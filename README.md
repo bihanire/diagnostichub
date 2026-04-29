@@ -334,6 +334,7 @@ Search benchmark report:
 
 - GitHub Actions pipeline: [ci.yml](/C:/Users/eatugonza/Documents/projects/diagnostichub/.github/workflows/ci.yml)
 - Deployment runbook: [deployment-guide.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/docs/deployment-guide.md)
+- Ubuntu Apache + FQDN deployment pack: [README.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/deploy/ubuntu/README.md)
 - Photo library submission pack: [README.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/docs/photo-library-template/README.md)
 - SOP import/export pack: [README.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/docs/sop-import-template/README.md)
 - SOP quality report: [quality-report.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/docs/sop-import-template/quality-report.md)

@@ -1,0 +1,13 @@
+[Unit]
+Description=DiagHub deploy worker (git fetch + safe rollout)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+EnvironmentFile=-/etc/diaghub/deploy.env
+ExecStart=/opt/diaghub/bin/deploy.sh --source timer
+TimeoutStartSec=900
+Nice=5

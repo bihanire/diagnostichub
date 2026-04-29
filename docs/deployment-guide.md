@@ -106,6 +106,22 @@ The GitHub Actions workflow in `.github/workflows/ci.yml` does three things:
 
 This gives us a useful minimum release gate before deployment.
 
+## Ubuntu + Apache FQDN Pack
+
+For direct Ubuntu hosting behind Apache on a real FQDN (for example `diaghub.watuafrica.co.ug`), use the deployment pack at:
+
+- [deploy/ubuntu/README.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/deploy/ubuntu/README.md)
+
+The pack includes:
+
+- Apache vhost template (`deploy/ubuntu/apache`)
+- `systemd` runtime and autodeploy units (`deploy/ubuntu/systemd`)
+- atomic deploy + rollback scripts (`deploy/ubuntu/scripts`)
+- production env templates (`deploy/ubuntu/env`)
+- GitHub Actions production trigger (`.github/workflows/deploy-production.yml`)
+
+This path supports automatic git probe and rollout using `diaghub-autodeploy.timer`, with optional immediate deploy trigger from GitHub Actions on `main` pushes.
+
 ## Current Limitation
 
 The current workspace where this pass was implemented does not have Docker installed, so the Docker build and Compose startup could not be executed locally here. The application tests and production frontend build were verified successfully in the existing local toolchain.

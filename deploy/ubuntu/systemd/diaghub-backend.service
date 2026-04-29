@@ -1,0 +1,21 @@
+[Unit]
+Description=DiagHub FastAPI backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=diaghub
+Group=diaghub
+WorkingDirectory=/opt/diaghub/repo/backend
+EnvironmentFile=-/etc/diaghub/backend.env
+ExecStart=/opt/diaghub/venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=3
+TimeoutStartSec=60
+TimeoutStopSec=30
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=DiagHub git update probe timer
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=30s
+RandomizedDelaySec=20s
+Unit=diaghub-autodeploy.service
+
+[Install]
+WantedBy=timers.target
