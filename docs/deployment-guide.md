@@ -135,6 +135,7 @@ sudo bash deploy/ubuntu/scripts/install-pack.sh \
 In this mode, set `OPS_COOKIE_SECURE=false` and use the LAN backend env template:
 
 - `deploy/ubuntu/env/backend.env.lan.example`
+- Keep `NEXT_PUBLIC_ENABLE_SERVICE_WORKER=false` in frontend env to prevent stale cached shell mismatches on shared LAN clients.
 
 ## Current Limitation
 

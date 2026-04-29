@@ -41,6 +41,7 @@ function readConnectionMode(): ConnectionMode {
 export function AppStatusShell() {
   const [mounted, setMounted] = useState(false);
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>("online");
+  const serviceWorkerEnabled = process.env.NEXT_PUBLIC_ENABLE_SERVICE_WORKER === "true";
 
   useEffect(() => {
     setMounted(true);
@@ -79,22 +80,30 @@ export function AppStatusShell() {
       return;
     }
 
-    if (process.env.NODE_ENV !== "production") {
+    const unregisterAll = () =>
       navigator.serviceWorker
         .getRegistrations?.()
         .then((registrations) =>
           Promise.all(registrations.map((registration) => registration.unregister()))
         )
         .catch(() => {
-          // Keep development cleanup failures silent.
+          // Keep cleanup failures silent.
         });
+
+    if (!serviceWorkerEnabled) {
+      unregisterAll();
+      return;
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      unregisterAll();
       return;
     }
 
     navigator.serviceWorker.register("/sw.js").catch(() => {
       // Keep registration failures silent so the branch flow never breaks.
     });
-  }, [mounted]);
+  }, [mounted, serviceWorkerEnabled]);
 
   return (
     <>

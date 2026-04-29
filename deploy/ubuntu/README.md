@@ -120,6 +120,7 @@ sudo systemctl list-timers | grep diaghub-autodeploy
 For HTTP-only LAN mode:
 
 - Use `deploy/ubuntu/env/backend.env.lan.example`.
+- Keep `NEXT_PUBLIC_ENABLE_SERVICE_WORKER=false` to avoid stale-client hydration mismatches during rapid LAN updates.
 - Set `OPS_COOKIE_SECURE=false`.
 - Restrict LAN access at network/firewall level.
 

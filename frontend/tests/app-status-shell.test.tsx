@@ -58,6 +58,7 @@ describe("AppStatusShell", () => {
     const getRegistrations = vi.fn().mockResolvedValue([{ unregister }]);
 
     vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_SERVICE_WORKER", "true");
     Object.defineProperty(window, "navigator", {
       configurable: true,
       value: {
@@ -81,6 +82,7 @@ describe("AppStatusShell", () => {
     const register = vi.fn().mockResolvedValue(undefined);
 
     vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_ENABLE_SERVICE_WORKER", "true");
     Object.defineProperty(window, "navigator", {
       configurable: true,
       value: {
