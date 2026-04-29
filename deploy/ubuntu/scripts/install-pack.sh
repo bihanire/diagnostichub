@@ -12,6 +12,7 @@ APP_GROUP="diaghub"
 APP_ROOT="/opt/diaghub"
 REPO_URL=""
 REPO_BRANCH="main"
+HTTP_ONLY="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,6 +36,10 @@ while [[ $# -gt 0 ]]; do
     --app-root)
       APP_ROOT="${2:-/opt/diaghub}"
       shift 2
+      ;;
+    --http-only)
+      HTTP_ONLY="true"
+      shift
       ;;
     *)
       echo "Unknown argument: $1" >&2
@@ -90,7 +95,11 @@ install -m 0644 -o root -g root "$PACK_ROOT/systemd/diaghub-autodeploy.timer" /e
 
 echo "[install] installing Apache vhost template"
 VHOST_OUT="/etc/apache2/sites-available/${FQDN}.conf"
-sed "s/diaghub.watuafrica.co.ug/${FQDN}/g" "$PACK_ROOT/apache/diaghub.watuafrica.co.ug.conf" >"$VHOST_OUT"
+APACHE_TEMPLATE="$PACK_ROOT/apache/diaghub.watuafrica.co.ug.conf"
+if [[ "$HTTP_ONLY" == "true" ]]; then
+  APACHE_TEMPLATE="$PACK_ROOT/apache/diaghub.watuafrica.co.ug.http.conf"
+fi
+sed "s/diaghub.watuafrica.co.ug/${FQDN}/g" "$APACHE_TEMPLATE" >"$VHOST_OUT"
 chmod 0644 "$VHOST_OUT"
 
 echo "[install] reloading systemd daemon"
@@ -102,6 +111,10 @@ echo "Next:"
 echo "1) Edit /etc/diaghub/backend.env, /etc/diaghub/frontend.env, /etc/diaghub/deploy.env"
 echo "2) Enable services: systemctl enable --now diaghub-backend.service diaghub-frontend.service diaghub-autodeploy.timer"
 echo "3) Enable Apache modules/site:"
-echo "   a2enmod proxy proxy_http headers ssl rewrite"
+if [[ "$HTTP_ONLY" == "true" ]]; then
+  echo "   a2enmod proxy proxy_http headers"
+else
+  echo "   a2enmod proxy proxy_http headers ssl rewrite"
+fi
 echo "   a2ensite ${FQDN}.conf"
 echo "   apachectl configtest && systemctl reload apache2"

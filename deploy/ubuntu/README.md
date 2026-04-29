@@ -7,6 +7,11 @@ This pack deploys DiagHub behind Apache on Ubuntu with:
 - automatic git probe + atomic deploy + rollback
 - optional GitHub Actions trigger for immediate deploy on new commits
 
+It supports two modes:
+
+- HTTPS mode (default): for WAN/public environments with TLS.
+- HTTP-only LAN mode: for private network rollout without Let's Encrypt.
+
 ## Deployment Model
 
 1. Apache is the only internet-facing entry point on `:80` and `:443`.
@@ -18,7 +23,8 @@ This pack deploys DiagHub behind Apache on Ubuntu with:
 
 ## Files
 
-- `apache/diaghub.watuafrica.co.ug.conf`: Apache vhost template for the FQDN.
+- `apache/diaghub.watuafrica.co.ug.conf`: Apache HTTPS vhost template.
+- `apache/diaghub.watuafrica.co.ug.http.conf`: Apache HTTP-only LAN template.
 - `systemd/diaghub-backend.service`: FastAPI runtime service.
 - `systemd/diaghub-frontend.service`: Next.js runtime service.
 - `systemd/diaghub-autodeploy.service`: oneshot deploy worker.
@@ -32,7 +38,7 @@ This pack deploys DiagHub behind Apache on Ubuntu with:
 
 - Ubuntu with `apache2`, `git`, `python3`, `python3-venv`, `nodejs`, `npm`, `curl`.
 - DNS record for `diaghub.watuafrica.co.ug` pointing to the server.
-- TLS certificate (for example via Certbot) before turning on strict HTTPS.
+- TLS certificate (for example via Certbot) only if using HTTPS mode.
 - A GitHub deploy key with read access to this repository.
 
 ## Quick Install
@@ -44,6 +50,16 @@ sudo bash deploy/ubuntu/scripts/install-pack.sh \
   --fqdn diaghub.watuafrica.co.ug \
   --repo-url git@github.com:<org>/<repo>.git \
   --branch main
+```
+
+### Quick Install (HTTP-only LAN mode)
+
+```bash
+sudo bash deploy/ubuntu/scripts/install-pack.sh \
+  --fqdn diaghub.watuafrica.co.ug \
+  --repo-url git@github.com:<org>/<repo>.git \
+  --branch main \
+  --http-only
 ```
 
 Then:
@@ -63,6 +79,15 @@ sudo systemctl enable --now diaghub-autodeploy.timer
 
 ```bash
 sudo a2enmod proxy proxy_http headers ssl rewrite
+sudo a2ensite diaghub.watuafrica.co.ug.conf
+sudo apachectl configtest
+sudo systemctl reload apache2
+```
+
+For HTTP-only LAN mode:
+
+```bash
+sudo a2enmod proxy proxy_http headers
 sudo a2ensite diaghub.watuafrica.co.ug.conf
 sudo apachectl configtest
 sudo systemctl reload apache2
@@ -91,6 +116,12 @@ sudo systemctl list-timers | grep diaghub-autodeploy
 - Set `OPS_COOKIE_SECURE=true` in `/etc/diaghub/backend.env` for HTTPS production.
 - Set CORS to include `https://diaghub.watuafrica.co.ug`.
 - Keep deploy worker env (`/etc/diaghub/deploy.env`) root-readable only.
+
+For HTTP-only LAN mode:
+
+- Use `deploy/ubuntu/env/backend.env.lan.example`.
+- Set `OPS_COOKIE_SECURE=false`.
+- Restrict LAN access at network/firewall level.
 
 ## GitHub Actions Trigger
 

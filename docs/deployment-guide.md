@@ -122,6 +122,20 @@ The pack includes:
 
 This path supports automatic git probe and rollout using `diaghub-autodeploy.timer`, with optional immediate deploy trigger from GitHub Actions on `main` pushes.
 
+For LAN environments where TLS cannot be installed yet, use the pack's HTTP-only mode:
+
+```bash
+sudo bash deploy/ubuntu/scripts/install-pack.sh \
+  --fqdn diaghub.watuafrica.co.ug \
+  --repo-url git@github.com:<org>/<repo>.git \
+  --branch main \
+  --http-only
+```
+
+In this mode, set `OPS_COOKIE_SECURE=false` and use the LAN backend env template:
+
+- `deploy/ubuntu/env/backend.env.lan.example`
+
 ## Current Limitation
 
 The current workspace where this pass was implemented does not have Docker installed, so the Docker build and Compose startup could not be executed locally here. The application tests and production frontend build were verified successfully in the existing local toolchain.
