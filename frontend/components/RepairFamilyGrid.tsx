@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 
 import { getRepairFamilyShortcut } from "@/lib/issue-visuals";
 import { getRenderableRepairFamilies } from "@/lib/repair-families";
@@ -7,7 +7,7 @@ import { RepairFamilySummary } from "@/lib/types";
 type RepairFamilyGridProps = {
   families?: RepairFamilySummary[] | null;
   activeFamilyId?: string | null;
-  onSelect: (familyId: string) => void;
+  onSelect: (family: RepairFamilySummary, sourceRect: DOMRect) => void;
   onRetry?: () => void;
   loadError?: string | null;
 };
@@ -19,6 +19,10 @@ export function RepairFamilyGrid({
   onRetry,
   loadError = null,
 }: RepairFamilyGridProps) {
+  function handleCardSelect(event: MouseEvent<HTMLButtonElement>, family: RepairFamilySummary) {
+    onSelect(family, event.currentTarget.getBoundingClientRect());
+  }
+
   const incomingFamilies = Array.isArray(families)
     ? families.filter((item): item is RepairFamilySummary => Boolean(item?.id))
     : [];
@@ -100,7 +104,7 @@ export function RepairFamilyGrid({
                     aria-label={`Open ${title} diagnosis family`}
                     aria-pressed={isActive}
                     className={`family-card motion-card stagger-item ${isActive ? "family-card-active" : ""}`}
-                    onClick={() => onSelect(item.id)}
+                    onClick={(event) => handleCardSelect(event, item)}
                     style={cardStyle}
                     type="button"
                   >

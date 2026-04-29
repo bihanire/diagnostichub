@@ -367,6 +367,13 @@ describe("HomePage", () => {
     render(<HomePage />);
 
     await user.click(await screen.findByRole("button", { name: /display & vision/i }));
+    expect(await screen.findByRole("heading", { name: "Display & Vision" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /open full family workspace/i }));
+
+    await waitFor(() => {
+      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
+    });
 
     expect(await screen.findByRole("heading", { name: "Display & Vision" })).toBeInTheDocument();
     expect(screen.getByText("Cracks and visible panel damage")).toBeInTheDocument();

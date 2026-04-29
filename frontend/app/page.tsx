@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, startTransition, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, PointerEvent, startTransition, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FamilyExplorer } from "@/components/FamilyExplorer";
@@ -41,6 +41,28 @@ type FamilyRequestResult =
   | { kind: "success"; value: RepairFamilySummary[] }
   | { kind: "error"; error: unknown }
   | { kind: "timeout" };
+
+type QuickDrillOrigin = {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+};
+
+function getFamilyPrimaryProcedure(familyDetail: RepairFamilyDetail | null): ProcedureSummary | null {
+  if (!familyDetail) {
+    return null;
+  }
+
+  const categoryProcedure = familyDetail.common_categories
+    .map((category) => category.primary_procedure)
+    .find((procedure) => Boolean(procedure?.id));
+  if (categoryProcedure) {
+    return categoryProcedure;
+  }
+
+  return familyDetail.procedures.find((procedure) => Boolean(procedure?.id)) || null;
+}
 
 function loadFamiliesWithTimeout(request: Promise<RepairFamilySummary[]>): Promise<FamilyRequestResult> {
   const safeRequest = request
@@ -86,15 +108,38 @@ export default function HomePage() {
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [searchResultKey, setSearchResultKey] = useState(0);
   const [startingId, setStartingId] = useState<number | null>(null);
+  const [quickDrillFamily, setQuickDrillFamily] = useState<RepairFamilySummary | null>(null);
+  const [quickDrillOrigin, setQuickDrillOrigin] = useState<QuickDrillOrigin | null>(null);
+  const [quickDrillDetail, setQuickDrillDetail] = useState<RepairFamilyDetail | null>(null);
+  const [quickDrillLoading, setQuickDrillLoading] = useState(false);
+  const [quickDrillError, setQuickDrillError] = useState<string | null>(null);
+  const [quickDrillPrompt, setQuickDrillPrompt] = useState<string | null>(null);
+  const [quickDrillPreheat, setQuickDrillPreheat] = useState(false);
+  const [quickDrillClosing, setQuickDrillClosing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement | null>(null);
   const familyExplorerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const quickDrillPanelRef = useRef<HTMLDivElement | null>(null);
+  const quickDrillShroudRef = useRef<HTMLButtonElement | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
   const searchRequestIdRef = useRef(0);
   const assistDebounceRef = useRef<number | null>(null);
   const assistBlurTimeoutRef = useRef<number | null>(null);
+  const quickDrillCloseTimeoutRef = useRef<number | null>(null);
+  const quickDrillPreheatTimeoutRef = useRef<number | null>(null);
+  const quickDrillRequestIdRef = useRef(0);
+  const quickDrillPointerRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const quickDrillActive = Boolean(quickDrillFamily);
   const intakeFocusActive = searching || searchAssistOpen || query.trim().length > 0;
+  const quickDrillPrimaryProcedure = getFamilyPrimaryProcedure(quickDrillDetail);
+  const quickDrillPrompts =
+    quickDrillDetail?.common_categories
+      .flatMap((category) => category.search_examples)
+      .filter((prompt, index, allPrompts) => Boolean(prompt?.trim()) && allPrompts.indexOf(prompt) === index)
+      .slice(0, 8) ||
+    quickDrillFamily?.symptom_prompts.slice(0, 8) ||
+    [];
   const logicIdentifiedActive = query.trim().length >= 4;
   const logicStatusLabel = searching
     ? "Logic identified. Running confidence match..."
@@ -121,6 +166,17 @@ export default function HomePage() {
   }, [intakeFocusActive]);
 
   useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.body.classList.toggle("quick-drill-open", quickDrillActive);
+    return () => {
+      document.body.classList.remove("quick-drill-open");
+    };
+  }, [quickDrillActive]);
+
+  useEffect(() => {
     return () => {
       searchAbortRef.current?.abort();
       if (assistDebounceRef.current !== null) {
@@ -128,6 +184,12 @@ export default function HomePage() {
       }
       if (assistBlurTimeoutRef.current !== null) {
         window.clearTimeout(assistBlurTimeoutRef.current);
+      }
+      if (quickDrillCloseTimeoutRef.current !== null) {
+        window.clearTimeout(quickDrillCloseTimeoutRef.current);
+      }
+      if (quickDrillPreheatTimeoutRef.current !== null) {
+        window.clearTimeout(quickDrillPreheatTimeoutRef.current);
       }
     };
   }, []);
@@ -333,6 +395,104 @@ export default function HomePage() {
 
     return () => window.clearTimeout(timer);
   }, [activeFamily]);
+
+  useEffect(() => {
+    if (!quickDrillFamily || quickDrillClosing) {
+      return;
+    }
+
+    const panel = quickDrillPanelRef.current;
+    const shroud = quickDrillShroudRef.current;
+    if (!panel || !quickDrillOrigin) {
+      return;
+    }
+
+    const reducedMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (reducedMotion) {
+      panel.style.removeProperty("transform");
+      panel.style.removeProperty("opacity");
+      if (shroud) {
+        shroud.style.removeProperty("opacity");
+      }
+      return;
+    }
+
+    const panelRect = panel.getBoundingClientRect();
+    const sourceCenterX = quickDrillOrigin.left + quickDrillOrigin.width / 2;
+    const sourceCenterY = quickDrillOrigin.top + quickDrillOrigin.height / 2;
+    const panelCenterX = panelRect.left + panelRect.width / 2;
+    const panelCenterY = panelRect.top + panelRect.height / 2;
+    const offsetX = sourceCenterX - panelCenterX;
+    const offsetY = sourceCenterY - panelCenterY;
+    const scaleX = Math.max(0.22, Math.min(1, quickDrillOrigin.width / panelRect.width));
+    const scaleY = Math.max(0.2, Math.min(1, quickDrillOrigin.height / panelRect.height));
+
+    const panelAnimation =
+      typeof panel.animate === "function"
+        ? panel.animate(
+            [
+              {
+                transform: `translate3d(${offsetX}px, ${offsetY}px, 0) scale(${scaleX}, ${scaleY})`,
+                opacity: 0.18,
+                filter: "blur(0.8px)"
+              },
+              {
+                transform: "translate3d(0, 0, 0) scale(1)",
+                opacity: 1,
+                filter: "blur(0)"
+              }
+            ],
+            {
+              duration: 420,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+              fill: "both"
+            }
+          )
+        : null;
+
+    const shroudAnimation =
+      shroud && typeof shroud.animate === "function"
+        ? shroud.animate(
+            [
+              { opacity: 0 },
+              { opacity: 1 }
+            ],
+            {
+              duration: 280,
+              easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+              fill: "both"
+            }
+          )
+        : null;
+
+    return () => {
+      panelAnimation?.cancel();
+      shroudAnimation?.cancel();
+    };
+  }, [quickDrillClosing, quickDrillFamily, quickDrillOrigin]);
+
+  useEffect(() => {
+    if (!quickDrillFamily) {
+      return;
+    }
+
+    function handleEscape(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+      event.preventDefault();
+      requestCloseQuickDrill();
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [quickDrillFamily]);
 
   async function runSearch(nextQuery: string) {
     const cleanQuery = nextQuery.trim();
@@ -553,6 +713,163 @@ export default function HomePage() {
     } finally {
       setFamilyLoadingId(null);
     }
+  }
+
+  function requestCloseQuickDrill() {
+    if (!quickDrillFamily || quickDrillClosing) {
+      return;
+    }
+    quickDrillRequestIdRef.current += 1;
+    if (quickDrillPreheatTimeoutRef.current !== null) {
+      window.clearTimeout(quickDrillPreheatTimeoutRef.current);
+      quickDrillPreheatTimeoutRef.current = null;
+    }
+
+    const reducedMotion =
+      typeof window !== "undefined" &&
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    setQuickDrillClosing(true);
+
+    if (!reducedMotion) {
+      if (quickDrillPanelRef.current && typeof quickDrillPanelRef.current.animate === "function") {
+        quickDrillPanelRef.current.animate(
+          [
+            { transform: "translate3d(0, 0, 0) scale(1)", opacity: 1 },
+            { transform: "translate3d(0, 20px, 0) scale(0.97)", opacity: 0 }
+          ],
+          {
+            duration: 300,
+            easing: "cubic-bezier(0.2, 0.82, 0.22, 1)",
+            fill: "forwards"
+          }
+        );
+      }
+      if (quickDrillShroudRef.current && typeof quickDrillShroudRef.current.animate === "function") {
+        quickDrillShroudRef.current.animate(
+          [{ opacity: 1 }, { opacity: 0 }],
+          {
+            duration: 240,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards"
+          }
+        );
+      }
+    }
+
+    if (quickDrillCloseTimeoutRef.current !== null) {
+      window.clearTimeout(quickDrillCloseTimeoutRef.current);
+    }
+    quickDrillCloseTimeoutRef.current = window.setTimeout(() => {
+      setQuickDrillFamily(null);
+      setQuickDrillOrigin(null);
+      setQuickDrillDetail(null);
+      setQuickDrillLoading(false);
+      setQuickDrillError(null);
+      setQuickDrillPrompt(null);
+      setQuickDrillPreheat(false);
+      setQuickDrillClosing(false);
+      quickDrillPointerRef.current = null;
+    }, reducedMotion ? 0 : 280);
+  }
+
+  async function openQuickDrill(family: RepairFamilySummary, sourceRect: DOMRect) {
+    const nextRequestId = quickDrillRequestIdRef.current + 1;
+    quickDrillRequestIdRef.current = nextRequestId;
+
+    setQuickDrillFamily(family);
+    setQuickDrillOrigin({
+      top: sourceRect.top,
+      left: sourceRect.left,
+      width: sourceRect.width,
+      height: sourceRect.height
+    });
+    setQuickDrillDetail(null);
+    setQuickDrillLoading(true);
+    setQuickDrillError(null);
+    setQuickDrillPrompt(family.symptom_prompts[0] || null);
+    setQuickDrillPreheat(false);
+    setQuickDrillClosing(false);
+    setActiveFamily(null);
+
+    try {
+      const detail = await getRepairFamilyDetail(family.id);
+      if (quickDrillRequestIdRef.current !== nextRequestId) {
+        return;
+      }
+      setQuickDrillDetail(detail);
+      if (detail.symptom_prompts.length > 0) {
+        setQuickDrillPrompt(detail.symptom_prompts[0]);
+      }
+    } catch (requestError) {
+      if (quickDrillRequestIdRef.current !== nextRequestId) {
+        return;
+      }
+      setQuickDrillError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Could not load this quick-drill family. You can still open the full family workspace."
+      );
+    } finally {
+      if (quickDrillRequestIdRef.current === nextRequestId) {
+        setQuickDrillLoading(false);
+      }
+    }
+  }
+
+  function handleQuickDrillPointerMove(event: PointerEvent<HTMLDivElement>) {
+    const now = performance.now();
+    const previous = quickDrillPointerRef.current;
+    quickDrillPointerRef.current = { x: event.clientX, y: event.clientY, t: now };
+
+    if (!previous) {
+      return;
+    }
+
+    const deltaTime = Math.max(1, now - previous.t);
+    const deltaX = event.clientX - previous.x;
+    const deltaY = event.clientY - previous.y;
+    const speed = Math.hypot(deltaX, deltaY) / deltaTime;
+    if (speed < 1.05) {
+      return;
+    }
+
+    if (!quickDrillPreheat) {
+      setQuickDrillPreheat(true);
+    }
+    if (quickDrillPreheatTimeoutRef.current !== null) {
+      window.clearTimeout(quickDrillPreheatTimeoutRef.current);
+    }
+    quickDrillPreheatTimeoutRef.current = window.setTimeout(() => {
+      setQuickDrillPreheat(false);
+    }, 150);
+  }
+
+  function handleQuickDrillPromptSelect(prompt: string) {
+    setQuickDrillPrompt(prompt);
+    requestCloseQuickDrill();
+    void runSearch(prompt);
+  }
+
+  function handleQuickDrillOpenWorkspace() {
+    if (!quickDrillFamily) {
+      return;
+    }
+
+    const familyId = quickDrillFamily.id;
+    requestCloseQuickDrill();
+    void openFamily(familyId);
+  }
+
+  function handleQuickDrillStartTriage() {
+    if (quickDrillPrimaryProcedure) {
+      requestCloseQuickDrill();
+      void openFlow(quickDrillPrimaryProcedure, quickDrillPrompt || quickDrillPrimaryProcedure.title);
+      return;
+    }
+
+    handleQuickDrillOpenWorkspace();
   }
 
   return (
@@ -821,10 +1138,10 @@ export default function HomePage() {
       ) : null}
 
       <RepairFamilyGrid
-        activeFamilyId={familyLoadingId || activeFamily?.id || null}
+        activeFamilyId={familyLoadingId || quickDrillFamily?.id || activeFamily?.id || null}
         families={families}
         loadError={familiesError}
-        onSelect={openFamily}
+        onSelect={openQuickDrill}
         onRetry={reloadFamilies}
       />
       {activeFamily ? (
@@ -836,6 +1153,105 @@ export default function HomePage() {
             openingProcedureId={startingId}
           />
         </div>
+      ) : null}
+
+      {quickDrillFamily ? (
+        <section
+          aria-labelledby="quick-drill-title"
+          aria-modal="true"
+          className={`quick-drill-layer ${quickDrillClosing ? "quick-drill-layer-closing" : ""}`}
+          role="dialog"
+        >
+          <button
+            aria-label="Close quick drill"
+            className="quick-drill-shroud"
+            onClick={requestCloseQuickDrill}
+            ref={quickDrillShroudRef}
+            type="button"
+          />
+          <div
+            className={`quick-drill-panel ${quickDrillPreheat ? "quick-drill-panel-preheat" : ""}`}
+            onPointerMove={handleQuickDrillPointerMove}
+            ref={quickDrillPanelRef}
+          >
+            <div className="quick-drill-head">
+              <div>
+                <span className="eyebrow">Quick drill</span>
+                <h3 id="quick-drill-title">{quickDrillFamily.title}</h3>
+                <p className="body-copy">{quickDrillDetail?.hint || quickDrillFamily.hint}</p>
+              </div>
+              <button
+                className="quick-drill-close"
+                onClick={requestCloseQuickDrill}
+                type="button"
+              >
+                Close
+              </button>
+            </div>
+
+            {quickDrillDetail?.common_categories.length ? (
+              <div className="quick-drill-stream">
+                {quickDrillDetail.common_categories.slice(0, 3).map((category) => (
+                  <span className="quick-drill-stream-pill" key={`${quickDrillFamily.id}-${category.title}`}>
+                    {category.title}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <section className="quick-drill-chip-block">
+              <strong>Micro symptoms</strong>
+              <div className="quick-drill-chip-grid">
+                {quickDrillPrompts.length > 0 ? (
+                  quickDrillPrompts.map((prompt) => (
+                    <button
+                      className={`quick-drill-chip ${quickDrillPrompt === prompt ? "quick-drill-chip-active" : ""}`}
+                      data-magnetic
+                      key={`${quickDrillFamily.id}-${prompt}`}
+                      onClick={() => handleQuickDrillPromptSelect(prompt)}
+                      type="button"
+                    >
+                      {prompt}
+                    </button>
+                  ))
+                ) : (
+                  <span className="quick-drill-chip quick-drill-chip-placeholder">
+                    No symptom shortcuts yet for this family.
+                  </span>
+                )}
+              </div>
+            </section>
+
+            {quickDrillError ? (
+              <p className="quick-drill-error" role="status">
+                {quickDrillError}
+              </p>
+            ) : null}
+
+            <div className="quick-drill-actions">
+              <button
+                className="primary-button quick-drill-primary"
+                disabled={quickDrillLoading || startingId !== null}
+                onClick={handleQuickDrillStartTriage}
+                type="button"
+              >
+                {quickDrillLoading
+                  ? "Preparing quick triage..."
+                  : quickDrillPrimaryProcedure
+                    ? `Start triage: ${quickDrillPrimaryProcedure.title}`
+                    : "Start triage"}
+              </button>
+              <button
+                className="secondary-button quick-drill-secondary"
+                disabled={quickDrillLoading}
+                onClick={handleQuickDrillOpenWorkspace}
+                type="button"
+              >
+                Open full family workspace
+              </button>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       {error ? <p className="error-banner" role="alert">{error}</p> : null}
