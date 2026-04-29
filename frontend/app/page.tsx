@@ -574,7 +574,7 @@ export default function HomePage() {
             <h1 className="home-hero-title">{uiCopy.home.hero.title}</h1>
             <p>{uiCopy.home.hero.description}</p>
             <div className="hero-command-strip" aria-label="Diagnosis workflow">
-              <span className="hero-command-chip">
+              <span className="hero-command-chip hero-command-chip-active">
                 <strong>01</strong>
                 Search
               </span>
