@@ -1,0 +1,245 @@
+procedure_id,keyword
+1,dead phone
+1,dead set
+1,no power
+1,not turning on
+1,not powering on
+1,phone not coming on
+1,does not start
+1,refuses to start
+1,no life
+1,wont boot
+1,boot issue
+1,boot loop no start
+1,stuck on logo
+1,logo loop
+1,screen stays black after power
+1,power button no response
+1,drained completely
+1,battery flat
+1,vibrates only
+1,keeps vibrating no display
+1,only vibrates when i hold power
+1,vibrates when holding power
+1,samsung logo no start
+2,cracked screen
+2,broken screen
+2,blacked out
+2,black screen
+2,no display
+2,phone rings but screen black
+2,display issue
+2,lines in screen
+2,vertical lines
+2,horizontal lines
+2,shaky screen
+2,screen shaking
+2,flickering
+2,flicker screen
+2,blurry display
+2,blurred screen
+2,yellow light
+2,yellow tint
+2,display tinted
+2,touch not working
+2,touch unresponsive
+2,ghost touch
+2,half display
+3,stolen phone
+3,snatched phone
+3,lost phone
+3,missing phone
+3,phone taken
+3,device stolen
+3,find my phone
+3,track phone
+3,block sim
+3,report theft
+4,not charging
+4,charge fail
+4,charging issue
+4,charging problem
+4,slow charging
+4,charger not working
+4,charger connected but not charging
+4,battery not increasing
+4,battery percentage goes down while charger is in
+4,battery goes down while charging
+4,only charges when held
+4,charges in one position
+4,moisture warning
+4,moisture warning keeps appearing
+4,must bend cable
+4,charging port
+4,port loose
+4,usb port issue
+4,no charging sign
+5,overheating
+5,heating up
+5,too hot
+5,hot phone
+5,phone gets hot
+5,temperature warning
+5,swollen battery
+5,battery swollen
+5,battery bulging
+5,battery puffed
+5,back cover lifting
+5,burning smell
+5,burnt smell
+5,hot while charging
+5,warm when idle
+6,battery drains fast
+6,drained battery
+6,battery finishing quickly
+6,dies quickly
+6,charge not lasting
+6,loses charge overnight
+6,battery weak
+6,short battery life
+6,discharging fast
+6,battery drops quickly
+6,from 100 to 0
+7,freezing
+7,frozen screen
+7,hanging
+7,hangs
+7,lagging
+7,slow phone
+7,app issue
+7,app crashing
+7,phone stuck
+7,screen stuck
+7,apps not opening
+7,slow after update
+7,keeps pausing
+7,very slow
+8,restarts itself
+8,keeps restarting
+8,random restart
+8,auto reboot
+8,boot loop
+8,rebooting alone
+8,restart by itself
+8,safe mode
+8,stuck in safe mode
+8,phone restarts on its own
+8,restart issue
+9,not reading sim
+9,sim not detected
+9,sim error
+9,sim card invalid
+9,no network
+9,no service
+9,no signal
+9,network registration issue
+9,network issue
+9,mobile data not working
+9,data issue
+9,poor signal
+9,wifi problem
+9,wifi not connecting
+9,internet not working
+9,airplane mode reset
+9,sim slot issue
+10,mouthpiece
+10,microphone issue
+10,mic not working
+10,speaker issue
+10,speaker not working
+10,no sound
+10,cannot hear caller
+10,caller cannot hear me
+10,audio issue
+10,low sound
+10,earpiece issue
+10,voice recorder no sound
+10,loudspeaker dead
+11,frp
+11,google lock
+11,factory reset asks old google account
+11,old google account after reset
+11,factory reset protection
+11,forgot password
+11,forgot pin
+11,forgot pattern
+11,locked phone
+11,phone locked
+11,cannot unlock
+11,device managed
+11,shell managed
+11,mdm lock
+12,fell in water
+12,water damage
+12,liquid damage
+12,water entered phone
+12,wet phone
+12,dropped phone
+12,impact damage
+12,bent device
+12,bent frame
+12,burnt
+12,wet and burnt smell
+12,burning mark
+12,sim tray broken
+12,simty broken
+12,simtry broken
+12,frame damage
+12,phone got wet
+12,corrosion
+13,repair ticket
+13,job card
+13,log repair
+13,incoming ticket
+13,outgoing ticket
+13,aftersales sheet
+13,dispatch device
+13,waybill
+13,legal status
+13,self repairs ls
+13,watu repairs ls
+13,remove ls
+13,transtel dispatch
+13,watu simu hq
+13,aramex pickup
+13,repair routing
+13,dispatch compliance
+13,sticker on device
+14,replacement request
+14,replace stolen phone
+14,new phone after theft
+14,device replacement
+14,replacement eligibility
+14,ber replacement
+14,beyond economical repair
+14,stolen ls
+14,10 weekly payments
+14,replacement loan
+14,obs repossessed
+14,replacement device
+15,asset transfer
+15,ownership transfer
+15,transfer loan
+15,transfer phone to another person
+15,transferred loan
+15,next of kin transfer
+15,death certificate transfer
+15,loan reschedule
+15,repair centre 15 days
+15,repair delay reschedule
+15,obs transferred
+16,return device
+16,refund request
+16,phone refund
+16,returned phone
+16,recovered device
+16,third party recovery
+16,reward for recovery
+16,remove legal status after recovery
+16,returned legal status
+16,counter flash list
+16,reported thefts
+16,factory reset return
+16,refund deduction
+16,uncollected device
+16,prepayment ticket

@@ -1,0 +1,17 @@
+{
+  "name": "Simu Triage and Diagnosis Hub",
+  "short_name": "Diag Hub",
+  "description": "Guided branch-side triage and diagnosis for Watu Simu aftersales teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1818",
+  "theme_color": "#1bb7c4",
+  "icons": [
+    {
+      "src": "/icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

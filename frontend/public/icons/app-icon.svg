@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Diag Hub icon">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b3135" />
+      <stop offset="55%" stop-color="#197b84" />
+      <stop offset="100%" stop-color="#1bb7c4" />
+    </linearGradient>
+    <linearGradient id="chip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8fb2ff" />
+      <stop offset="100%" stop-color="#73e3d3" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg)" />
+  <circle cx="390" cy="120" r="86" fill="#62c775" opacity="0.18" />
+  <circle cx="128" cy="386" r="96" fill="#4fc0ff" opacity="0.12" />
+  <rect x="150" y="88" width="212" height="336" rx="44" fill="#10233f" />
+  <rect x="168" y="110" width="176" height="288" rx="30" fill="#eff6ff" />
+  <rect x="202" y="145" width="108" height="108" rx="22" fill="url(#chip)" opacity="0.9" />
+  <path d="M208 314h96M208 350h72" stroke="#16304f" stroke-width="24" stroke-linecap="round" />
+  <circle cx="256" cy="390" r="18" fill="#1bb7c4" />
+</svg>

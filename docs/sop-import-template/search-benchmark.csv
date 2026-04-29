@@ -1,0 +1,83 @@
+query,expected_procedure_id,expected_procedure_title,expected_issue_type,minimum_confidence,minimum_margin
+phone not coming on but vibrates,1,Phone Not Powering On,Power & Thermal,0.45,0.20
+dead set no life after charge,1,Phone Not Powering On,Power & Thermal,0.45,0.15
+the phone is not powering on and it only vibrates,1,Phone Not Powering On,Power & Thermal,0.50,0.20
+yellow light on screen,2,Screen Issue,Display & Vision,0.45,0.20
+lines in screen and touch not working,2,Screen Issue,Display & Vision,0.50,0.20
+the screen is yellow and touch is not working,2,Screen Issue,Display & Vision,0.50,0.20
+my phone was snatched,3,Stolen Phone,Security & Access,0.40,0.15
+need track stolen device,3,Stolen Phone,Security & Access,0.35,0.15
+charger connected but battery stays same,4,Charging Issue,Power & Thermal,0.38,0.10
+phone charges only when cable bent,4,Charging Issue,Power & Thermal,0.40,0.15
+the phone is not charging when i insert a charger,4,Charging Issue,Power & Thermal,0.50,0.15
+phone too hot and back cover lifting,5,Overheating or Swollen Battery,Power & Thermal,0.42,0.20
+battery swollen and smells burnt,5,Overheating or Swollen Battery,Power & Thermal,0.45,0.20
+the phone gets too hot when charging and the back cover is lifting,5,Overheating or Swollen Battery,Power & Thermal,0.50,0.20
+battery drains fast even when idle,6,Battery Draining Fast,Power & Thermal,0.42,0.05
+full charge finishes quickly,6,Battery Draining Fast,Power & Thermal,0.35,0.15
+the battery drains very fast even when the phone is idle,6,Battery Draining Fast,Power & Thermal,0.45,0.05
+phone freezing and apps hanging,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
+one app keeps crashing and phone hangs,7,"Freezing, Hanging, or App Issue",Logic & Software,0.40,0.15
+the phone keeps freezing whenever i open apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
+phone restarts itself randomly,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.20
+stuck in safe mode after boot,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.20
+the phone keeps restarting after i switch it on,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.20
+not reading sim,9,SIM or Network Issue,Connectivity & I/O,0.50,0.20
+no network and mobile data not working,9,SIM or Network Issue,Connectivity & I/O,0.42,0.20
+the device is not reading the sim and there is no network,9,SIM or Network Issue,Connectivity & I/O,0.45,0.20
+mouthpiece not working,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.50,0.10
+caller cant hear me but speaker ok,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.35,0.15
+the customer says callers cannot hear me but the speaker is fine,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.15
+forgot pattern,11,"FRP, Password, or Locked Device",Security & Access,0.50,0.20
+google lock after reset,11,"FRP, Password, or Locked Device",Security & Access,0.40,0.20
+the customer forgot the pattern and now the device is locked,11,"FRP, Password, or Locked Device",Security & Access,0.50,0.20
+simty broken,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.20
+phone fell in water and bent,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.25
+the phone fell in water and now the frame is bent,12,Liquid or Physical Damage,Physical & Liquid,0.50,0.25
+self repairs ls for repair ticket,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.45,0.20
+which legal status and dispatch path should i use,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.35,0.20
+which repair ticket and legal status should i use for dispatch,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.45,0.20
+replacement device after theft,14,Replacement Request Eligibility,Replacements & Transfers,0.45,0.20
+customer wants new phone after ber,14,Replacement Request Eligibility,Replacements & Transfers,0.38,0.15
+the customer wants a replacement because the device was stolen,14,Replacement Request Eligibility,Replacements & Transfers,0.45,0.15
+ownership transfer for phone loan,15,Asset Transfer or Loan Reschedule,Replacements & Transfers,0.45,0.10
+faulty device at repair centre for 20 days need reschedule,15,Asset Transfer or Loan Reschedule,Replacements & Transfers,0.38,0.20
+the faulty device has stayed at the repair centre for more than 15 days,15,Asset Transfer or Loan Reschedule,Replacements & Transfers,0.40,0.20
+refund request for returned phone,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.45,0.20
+third party recovery reward for recovered device,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.40,0.25
+the client wants a refund after returning the phone,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.45,0.20
+my samsung galaxy is not charging even with the samsung charger,4,Charging Issue,Power & Thermal,0.50,0.12
+the galaxy phone keeps freezing and samsung members diagnostics points to apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.18
+find my mobile says my samsung was stolen,3,Stolen Phone,Security & Access,0.40,0.15
+maintenance mode before sending this galaxy for repair,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.40,0.18
+callers cannot hear me on my samsung and samsung members says mic test failed,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.12
+my galaxy is stuck in safe mode after restart,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.18
+the galaxy sim card is not detected and samsung members network check fails,9,SIM or Network Issue,Connectivity & I/O,0.42,0.18
+device care shows the samsung battery is draining too fast,6,Battery Draining Fast,Power & Thermal,0.40,0.05
+the phone shows the samsung logo and refuses to start,1,Phone Not Powering On,Power & Thermal,0.45,0.18
+it switched off and now only vibrates when i hold power,1,Phone Not Powering On,Power & Thermal,0.45,0.18
+battery percentage goes down even while the charger is in,4,Charging Issue,Power & Thermal,0.45,0.12
+moisture warning keeps appearing when i try to charge,4,Charging Issue,Power & Thermal,0.45,0.18
+the back cover is popping up and the phone gets hot,5,Overheating or Swollen Battery,Power & Thermal,0.45,0.18
+the battery is draining after full charge and the phone gets warm,6,Battery Draining Fast,Power & Thermal,0.40,0.05
+screen is black but the phone is ringing,2,Screen Issue,Display & Vision,0.45,0.20
+touch is pressing things by itself on the screen,2,Screen Issue,Display & Vision,0.45,0.15
+the display is yellowish and blurry after restart,2,Screen Issue,Display & Vision,0.45,0.18
+the phone has vertical lines and half display,2,Screen Issue,Display & Vision,0.45,0.20
+phone is very slow after update and keeps hanging,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.18
+only one app freezes and the rest of the phone is fine,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.18
+safe mode keeps coming back every time i restart the phone,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.18
+it keeps rebooting and showing safe mode again,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.18
+factory reset done and now it wants the old google account,11,"FRP, Password, or Locked Device",Security & Access,0.45,0.20
+the phone is shell managed and locked,11,"FRP, Password, or Locked Device",Security & Access,0.40,0.18
+i forgot the phone password and cannot unlock it,11,"FRP, Password, or Locked Device",Security & Access,0.45,0.18
+the customer says the phone was stolen and they need to track it,3,Stolen Phone,Security & Access,0.40,0.15
+sim card is not detected and there is no service,9,SIM or Network Issue,Connectivity & I/O,0.45,0.20
+phone cannot register on the network even with another sim,9,SIM or Network Issue,Connectivity & I/O,0.45,0.18
+wifi connects but says no internet on this phone,9,SIM or Network Issue,Connectivity & I/O,0.40,0.18
+people hear me badly but the loud speaker works,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.12
+the mouthpiece is too low and callers cannot hear me well,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.12
+the phone fell down and the frame is now bent,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.22
+water entered the phone and now it smells burnt,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.25
+sim tray snapped and the side frame is damaged,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.20
+the customer says the phone got wet and the body is corroding,12,Liquid or Physical Damage,Physical & Liquid,0.45,0.22

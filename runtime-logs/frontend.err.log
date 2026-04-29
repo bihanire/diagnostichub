@@ -1,0 +1,55 @@
+[browser] Uncaught Error: Internal Next.js error: Router action dispatched before initialization.
+[browser] Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <ScrollAndMaybeFocusHandler cacheNode={{rsc:{...}, ...}}>
+      <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+        <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+          <LoadingBoundary name="/" loading={null}>
+            <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+              <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} ...>
+                <RedirectBoundary>
+                  <RedirectErrorBoundary router={{...}}>
+                    <InnerLayoutRouter url="/?v=famili..." tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} ...>
+                      <SegmentViewNode type="page" pagePath="page.tsx">
+                        <SegmentTrieNode>
+                        <ClientPageRoot Component={function HomePage} serverProvidedParams={{...}}>
+                          <HomePage params={Promise} searchParams={Promise}>
+                            <main className="app-shell" id="main-content">
+                              <section
++                               className="hero hero-compact"
+-                               className="hero hero-compact hero-world"
+                              >
+                                <div
++                                 className="hero-compact-grid"
+-                                 className="hero-ambient-map"
+-                                 aria-hidden="true"
+                                >
++                                 <div className="hero-copy">
+-                                 <span className="hero-map-node hero-map-node-search">
+                                  ...
+                              ...
+                      ...
+                    ...
+        ...
+
+    at <unknown> (https://react.dev/link/hydration-mismatch)
+    at div (<anonymous>)
+    at HomePage (lib/api.ts:264:20)
+  262 | export function getOpsFeedbackByTag(days: number): Promise<FeedbackTagBreakdownResponse> {
+  263 |   return apiRequest<FeedbackTagBreakdownResponse>(`/feedback/by-tag?days=${days}`, {
+> 264 |     authenticated: true
+      |                    ^
+  265 |   });
+  266 | }
+  267 |
