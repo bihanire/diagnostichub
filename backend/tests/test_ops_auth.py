@@ -161,7 +161,11 @@ class OpsAuthRouteTests(unittest.TestCase):
 
         valid_cookie_header = login_response.headers["set-cookie"]
         valid_token = valid_cookie_header.split(";", maxsplit=1)[0].split("=", maxsplit=1)[1]
-        tampered_token = f"{valid_token[:-1]}x"
+        payload_segment, signature_segment = valid_token.split(".", maxsplit=1)
+        tampered_signature = (
+            f"a{signature_segment[1:]}" if not signature_segment.startswith("a") else f"b{signature_segment[1:]}"
+        )
+        tampered_token = f"{payload_segment}.{tampered_signature}"
 
         with TestClient(self.app) as client:
             response = client.get(

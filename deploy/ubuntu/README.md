@@ -124,6 +124,21 @@ For HTTP-only LAN mode:
 - Set `OPS_COOKIE_SECURE=false`.
 - Restrict LAN access at network/firewall level.
 
+### If browsers show a username/password popup
+
+DiagHub does not use browser Basic Auth. Ops access is in-app at `/ops/login` (password only).
+
+If you see a browser username/password prompt, verify:
+
+1. The active Apache vhost includes `Header always unset WWW-Authenticate`.
+2. There are no inherited `AuthType Basic` / `Require valid-user` directives in your site config.
+3. Reload Apache after config changes:
+
+```bash
+sudo apachectl configtest
+sudo systemctl reload apache2
+```
+
 ## GitHub Actions Trigger
 
 Use `.github/workflows/deploy-production.yml` with these secrets:

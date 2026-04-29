@@ -35,6 +35,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             raise
 
         response.headers["X-Request-ID"] = request_id
+        # Keep auth handling inside the app UI. A `WWW-Authenticate` challenge
+        # can trigger browser-level username/password popups, which we do not use.
+        if response.status_code == 401 and "www-authenticate" in response.headers:
+            del response.headers["www-authenticate"]
         duration_ms = round((perf_counter() - started_at) * 1000, 2)
         log_method = logger.warning if response.status_code >= 400 else logger.debug
         log_method(
