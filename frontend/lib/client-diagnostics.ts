@@ -10,6 +10,8 @@ type ClientDiagnosticEntry = {
 
 const DIAGNOSTIC_CACHE_KEY = "diaghub-client-diagnostics";
 const MAX_DIAGNOSTIC_ENTRIES = 30;
+const DEBUG_DIAGNOSTIC_LOGS_ENABLED =
+  process.env.NEXT_PUBLIC_ENABLE_CLIENT_DEBUG_LOGS === "true";
 
 export function recordClientDiagnostic(
   event: string,
@@ -33,15 +35,21 @@ export function recordClientDiagnostic(
 
   try {
     const current = readClientDiagnostics();
+    const nextEntries = [entry, ...current].slice(0, MAX_DIAGNOSTIC_ENTRIES);
     window.localStorage.setItem(
       DIAGNOSTIC_CACHE_KEY,
-      JSON.stringify([entry, ...current].slice(0, MAX_DIAGNOSTIC_ENTRIES))
+      JSON.stringify(nextEntries)
+    );
+    window.dispatchEvent(
+      new CustomEvent("diaghub:diagnostic", {
+        detail: entry
+      })
     );
   } catch {
     // Diagnostics must never interrupt the user workflow.
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  if (DEBUG_DIAGNOSTIC_LOGS_ENABLED) {
     console.warn(`[diagnosis-hub:${event}] ${entry.message}`, entry.details || {});
   }
 }

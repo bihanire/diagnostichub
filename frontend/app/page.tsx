@@ -1,11 +1,12 @@
 "use client";
 
-import { FormEvent, startTransition, useEffect, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, startTransition, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { FamilyExplorer } from "@/components/FamilyExplorer";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
 import { RepairFamilyGrid } from "@/components/RepairFamilyGrid";
+import { SearchAssistDropdown } from "@/components/SearchAssistDropdown";
 import { SuggestionList } from "@/components/SuggestionList";
 import {
   ApiError,
@@ -23,10 +24,18 @@ import {
   BUILT_IN_REPAIR_FAMILIES,
   resolveRepairFamilies
 } from "@/lib/repair-families";
+import { getSearchAssistSuggestions, SearchAssistSuggestion } from "@/lib/search-assist";
 import { clearSession, loadSession, saveSession } from "@/lib/session";
 import { ProcedureSummary, RepairFamilyDetail, RepairFamilySummary, SearchResponse, TriageSession } from "@/lib/types";
 
 const FAMILY_LOAD_TIMEOUT_MS = 4500;
+const SEARCH_ASSIST_DEBOUNCE_MS = 200;
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => {
+    finished: Promise<void>;
+  };
+};
 
 type FamilyRequestResult =
   | { kind: "success"; value: RepairFamilySummary[] }
@@ -44,6 +53,23 @@ function loadFamiliesWithTimeout(request: Promise<RepairFamilySummary[]>): Promi
   return Promise.race([safeRequest, timeout]);
 }
 
+function applyVisualTransition(update: () => void) {
+  if (typeof document === "undefined") {
+    update();
+    return;
+  }
+
+  const transitionDocument = document as ViewTransitionDocument;
+  if (typeof transitionDocument.startViewTransition === "function") {
+    transitionDocument.startViewTransition(() => {
+      update();
+    });
+    return;
+  }
+
+  update();
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -54,13 +80,20 @@ export default function HomePage() {
   const [familyLoadingId, setFamilyLoadingId] = useState<string | null>(null);
   const [familiesError, setFamiliesError] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
+  const [searchAssistOpen, setSearchAssistOpen] = useState(false);
+  const [searchAssistLoading, setSearchAssistLoading] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState<SearchAssistSuggestion[]>([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const [searchResultKey, setSearchResultKey] = useState(0);
   const [startingId, setStartingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement | null>(null);
   const familyExplorerRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
   const searchRequestIdRef = useRef(0);
+  const assistDebounceRef = useRef<number | null>(null);
+  const assistBlurTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     setResumeSession(loadSession());
@@ -74,8 +107,41 @@ export default function HomePage() {
   useEffect(() => {
     return () => {
       searchAbortRef.current?.abort();
+      if (assistDebounceRef.current !== null) {
+        window.clearTimeout(assistDebounceRef.current);
+      }
+      if (assistBlurTimeoutRef.current !== null) {
+        window.clearTimeout(assistBlurTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setSearchAssistLoading(false);
+      setSearchSuggestions([]);
+      setActiveSuggestionIndex(-1);
+      return;
+    }
+
+    setSearchAssistLoading(true);
+    if (assistDebounceRef.current !== null) {
+      window.clearTimeout(assistDebounceRef.current);
+    }
+
+    assistDebounceRef.current = window.setTimeout(() => {
+      const nextSuggestions = getSearchAssistSuggestions(query, families, 5);
+      setSearchSuggestions(nextSuggestions);
+      setActiveSuggestionIndex(nextSuggestions.length > 0 ? 0 : -1);
+      setSearchAssistLoading(false);
+    }, SEARCH_ASSIST_DEBOUNCE_MS);
+
+    return () => {
+      if (assistDebounceRef.current !== null) {
+        window.clearTimeout(assistDebounceRef.current);
+      }
+    };
+  }, [families, query]);
 
   useEffect(() => {
     let cancelled = false;
@@ -267,6 +333,8 @@ export default function HomePage() {
 
     setSearching(true);
     setError(null);
+    setSearchAssistOpen(false);
+    setSearchAssistLoading(false);
     setActiveFamily(null);
 
     try {
@@ -276,9 +344,11 @@ export default function HomePage() {
       }
 
       startTransition(() => {
-        setSearchResult(response);
-        setQuery(cleanQuery);
-        setSearchResultKey((current) => current + 1);
+        applyVisualTransition(() => {
+          setSearchResult(response);
+          setQuery(cleanQuery);
+          setSearchResultKey((current) => current + 1);
+        });
       });
     } catch (requestError) {
       if (requestError instanceof ApiError && requestError.status === 499) {
@@ -300,6 +370,81 @@ export default function HomePage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await runSearch(query);
+  }
+
+  async function applySuggestion(suggestion: SearchAssistSuggestion) {
+    if (assistBlurTimeoutRef.current !== null) {
+      window.clearTimeout(assistBlurTimeoutRef.current);
+      assistBlurTimeoutRef.current = null;
+    }
+    setError(null);
+    setQuery(suggestion.queryValue);
+    setSearchAssistOpen(false);
+
+    if (suggestion.action === "link" && suggestion.href) {
+      if (typeof window !== "undefined") {
+        window.open(suggestion.href, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+
+    if (suggestion.action === "fill") {
+      return;
+    }
+
+    await runSearch(suggestion.queryValue);
+  }
+
+  function clearSearchInput() {
+    if (assistBlurTimeoutRef.current !== null) {
+      window.clearTimeout(assistBlurTimeoutRef.current);
+      assistBlurTimeoutRef.current = null;
+    }
+    setQuery("");
+    setSearchAssistOpen(false);
+    setSearchAssistLoading(false);
+    setSearchSuggestions([]);
+    setActiveSuggestionIndex(-1);
+    setError(null);
+    setSearchResult(null);
+    searchInputRef.current?.focus();
+  }
+
+  async function handleSearchInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    const hasSuggestions = searchSuggestions.length > 0;
+    const canNavigate = searchAssistOpen && hasSuggestions;
+
+    if (event.key === "ArrowDown" && hasSuggestions) {
+      event.preventDefault();
+      setSearchAssistOpen(true);
+      setActiveSuggestionIndex((current) =>
+        current < 0 ? 0 : (current + 1) % searchSuggestions.length
+      );
+      return;
+    }
+
+    if (event.key === "ArrowUp" && hasSuggestions) {
+      event.preventDefault();
+      setSearchAssistOpen(true);
+      setActiveSuggestionIndex((current) =>
+        current <= 0 ? searchSuggestions.length - 1 : current - 1
+      );
+      return;
+    }
+
+    if (event.key === "Escape") {
+      setSearchAssistOpen(false);
+      return;
+    }
+
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (canNavigate && activeSuggestionIndex >= 0) {
+        await applySuggestion(searchSuggestions[activeSuggestionIndex]);
+        return;
+      }
+      await runSearch(query);
+    }
   }
 
   async function openFlow(procedure: ProcedureSummary, searchQuery?: string) {
@@ -382,7 +527,9 @@ export default function HomePage() {
 
     try {
       const response = await getRepairFamilyDetail(familyId);
-      setActiveFamily(response);
+      applyVisualTransition(() => {
+        setActiveFamily(response);
+      });
     } catch (requestError) {
       setError(
         requestError instanceof Error ? requestError.message : "Could not open this repair family."
@@ -431,18 +578,73 @@ export default function HomePage() {
               <label className="search-label" htmlFor="problem-search">
                 Describe the problem
               </label>
-              <textarea
-                id="problem-search"
-                className="search-input"
-                disabled={searching}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder={uiCopy.home.search.placeholder}
-                aria-describedby="problem-search-hint"
-              />
+              <div className="search-input-wrap">
+                <textarea
+                  id="problem-search"
+                  ref={searchInputRef}
+                  className="search-input search-input-enhanced"
+                  disabled={searching}
+                  value={query}
+                  onBlur={() => {
+                    if (assistBlurTimeoutRef.current !== null) {
+                      window.clearTimeout(assistBlurTimeoutRef.current);
+                    }
+                    assistBlurTimeoutRef.current = window.setTimeout(() => {
+                      setSearchAssistOpen(false);
+                    }, 120);
+                  }}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setQuery(nextValue);
+                    setSearchAssistOpen(Boolean(nextValue.trim()));
+                  }}
+                  onFocus={() => {
+                    if (assistBlurTimeoutRef.current !== null) {
+                      window.clearTimeout(assistBlurTimeoutRef.current);
+                      assistBlurTimeoutRef.current = null;
+                    }
+                    setSearchAssistOpen(Boolean(query.trim()));
+                  }}
+                  onKeyDown={handleSearchInputKeyDown}
+                  placeholder={uiCopy.home.search.placeholder}
+                  aria-activedescendant={
+                    activeSuggestionIndex >= 0
+                      ? `search-assist-option-${activeSuggestionIndex}`
+                      : undefined
+                  }
+                  aria-controls="search-assist-listbox"
+                  aria-describedby="problem-search-hint"
+                  aria-expanded={searchAssistOpen}
+                  aria-haspopup="listbox"
+                />
+                {query.trim() ? (
+                  <button
+                    aria-label="Clear search"
+                    className="search-clear-button"
+                    onClick={clearSearchInput}
+                    type="button"
+                  >
+                    x
+                  </button>
+                ) : null}
+              </div>
               <p className="search-hint" id="problem-search-hint">
                 Use customer wording. The hub will pick out the issue family and symptoms.
               </p>
+              {searchAssistOpen ? (
+                <div id="search-assist-listbox">
+                  <SearchAssistDropdown
+                    activeIndex={activeSuggestionIndex}
+                    loading={searchAssistLoading}
+                    onHover={setActiveSuggestionIndex}
+                    onSelect={(suggestion) => {
+                      void applySuggestion(suggestion);
+                    }}
+                    query={query}
+                    suggestions={searchSuggestions}
+                  />
+                </div>
+              ) : null}
               <button className="primary-button" disabled={searching} type="submit">
                 {searching ? uiCopy.home.search.submittingLabel : uiCopy.home.search.submitLabel}
               </button>
@@ -550,6 +752,22 @@ export default function HomePage() {
               embedded
             />
           </details>
+        </section>
+      ) : null}
+
+      {searching && !searchResult ? (
+        <section className="search-results-stage search-results-stage-skeleton" aria-hidden="true">
+          <section className="panel search-skeleton-card">
+            <span className="skeleton-line skeleton-line-strong search-skeleton-line-lg" />
+            <span className="skeleton-line search-skeleton-line" />
+            <span className="skeleton-line search-skeleton-line-md" />
+          </section>
+          <section className="panel search-skeleton-card">
+            <span className="skeleton-line skeleton-line-strong search-skeleton-line-lg" />
+            <span className="skeleton-line search-skeleton-line" />
+            <span className="skeleton-line search-skeleton-line-sm" />
+            <span className="skeleton-line search-skeleton-line" />
+          </section>
         </section>
       ) : null}
 

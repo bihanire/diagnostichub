@@ -26,7 +26,7 @@ def triage_start(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Procedure not found.",
         )
-    logger.info(
+    logger.debug(
         "triage_started",
         extra={
             "event": "triage_started",
@@ -47,7 +47,7 @@ def triage_next(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Decision node not found.",
         )
-    logger.info(
+    logger.debug(
         "triage_advanced",
         extra={
             "event": "triage_advanced",

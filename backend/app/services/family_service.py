@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 
 from sqlalchemy.orm import Session
 
@@ -9,6 +10,9 @@ from app.schemas.family import (
     RepairFamilyDetailResponse,
     RepairFamilyFocusCard,
     RepairFamilyProcedureGroup,
+    RepairFamilySignalCluster,
+    RepairFamilySignalEntry,
+    RepairFamilySignalStream,
     RepairFamilySummary,
 )
 from app.services.procedure_service import procedure_query_with, to_summary
@@ -589,6 +593,68 @@ FAMILY_DEFINITIONS = {
 }
 
 
+_SIGNATURE_RULES: list[tuple[str, str, tuple[str, ...]]] = [
+    (
+        "display_path",
+        "Display path",
+        ("screen", "display", "flicker", "touch", "black", "lines", "tint"),
+    ),
+    (
+        "power_path",
+        "Power path",
+        ("power", "charging", "battery", "drain", "logo", "vibrate", "no life"),
+    ),
+    (
+        "thermal_safety",
+        "Thermal safety",
+        ("overheat", "hot", "swollen", "burn", "unsafe"),
+    ),
+    (
+        "access_security",
+        "Access security",
+        ("stolen", "frp", "password", "pattern", "pin", "lock", "managed"),
+    ),
+    (
+        "software_stability",
+        "Software stability",
+        ("freeze", "hanging", "restart", "reboot", "safe mode", "app"),
+    ),
+    (
+        "connectivity_io",
+        "Connectivity and I/O",
+        ("network", "sim", "data", "speaker", "microphone", "mouthpiece", "audio"),
+    ),
+    (
+        "physical_liquid",
+        "Physical and liquid",
+        ("water", "liquid", "corrosion", "bent", "impact", "broken", "tray"),
+    ),
+]
+
+_FAMILY_SIGNATURE_FALLBACK: dict[str, tuple[str, str]] = {
+    "display": ("display_path", "Display path"),
+    "power": ("power_path", "Power path"),
+    "logic": ("software_stability", "Software stability"),
+    "security": ("access_security", "Access security"),
+    "connectivity": ("connectivity_io", "Connectivity and I/O"),
+    "physical": ("physical_liquid", "Physical and liquid"),
+}
+
+_PRIORITY_RANK = {"critical": 0, "primary": 1, "secondary": 2}
+
+
+@dataclass(slots=True)
+class _RawFamilySignalEvent:
+    summary: str
+    priority: str
+    source: str
+    order: int
+    technical_notes: list[str] = field(default_factory=list)
+    related_procedures: list[ProcedureSummary] = field(default_factory=list)
+    signature: str = "family_signal"
+    signature_label: str = "Family signal"
+
+
 def _load_procedures(db: Session) -> list[Procedure]:
     return db.scalars(
         procedure_query_with(
@@ -620,6 +686,229 @@ def _procedures_for_family(
     for category in family["categories"]:
         family_procedures.extend(procedures_by_category.get(category, []))
     return family_procedures
+
+
+def _normalize_text(value: str) -> str:
+    return " ".join(value.split()).strip()
+
+
+def _classify_signature(summary: str, family_id: str) -> tuple[str, str]:
+    text = summary.lower()
+    for signature, label, keywords in _SIGNATURE_RULES:
+        if any(keyword in text for keyword in keywords):
+            return signature, label
+    return _FAMILY_SIGNATURE_FALLBACK.get(family_id, ("family_signal", "Family signal"))
+
+
+def _merge_procedure_summaries(
+    existing: list[ProcedureSummary],
+    incoming: Sequence[ProcedureSummary],
+) -> list[ProcedureSummary]:
+    merged = list(existing)
+    seen = {item.id for item in existing}
+    for procedure in incoming:
+        if procedure.id in seen:
+            continue
+        seen.add(procedure.id)
+        merged.append(procedure)
+    return merged
+
+
+def _unique_notes(notes: Sequence[str]) -> list[str]:
+    unique: list[str] = []
+    seen: set[str] = set()
+    for note in notes:
+        normalized = _normalize_text(note)
+        if not normalized:
+            continue
+        key = normalized.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(normalized)
+    return unique
+
+
+def _build_family_signal_stream(
+    *,
+    family_id: str,
+    family_hint: str,
+    symptom_prompts: Sequence[str],
+    focus_cards: Sequence[RepairFamilyFocusCard],
+    common_categories: Sequence[RepairFamilyCategoryCard],
+    procedure_groups: Sequence[RepairFamilyProcedureGroup],
+    branch_checks: Sequence[str],
+    escalation_signals: Sequence[str],
+) -> RepairFamilySignalStream:
+    raw_events: list[_RawFamilySignalEvent] = []
+    order = 1
+
+    def add_event(
+        summary: str,
+        *,
+        priority: str,
+        source: str,
+        technical_notes: Sequence[str] | None = None,
+        related_procedures: Sequence[ProcedureSummary] | None = None,
+    ) -> None:
+        nonlocal order
+        clean_summary = _normalize_text(summary)
+        if not clean_summary:
+            return
+        signature, signature_label = _classify_signature(clean_summary, family_id)
+        raw_events.append(
+            _RawFamilySignalEvent(
+                summary=clean_summary,
+                priority=priority,
+                source=source,
+                order=order,
+                technical_notes=_unique_notes(technical_notes or []),
+                related_procedures=list(related_procedures or []),
+                signature=signature,
+                signature_label=signature_label,
+            )
+        )
+        order += 1
+
+    add_event(
+        family_hint,
+        priority="primary",
+        source="family_hint",
+        technical_notes=["Use this as the route anchor before opening detailed logs."],
+    )
+
+    for signal in escalation_signals:
+        add_event(
+            signal,
+            priority="critical",
+            source="escalation_signal",
+            technical_notes=["Escalate fast once this signal is confirmed in branch checks."],
+        )
+
+    for check in branch_checks:
+        add_event(
+            check,
+            priority="primary",
+            source="branch_check",
+            technical_notes=["Need-to-know branch verification before dispatch."],
+        )
+
+    for category in common_categories:
+        related = [category.primary_procedure, *category.supporting_procedures]
+        add_event(
+            f"{category.title}: {category.description}",
+            priority="primary",
+            source="common_category",
+            technical_notes=category.search_examples,
+            related_procedures=related,
+        )
+
+    for group in procedure_groups:
+        add_event(
+            f"{group.title}: {group.description}",
+            priority="primary",
+            source="procedure_group",
+            technical_notes=[procedure.title for procedure in group.procedures],
+            related_procedures=group.procedures,
+        )
+
+    for card in focus_cards:
+        add_event(
+            f"{card.title}: {card.description}",
+            priority="secondary",
+            source="focus_card",
+            technical_notes=["Supporting context for technician confidence."],
+        )
+
+    for prompt in symptom_prompts:
+        add_event(
+            prompt,
+            priority="secondary",
+            source="symptom_prompt",
+            technical_notes=["Common customer wording to reuse in search."],
+        )
+
+    dedup_index: dict[str, RepairFamilySignalEntry] = {}
+    for event in raw_events:
+        dedupe_key = (
+            f"{event.priority}|{event.source}|{event.signature}|{event.summary.lower()}"
+        )
+        existing = dedup_index.get(dedupe_key)
+        if existing is None:
+            dedup_index[dedupe_key] = RepairFamilySignalEntry(
+                key=f"{event.signature}:{event.source}:{event.order}",
+                summary=event.summary,
+                priority=event.priority,
+                source=event.source,
+                signature=event.signature,
+                signature_label=event.signature_label,
+                occurrence_count=1,
+                first_seen_order=event.order,
+                related_procedures=event.related_procedures,
+                technical_notes=event.technical_notes,
+            )
+            continue
+
+        existing.occurrence_count += 1
+        existing.first_seen_order = min(existing.first_seen_order, event.order)
+        existing.related_procedures = _merge_procedure_summaries(
+            existing.related_procedures,
+            event.related_procedures,
+        )
+        existing.technical_notes = _unique_notes(
+            [*existing.technical_notes, *event.technical_notes]
+        )
+
+    entries = sorted(
+        dedup_index.values(),
+        key=lambda item: (
+            _PRIORITY_RANK.get(item.priority, 99),
+            item.first_seen_order,
+            item.summary,
+        ),
+    )
+
+    clusters_by_signature: dict[str, list[RepairFamilySignalEntry]] = {}
+    for entry in entries:
+        clusters_by_signature.setdefault(entry.signature, []).append(entry)
+
+    clusters: list[RepairFamilySignalCluster] = []
+    for signature, signature_entries in clusters_by_signature.items():
+        sorted_entries = sorted(signature_entries, key=lambda item: item.first_seen_order)
+        cluster_priority = min(
+            (entry.priority for entry in sorted_entries),
+            key=lambda value: _PRIORITY_RANK.get(value, 99),
+        )
+        clusters.append(
+            RepairFamilySignalCluster(
+                signature=signature,
+                signature_label=sorted_entries[0].signature_label,
+                priority=cluster_priority,
+                total_occurrences=sum(entry.occurrence_count for entry in sorted_entries),
+                entries=sorted_entries,
+            )
+        )
+
+    clusters.sort(
+        key=lambda item: (
+            _PRIORITY_RANK.get(item.priority, 99),
+            min(entry.first_seen_order for entry in item.entries),
+            item.signature_label,
+        )
+    )
+
+    critical_entries = [entry for entry in entries if entry.priority == "critical"]
+    need_to_know_entries = [entry for entry in entries if entry.priority == "primary"]
+    nice_to_know_entries = [entry for entry in entries if entry.priority == "secondary"]
+
+    return RepairFamilySignalStream(
+        original_event_count=len(raw_events),
+        deduplicated_event_count=len(entries),
+        critical_entries=critical_entries,
+        need_to_know_entries=need_to_know_entries,
+        nice_to_know_entries=nice_to_know_entries,
+        clusters=clusters,
+    )
 
 
 def list_repair_families(db: Session) -> list[RepairFamilySummary]:
@@ -700,19 +989,36 @@ def get_repair_family_detail(db: Session, family_id: str) -> RepairFamilyDetailR
                 )
             )
 
+    focus_cards = [
+        RepairFamilyFocusCard(title=item["title"], description=item["description"])
+        for item in family.get("focus_cards", [])
+    ]
+    branch_checks = family.get("branch_checks", [])
+    escalation_signals = family.get("escalation_signals", [])
+    symptom_prompts = family.get("symptom_prompts", [])
+
+    in_family_stream = _build_family_signal_stream(
+        family_id=family_id,
+        family_hint=family["hint"],
+        symptom_prompts=symptom_prompts,
+        focus_cards=focus_cards,
+        common_categories=common_categories,
+        procedure_groups=procedure_groups,
+        branch_checks=branch_checks,
+        escalation_signals=escalation_signals,
+    )
+
     return RepairFamilyDetailResponse(
         id=family_id,
         title=family["title"],
         hint=family["hint"],
         diagnostic_goal=family["diagnostic_goal"],
-        symptom_prompts=family["symptom_prompts"],
-        focus_cards=[
-            RepairFamilyFocusCard(title=item["title"], description=item["description"])
-            for item in family.get("focus_cards", [])
-        ],
+        symptom_prompts=symptom_prompts,
+        focus_cards=focus_cards,
         common_categories=common_categories,
         procedure_groups=procedure_groups,
-        branch_checks=family.get("branch_checks", []),
-        escalation_signals=family.get("escalation_signals", []),
+        branch_checks=branch_checks,
+        escalation_signals=escalation_signals,
+        in_family_stream=in_family_stream,
         procedures=[summary_for(procedure) for procedure in ordered_procedures],
     )

@@ -217,7 +217,7 @@ export default function ResultPage() {
 
   return (
     <main className="app-shell" id="main-content">
-      <section className="hero hero-compact result-hero">
+      <section className="hero hero-compact result-hero motion-surface">
         <div className="result-hero-grid">
           <div className="result-hero-main">
             <div className="result-hero-topline">
@@ -257,26 +257,26 @@ export default function ResultPage() {
         </div>
       </section>
 
-      <section className="panel result-grid result-grid-priority">
-        <div className="result-copy result-copy-strong">
+      <section className="panel result-grid result-grid-priority motion-stage">
+        <div className="result-copy result-copy-strong motion-card stagger-item" style={{ animationDelay: "0ms" }}>
           <span className="eyebrow">{uiCopy.result.primary.eyebrow}</span>
           <strong>{uiCopy.result.actionCard.actionTitle}</strong>
           <p>{outcome.recommended_action}</p>
         </div>
-        <div className="result-copy">
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "56ms" }}>
           <span className="eyebrow">{uiCopy.result.primary.eyebrow}</span>
           <strong>{uiCopy.result.actionCard.diagnosisTitle}</strong>
           <p>{outcome.diagnosis}</p>
         </div>
-        <div className="result-copy">
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "112ms" }}>
           <span className="eyebrow">{uiCopy.result.primary.eyebrow}</span>
           <strong>{uiCopy.result.actionCard.warrantyTitle}</strong>
           <p>{outcome.warranty_status || uiCopy.result.actionCard.warrantyFallback}</p>
         </div>
       </section>
 
-      <section className="panel result-secondary-grid">
-        <div className="result-copy">
+      <section className="panel result-secondary-grid motion-stage">
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "0ms" }}>
           <span className="eyebrow">{uiCopy.result.warrantyDirection.eyebrow}</span>
           <strong>{uiCopy.result.warrantyDirection.title}</strong>
           <div className="chip-row result-chip-row">
@@ -291,7 +291,7 @@ export default function ResultPage() {
             ))}
           </ul>
         </div>
-        <div className="result-copy">
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "56ms" }}>
           <span className="eyebrow">{uiCopy.result.playbook.eyebrow}</span>
           <strong>{uiCopy.result.playbook.title}</strong>
           <p className="body-copy result-playbook-title">{outcome.branch_playbook.title}</p>

@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { getRepairFamilyShortcut } from "@/lib/issue-visuals";
 import { getRenderableRepairFamilies } from "@/lib/repair-families";
 import { RepairFamilySummary } from "@/lib/types";
@@ -64,7 +66,7 @@ export function RepairFamilyGrid({
                 Showing built-in family guide while live data refreshes.
               </div>
             ) : null}
-            <div className="family-grid">
+            <div className="family-grid motion-stage">
               {safeFamilies.map((item, index) => {
                 const familyVisual = getRepairFamilyShortcut(item.id);
                 const title = item.title?.trim() || familyVisual?.label || "Repair family";
@@ -85,13 +87,21 @@ export function RepairFamilyGrid({
                       .slice(0, 2)
                   : [];
                 const isActive = activeFamilyId === item.id;
+                const cardStyle = {
+                  ["--stagger-index" as "--stagger-index"]: index
+                } as CSSProperties;
+                if (isActive) {
+                  cardStyle.viewTransitionName = `family-card-${item.id}`;
+                }
+
                 return (
                   <button
                     key={item.id}
                     aria-label={`Open ${title} diagnosis family`}
                     aria-pressed={isActive}
-                    className={`family-card ${isActive ? "family-card-active" : ""}`}
+                    className={`family-card motion-card stagger-item ${isActive ? "family-card-active" : ""}`}
                     onClick={() => onSelect(item.id)}
+                    style={cardStyle}
                     type="button"
                   >
                     <div className="family-card-art">

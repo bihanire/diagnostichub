@@ -198,6 +198,14 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertGreater(len(display_family.procedure_groups), 0)
         self.assertGreater(len(display_family.branch_checks), 0)
         self.assertGreater(len(display_family.escalation_signals), 0)
+        self.assertGreater(display_family.in_family_stream.original_event_count, 0)
+        self.assertGreater(display_family.in_family_stream.deduplicated_event_count, 0)
+        self.assertLessEqual(
+            display_family.in_family_stream.deduplicated_event_count,
+            display_family.in_family_stream.original_event_count,
+        )
+        self.assertGreater(len(display_family.in_family_stream.need_to_know_entries), 0)
+        self.assertGreater(len(display_family.in_family_stream.clusters), 0)
         self.assertEqual(
             {item.title for item in display_family.procedures},
             {"Screen Issue"},

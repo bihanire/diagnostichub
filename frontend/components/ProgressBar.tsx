@@ -10,7 +10,7 @@ export function ProgressBar({ step, total }: ProgressBarProps) {
   const percentage = total > 0 ? Math.min((step / total) * 100, 100) : 0;
 
   return (
-    <div className="progress-panel" aria-label={`Step ${step} of ${total}`}>
+    <div className="progress-panel motion-surface" aria-label={`Step ${step} of ${total}`}>
       <div className="progress-copy">
         <div className="progress-copy-main">
           <span className="eyebrow">{uiCopy.progress.eyebrow}</span>

@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import { ProcedureSummary } from "@/lib/types";
 import { uiCopy } from "@/lib/copy";
 
@@ -23,12 +25,17 @@ export function SuggestionList({
         <h3>{title}</h3>
       </div>
       {items.length === 0 ? <p className="body-copy">{emptyMessage}</p> : null}
-      <div className="link-grid">
-        {items.map((item) => (
+      <div className="link-grid motion-stage">
+        {items.map((item, index) => (
           <button
             key={item.id}
-            className="link-card"
+            className="link-card stagger-item"
             onClick={() => onSelect?.(item)}
+            style={
+              {
+                ["--stagger-index" as "--stagger-index"]: index
+              } as CSSProperties
+            }
             type="button"
           >
             <span className="eyebrow">{item.category}</span>

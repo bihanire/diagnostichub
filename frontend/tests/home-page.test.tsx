@@ -188,6 +188,88 @@ describe("HomePage", () => {
       escalation_signals: [
         "Visible crack, ink bleed, or pressure damage changing the warranty direction."
       ],
+      in_family_stream: {
+        original_event_count: 6,
+        deduplicated_event_count: 5,
+        critical_entries: [
+          {
+            key: "display_path:escalation_signal:1",
+            summary: "Visible crack, ink bleed, or pressure damage changing the warranty direction.",
+            priority: "critical",
+            source: "escalation_signal",
+            signature: "display_path",
+            signature_label: "Display path",
+            occurrence_count: 1,
+            first_seen_order: 1,
+            related_procedures: [],
+            technical_notes: []
+          }
+        ],
+        need_to_know_entries: [
+          {
+            key: "display_path:branch_check:2",
+            summary:
+              "Confirm whether cracks, pressure marks, or liquid traces are visible with the customer present.",
+            priority: "primary",
+            source: "branch_check",
+            signature: "display_path",
+            signature_label: "Display path",
+            occurrence_count: 1,
+            first_seen_order: 2,
+            related_procedures: [],
+            technical_notes: []
+          }
+        ],
+        nice_to_know_entries: [
+          {
+            key: "display_path:symptom_prompt:3",
+            summary: "cracked screen",
+            priority: "secondary",
+            source: "symptom_prompt",
+            signature: "display_path",
+            signature_label: "Display path",
+            occurrence_count: 1,
+            first_seen_order: 3,
+            related_procedures: [],
+            technical_notes: ["Common customer wording to reuse in search."]
+          }
+        ],
+        clusters: [
+          {
+            signature: "display_path",
+            signature_label: "Display path",
+            priority: "critical",
+            total_occurrences: 2,
+            entries: [
+              {
+                key: "display_path:escalation_signal:1",
+                summary: "Visible crack, ink bleed, or pressure damage changing the warranty direction.",
+                priority: "critical",
+                source: "escalation_signal",
+                signature: "display_path",
+                signature_label: "Display path",
+                occurrence_count: 1,
+                first_seen_order: 1,
+                related_procedures: [],
+                technical_notes: []
+              },
+              {
+                key: "display_path:branch_check:2",
+                summary:
+                  "Confirm whether cracks, pressure marks, or liquid traces are visible with the customer present.",
+                priority: "primary",
+                source: "branch_check",
+                signature: "display_path",
+                signature_label: "Display path",
+                occurrence_count: 1,
+                first_seen_order: 2,
+                related_procedures: [],
+                technical_notes: []
+              }
+            ]
+          }
+        ]
+      },
       procedures: [
         {
           id: 2,
@@ -359,5 +441,41 @@ describe("HomePage", () => {
     });
     expect(screen.getByRole("button", { name: /power & thermal/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /physical & liquid/i })).toBeInTheDocument();
+  });
+
+  it("shows categorized fuzzy suggestions and allows keyboard selection with Enter", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    const input = screen.getByPlaceholderText(/phone is not turning on but it vibrates/i);
+    await user.type(input, "knox gaurd");
+    await user.click(input);
+    await waitFor(() => {
+      expect(screen.getByText("Hardware Errors")).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: /knox guard.*managed device/i })
+      ).toBeInTheDocument();
+    }, { timeout: 3000 });
+
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(apiMocks.searchProcedures).toHaveBeenCalledWith(
+        expect.stringContaining("knox guard"),
+        expect.anything()
+      );
+    });
+  });
+
+  it("clears the enhanced search input with the clear button", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    const input = screen.getByPlaceholderText(/phone is not turning on but it vibrates/i);
+    await user.type(input, "screen issue");
+    expect(screen.getByRole("button", { name: /clear search/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /clear search/i }));
+    expect((input as HTMLTextAreaElement).value).toBe("");
   });
 });

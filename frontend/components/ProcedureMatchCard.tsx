@@ -27,7 +27,7 @@ export function ProcedureMatchCard({
   busy
 }: ProcedureMatchCardProps) {
   return (
-    <section className="panel match-card">
+    <section className="panel match-card motion-surface">
       <div className="match-heading">
         <div>
           <span className="eyebrow">{uiCopy.matchCard.eyebrow}</span>
@@ -53,7 +53,9 @@ export function ProcedureMatchCard({
         procedureCategory={procedure.category}
         variant="embedded"
       />
-      <div className={`muted-card stack-block ${confidenceState === "caution" ? "match-review-card" : ""}`}>
+      <div
+        className={`muted-card stack-block motion-card ${confidenceState === "caution" ? "match-review-card" : ""}`}
+      >
         <strong>
           {confidenceState === "caution"
             ? uiCopy.matchCard.cautionTitle

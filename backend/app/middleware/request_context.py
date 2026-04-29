@@ -36,7 +36,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
 
         response.headers["X-Request-ID"] = request_id
         duration_ms = round((perf_counter() - started_at) * 1000, 2)
-        log_method = logger.warning if response.status_code >= 400 else logger.info
+        log_method = logger.warning if response.status_code >= 400 else logger.debug
         log_method(
             "request_completed",
             extra={

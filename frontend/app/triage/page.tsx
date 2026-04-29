@@ -283,9 +283,11 @@ export default function TriagePage() {
         </div>
       </section>
 
-      <div className="triage-top-grid">
-        <ProgressBar step={session.progress.step} total={session.progress.total} />
-        <section className="panel panel-compact case-frame-card">
+      <div className="triage-top-grid motion-stage">
+        <div className="stagger-item" style={{ animationDelay: "0ms" }}>
+          <ProgressBar step={session.progress.step} total={session.progress.total} />
+        </div>
+        <section className="panel panel-compact case-frame-card motion-surface stagger-item" style={{ animationDelay: "56ms" }}>
           <span className="eyebrow">{uiCopy.triage.caseFrame.eyebrow}</span>
           <h3>{uiCopy.triage.caseFrame.title}</h3>
           <p className="body-copy">
@@ -295,7 +297,7 @@ export default function TriagePage() {
       </div>
 
       <div className={`triage-stage-grid ${questionSwitching ? "triage-stage-grid-syncing" : ""}`}>
-        <section className={`panel question-panel ${questionSwitching ? "question-panel-syncing" : ""}`}>
+        <section className={`panel question-panel motion-surface ${questionSwitching ? "question-panel-syncing" : ""}`}>
           <div key={`${questionKey}-${currentNode.id}`} className="question-surface">
             <span className="eyebrow">{uiCopy.triage.question.eyebrow}</span>
             <h3 className="triage-question">{currentNode.question}</h3>

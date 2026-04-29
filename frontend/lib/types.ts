@@ -15,6 +15,36 @@ export type RepairFamilySummary = {
   procedure_count: number;
 };
 
+export type RepairFamilySignalEntry = {
+  key: string;
+  summary: string;
+  priority: "critical" | "primary" | "secondary" | string;
+  source: string;
+  signature: string;
+  signature_label: string;
+  occurrence_count: number;
+  first_seen_order: number;
+  related_procedures: ProcedureSummary[];
+  technical_notes: string[];
+};
+
+export type RepairFamilySignalCluster = {
+  signature: string;
+  signature_label: string;
+  priority: "critical" | "primary" | "secondary" | string;
+  total_occurrences: number;
+  entries: RepairFamilySignalEntry[];
+};
+
+export type RepairFamilySignalStream = {
+  original_event_count: number;
+  deduplicated_event_count: number;
+  critical_entries: RepairFamilySignalEntry[];
+  need_to_know_entries: RepairFamilySignalEntry[];
+  nice_to_know_entries: RepairFamilySignalEntry[];
+  clusters: RepairFamilySignalCluster[];
+};
+
 export type RepairFamilyDetail = {
   id: string;
   title: string;
@@ -39,6 +69,7 @@ export type RepairFamilyDetail = {
   }[];
   branch_checks: string[];
   escalation_signals: string[];
+  in_family_stream: RepairFamilySignalStream;
   procedures: ProcedureSummary[];
 };
 

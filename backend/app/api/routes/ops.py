@@ -46,7 +46,7 @@ def login_ops(
         max_age=max(settings.ops_session_ttl_hours, 1) * 3600,
         path="/",
     )
-    logger.info(
+    logger.debug(
         "ops_login_succeeded",
         extra={
             "event": "ops_login_succeeded",
@@ -74,7 +74,7 @@ def logout_ops(
         secure=settings.ops_cookie_secure,
         samesite="lax",
     )
-    logger.info(
+    logger.debug(
         "ops_logout_completed",
         extra={
             "event": "ops_logout_completed",

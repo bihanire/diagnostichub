@@ -13,7 +13,7 @@ logger = get_logger("relational_encyclopedia.search")
 @router.post("/search", response_model=SearchResponse)
 def search(request: SearchRequest, db: Session = Depends(get_db)) -> SearchResponse:
     response = search_procedures(db, request.query)
-    logger.info(
+    logger.debug(
         "search_completed",
         extra={
             "event": "search_completed",

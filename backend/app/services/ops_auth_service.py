@@ -125,7 +125,7 @@ def require_ops_session(request: Request) -> OpsSession:
             detail="Ops access is required for this view.",
         )
 
-    logger.info(
+    logger.debug(
         "ops_session_valid",
         extra={
             "event": "ops_session_valid",

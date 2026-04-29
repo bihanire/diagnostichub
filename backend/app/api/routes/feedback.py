@@ -39,7 +39,7 @@ def submit_feedback(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
-    logger.info(
+    logger.debug(
         "feedback_saved",
         extra={
             "event": "feedback_saved",
