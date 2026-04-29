@@ -1877,7 +1877,8 @@ body.low-power-visuals {
 .family-card-cta::after {
   content: "→";
   font-size: 0.95rem;
-  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.26s var(--ease-spring);
+  content: "->";
 }
 
 .family-card-art,
@@ -1896,10 +1897,6 @@ body.low-power-visuals {
   min-height: 88px;
   padding: 8px;
   align-content: space-between;
-}
-
-.family-card-cta::after {
-  content: "->";
 }
 
 .family-explorer-anchor {
