@@ -147,7 +147,7 @@ def apply_samsung_outcome(procedure: Procedure, outcome: FinalOutcomePayload) ->
         customer_care=apply_samsung_customer_care(procedure, outcome.customer_care),
         follow_up_message=_append_sentence(
             outcome.follow_up_message,
-            "Keep the explanation simple and Galaxy-specific so the customer understands why the branch is or is not sending the phone for service.",
+            "Keep the explanation simple and tied to the confirmed branch findings so the customer understands why the branch is or is not sending the phone for service.",
         ),
     )
 

@@ -268,7 +268,7 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertTrue(
             any("Maintenance mode" in action for action in final_step.outcome.related_actions)
         )
-        self.assertIn("Galaxy-specific", final_step.outcome.follow_up_message)
+        self.assertIn("confirmed branch findings", final_step.outcome.follow_up_message)
         self.assertEqual(final_step.outcome.decision_type, "service_centre")
         self.assertEqual(final_step.outcome.decision_label, "Send to service centre")
         self.assertGreater(len(final_step.outcome.evidence_checklist), 0)
