@@ -94,6 +94,11 @@ export default function HomePage() {
   const searchRequestIdRef = useRef(0);
   const assistDebounceRef = useRef<number | null>(null);
   const assistBlurTimeoutRef = useRef<number | null>(null);
+  const intakeFocusActive = searching || searchAssistOpen || query.trim().length > 0;
+  const logicIdentifiedActive = query.trim().length >= 4;
+  const logicStatusLabel = searching
+    ? "Logic identified. Running confidence match..."
+    : "Logic identified. Triage signal strengthening.";
 
   useEffect(() => {
     setResumeSession(loadSession());
@@ -103,6 +108,17 @@ export default function HomePage() {
     router.prefetch("/triage");
     router.prefetch("/result");
   }, [router]);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    document.body.classList.toggle("intake-focus-mode", intakeFocusActive);
+    return () => {
+      document.body.classList.remove("intake-focus-mode");
+    };
+  }, [intakeFocusActive]);
 
   useEffect(() => {
     return () => {
@@ -540,7 +556,10 @@ export default function HomePage() {
   }
 
   return (
-    <main className="app-shell" id="main-content">
+    <main
+      className={`app-shell ${intakeFocusActive ? "app-shell-intake-focus" : ""}`}
+      id="main-content"
+    >
       <section className="hero hero-compact hero-world">
         <div className="hero-ambient-map" aria-hidden="true">
           <span className="hero-map-node hero-map-node-search" />
@@ -569,7 +588,11 @@ export default function HomePage() {
               </span>
             </div>
           </div>
-          <div className={`hero-search-shell ${searching ? "is-searching" : ""}`}>
+          <div
+            className={`hero-search-shell ${searching ? "is-searching" : ""} ${
+              intakeFocusActive ? "is-intake-focus" : ""
+            }`}
+          >
             <div className="search-shell-topline">
               <span>Case intake</span>
               <span>Full sentences work</span>
@@ -628,8 +651,15 @@ export default function HomePage() {
                   </button>
                 ) : null}
               </div>
-              <p className="search-hint" id="problem-search-hint">
-                Use customer wording. The hub will pick out the issue family and symptoms.
+              <p
+                aria-live="polite"
+                className={`search-hint ${logicIdentifiedActive ? "search-hint-live" : ""}`}
+                id="problem-search-hint"
+              >
+                <span className="search-hint-primary">
+                  Use customer wording. The hub will pick out the issue family and symptoms.
+                </span>
+                <span className="search-hint-secondary">{logicStatusLabel}</span>
               </p>
               {searchAssistOpen ? (
                 <div id="search-assist-listbox">
