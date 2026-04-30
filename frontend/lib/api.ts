@@ -8,6 +8,7 @@ import {
   InteractionTelemetryPayload,
   InteractionTelemetryResponse,
   OpsSessionResponse,
+  OpsTelemetrySummaryResponse,
   ProcedureFeedbackBreakdownResponse,
   RepairFamilyDetail,
   RepairFamilySummary,
@@ -310,6 +311,12 @@ export function getOpsFeedbackExportUrl(days: number): string {
 
 export function getOpsFeedbackLanguageExportUrl(days: number, limit = 50): string {
   return `${API_BASE_URL}/feedback/language-candidates/export.csv?days=${days}&limit=${limit}`;
+}
+
+export function getOpsTelemetrySummary(): Promise<OpsTelemetrySummaryResponse> {
+  return apiRequest<OpsTelemetrySummaryResponse>("/ops/telemetry/summary", {
+    authenticated: true,
+  });
 }
 
 export function recordInteractionTelemetry(

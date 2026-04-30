@@ -18,6 +18,7 @@ const apiMocks = vi.hoisted(() => ({
   getOpsFeedbackByProcedure: vi.fn(),
   getOpsFeedbackByBranch: vi.fn(),
   getOpsFeedbackByTag: vi.fn(),
+  getOpsTelemetrySummary: vi.fn(),
   getOpsSession: vi.fn(),
   logoutOps: vi.fn(),
   ApiError: class extends Error {
@@ -46,6 +47,7 @@ vi.mock("@/lib/api", () => ({
   getOpsFeedbackByProcedure: apiMocks.getOpsFeedbackByProcedure,
   getOpsFeedbackByBranch: apiMocks.getOpsFeedbackByBranch,
   getOpsFeedbackByTag: apiMocks.getOpsFeedbackByTag,
+  getOpsTelemetrySummary: apiMocks.getOpsTelemetrySummary,
   getOpsSession: apiMocks.getOpsSession,
   logoutOps: apiMocks.logoutOps
 }));
@@ -131,6 +133,30 @@ describe("InsightsPage", () => {
         }
       ]
     });
+    apiMocks.getOpsTelemetrySummary.mockResolvedValue({
+      generated_at: "2026-04-27T09:00:00.000Z",
+      uptime_seconds: 3600,
+      total_http_requests: 400,
+      active_endpoints: 8,
+      search: {
+        total_searches: 40,
+        no_match_count: 6,
+        review_required_count: 10,
+        top_issue_types: { "Power & Thermal": 12 },
+        confidence_states: { strong: 20, caution: 14, weak: 6 },
+        ambiguity_risk_counts: { medium: 7, high: 3 }
+      },
+      interaction: {
+        total_events: 24,
+        event_counts: {
+          confidence_gate_shown: 10,
+          confidence_gate_confirmed: 8,
+          best_match_direct_started: 11,
+          no_match_recovery_family_opened: 3,
+          no_match_recovery_prompt_used: 2
+        }
+      }
+    });
     apiMocks.logoutOps.mockResolvedValue({
       authenticated: false,
       message: "Ops session cleared."
@@ -146,6 +172,8 @@ describe("InsightsPage", () => {
     expect(screen.getByText("Screen path needs a clearer branch.")).toBeInTheDocument();
     expect(screen.getAllByText("Confusing question").length).toBeGreaterThan(0);
     expect(screen.getByText("the phone is not charging when i insert a charger")).toBeInTheDocument();
+    expect(screen.getByText("Search-to-triage quality signals")).toBeInTheDocument();
+    expect(screen.getByText("80%")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /export csv/i })).toHaveAttribute(
       "href",
       "http://localhost:8000/feedback/export.csv?days=30"
@@ -181,6 +209,7 @@ describe("InsightsPage", () => {
       expect(apiMocks.getOpsFeedbackByBranch).toHaveBeenCalledWith(7);
       expect(apiMocks.getOpsFeedbackLanguageCandidates).toHaveBeenCalledWith(7);
       expect(apiMocks.getOpsFeedbackByTag).toHaveBeenCalledWith(7);
+      expect(apiMocks.getOpsTelemetrySummary).toHaveBeenCalled();
     });
   });
 

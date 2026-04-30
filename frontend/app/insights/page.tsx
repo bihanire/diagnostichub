@@ -14,6 +14,7 @@ import {
   getOpsFeedbackExportUrl,
   getOpsFeedbackSummary,
   getOpsSession,
+  getOpsTelemetrySummary,
   logoutOps
 } from "@/lib/api";
 import { getFeedbackTagLabel, getReviewWindowLabel, reviewWindowOptions, uiCopy } from "@/lib/copy";
@@ -24,6 +25,7 @@ import type {
   FeedbackSummaryResponse,
   FeedbackTagBreakdownResponse,
   OpsSessionResponse,
+  OpsTelemetrySummaryResponse,
   ProcedureFeedbackBreakdownResponse
 } from "@/lib/types";
 
@@ -41,6 +43,7 @@ export default function InsightsPage() {
     null
   );
   const [tagBreakdown, setTagBreakdown] = useState<FeedbackTagBreakdownResponse | null>(null);
+  const [telemetrySummary, setTelemetrySummary] = useState<OpsTelemetrySummaryResponse | null>(null);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
@@ -92,12 +95,13 @@ export default function InsightsPage() {
       setError(null);
 
       try {
-        const [summaryResponse, procedureResponse, branchResponse, languageResponse, tagResponse] = await Promise.all([
+        const [summaryResponse, procedureResponse, branchResponse, languageResponse, tagResponse, telemetryResponse] = await Promise.all([
           getOpsFeedbackSummary(days),
           getOpsFeedbackByProcedure(days),
           getOpsFeedbackByBranch(days),
           getOpsFeedbackLanguageCandidates(days),
-          getOpsFeedbackByTag(days)
+          getOpsFeedbackByTag(days),
+          getOpsTelemetrySummary()
         ]);
 
         if (!active) {
@@ -109,6 +113,7 @@ export default function InsightsPage() {
         setBranchBreakdown(branchResponse);
         setLanguageCandidates(languageResponse);
         setTagBreakdown(tagResponse);
+        setTelemetrySummary(telemetryResponse);
       } catch (requestError) {
         if (!active) {
           return;
@@ -177,6 +182,22 @@ export default function InsightsPage() {
   const noteCount = summary?.latest_submissions.filter(
     (item) => item.comment && item.comment.trim().length > 0
   ).length || 0;
+
+  const interactionEventCounts = telemetrySummary?.interaction.event_counts || {};
+  const confidenceGateShownCount = interactionEventCounts.confidence_gate_shown || 0;
+  const confidenceGateConfirmedCount = interactionEventCounts.confidence_gate_confirmed || 0;
+  const noMatchRecoveryCount =
+    (interactionEventCounts.no_match_recovery_family_opened || 0) +
+    (interactionEventCounts.no_match_recovery_prompt_used || 0);
+  const directStartCount = interactionEventCounts.best_match_direct_started || 0;
+  const confidenceGateConfirmRate =
+    confidenceGateShownCount > 0
+      ? formatRatioPercent(confidenceGateConfirmedCount / confidenceGateShownCount)
+      : formatRatioPercent(0);
+  const ambiguityTouchRate =
+    telemetrySummary?.search.total_searches && telemetrySummary.search.total_searches > 0
+      ? formatRatioPercent(confidenceGateShownCount / telemetrySummary.search.total_searches)
+      : formatRatioPercent(0);
 
   const sessionExpiryLabel = opsSession?.expires_at
     ? formatDateTime(opsSession.expires_at)
@@ -287,6 +308,42 @@ export default function InsightsPage() {
               : uiCopy.insights.cards.activeBranchEmpty}
           </p>
         </article>
+      </section>
+
+      <section className="panel">
+        <div className="panel-header">
+          <span className="eyebrow">Journey telemetry</span>
+          <h3>Search-to-triage quality signals</h3>
+        </div>
+        <p className="muted-copy panel-lead">
+          Track when officers need extra confirmation before triage and how often no-match recovery paths are used.
+        </p>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <span className="eyebrow">Ambiguity touch rate</span>
+            <strong>{ambiguityTouchRate}</strong>
+            <p className="muted-copy">
+              {confidenceGateShownCount} confidence gate prompts from {telemetrySummary?.search.total_searches ?? 0} searches.
+            </p>
+          </div>
+          <div className="stat-card">
+            <span className="eyebrow">Gate confirm rate</span>
+            <strong>{confidenceGateConfirmRate}</strong>
+            <p className="muted-copy">
+              {confidenceGateConfirmedCount} confirmations after {confidenceGateShownCount} prompts.
+            </p>
+          </div>
+          <div className="stat-card">
+            <span className="eyebrow">Direct starts</span>
+            <strong>{directStartCount}</strong>
+            <p className="muted-copy">Best-match routes started without review gate interruption.</p>
+          </div>
+          <div className="stat-card">
+            <span className="eyebrow">No-match recoveries</span>
+            <strong>{noMatchRecoveryCount}</strong>
+            <p className="muted-copy">Recovery family opens and prompt-led retries for low-confidence searches.</p>
+          </div>
+        </div>
       </section>
 
       <section className="panel">

@@ -287,6 +287,25 @@ export type InteractionTelemetryResponse = {
   accepted: boolean;
 };
 
+export type OpsTelemetrySummaryResponse = {
+  generated_at: string;
+  uptime_seconds: number;
+  total_http_requests: number;
+  active_endpoints: number;
+  search: {
+    total_searches: number;
+    no_match_count: number;
+    review_required_count: number;
+    top_issue_types: Record<string, number>;
+    confidence_states: Record<string, number>;
+    ambiguity_risk_counts: Record<string, number>;
+  };
+  interaction: {
+    total_events: number;
+    event_counts: Record<string, number>;
+  };
+};
+
 export type FeedbackSnapshot = {
   id: number;
   helpful: boolean;
