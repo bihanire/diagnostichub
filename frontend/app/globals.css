@@ -64,9 +64,12 @@ html {
   min-height: 100%;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-kerning: normal;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
 }
 
 body {
@@ -74,6 +77,7 @@ body {
   min-height: 100vh;
   color: var(--text);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  font-optical-sizing: auto;
   background:
     repeating-linear-gradient(
       135deg,

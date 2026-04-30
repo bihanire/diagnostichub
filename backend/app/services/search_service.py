@@ -2,6 +2,8 @@ import re
 from dataclasses import dataclass
 from difflib import SequenceMatcher
 from functools import lru_cache
+from threading import Lock
+from time import monotonic
 
 from sqlalchemy.orm import Session
 
@@ -398,6 +400,7 @@ TOKEN_NORMALIZATIONS = {
 
 _NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9\s]")
 _MULTI_SPACE_PATTERN = re.compile(r"\s+")
+SEARCH_INDEX_CACHE_TTL_SECONDS = 90.0
 
 
 @dataclass(frozen=True)
@@ -409,6 +412,12 @@ class ProcedureSearchIndex:
     normalized_title: str
     normalized_description: str
     normalized_tags: tuple[str, ...]
+
+
+_search_index_cache_lock = Lock()
+_search_index_cache_expires_at = 0.0
+_search_index_cache: tuple[ProcedureSearchIndex, ...] = ()
+_search_index_cache_bind_id: int | None = None
 
 
 @lru_cache(maxsize=8192)
@@ -477,8 +486,13 @@ def infer_issue_type(tokens: list[str], *, precomputed_scores: dict[str, int] | 
     return tied_issue_types[0]
 
 
-def normalized_similarity(left: str, right: str) -> float:
+@lru_cache(maxsize=262_144)
+def _sequence_ratio_cached(left: str, right: str) -> float:
     return SequenceMatcher(None, left, right).ratio()
+
+
+def normalized_similarity(left: str, right: str) -> float:
+    return _sequence_ratio_cached(left, right)
 
 
 def similarity(left: str, right: str) -> float:
@@ -499,7 +513,7 @@ def token_similarity(
         if token in candidate_tokens:
             total += 1.0
             continue
-        total += max(SequenceMatcher(None, token, candidate).ratio() for candidate in candidates)
+        total += max(_sequence_ratio_cached(token, candidate) for candidate in candidates)
     return total / len(query_tokens)
 
 
@@ -645,6 +659,42 @@ def classify_confidence(best_score: float, margin: float) -> tuple[str, bool, st
     return "strong", False, None
 
 
+def _get_indexed_procedures(db: Session) -> tuple[ProcedureSearchIndex, ...]:
+    global _search_index_cache
+    global _search_index_cache_expires_at
+    global _search_index_cache_bind_id
+
+    now = monotonic()
+    bind_id = id(db.get_bind())
+    if (
+        _search_index_cache
+        and now < _search_index_cache_expires_at
+        and _search_index_cache_bind_id == bind_id
+    ):
+        return _search_index_cache
+
+    with _search_index_cache_lock:
+        now = monotonic()
+        if (
+            _search_index_cache
+            and now < _search_index_cache_expires_at
+            and _search_index_cache_bind_id == bind_id
+        ):
+            return _search_index_cache
+
+        procedures = db.scalars(
+            procedure_query_with(
+                include_tags=True,
+                include_decision_nodes=False,
+                include_links=False,
+            )
+        ).all()
+        _search_index_cache = tuple(build_procedure_search_index(procedure) for procedure in procedures)
+        _search_index_cache_expires_at = now + SEARCH_INDEX_CACHE_TTL_SECONDS
+        _search_index_cache_bind_id = bind_id
+        return _search_index_cache
+
+
 def search_procedures(db: Session, query: str) -> SearchResponse:
     clean_query = query.strip()
     query_tokens = tokenize(clean_query)
@@ -654,13 +704,8 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
     query_ngrams = build_ngrams(query_tokens)
     issue_type_scores = score_issue_type_signals(query_tokens)
     issue_type = infer_issue_type(query_tokens, precomputed_scores=issue_type_scores)
-    procedures = db.scalars(
-        procedure_query_with(
-            include_tags=True,
-            include_decision_nodes=False,
-            include_links=False,
-        )
-    ).all()
+    indexed_procedures = _get_indexed_procedures(db)
+    procedures = [item.procedure for item in indexed_procedures]
 
     if not procedures:
         return SearchResponse(
@@ -683,7 +728,6 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
             message="No procedures are available yet.",
         )
 
-    indexed_procedures = [build_procedure_search_index(procedure) for procedure in procedures]
     ranked = sorted(
         (
             (
