@@ -15,6 +15,7 @@ import {
   getRelated,
   getRepairFamilies,
   getRepairFamilyDetail,
+  recordInteractionTelemetry,
   searchProcedures,
   startTriage
 } from "@/lib/api";
@@ -26,7 +27,14 @@ import {
 } from "@/lib/repair-families";
 import { getSearchAssistSuggestions, SearchAssistSuggestion } from "@/lib/search-assist";
 import { clearSession, loadSession, saveSession } from "@/lib/session";
-import { ProcedureSummary, RepairFamilyDetail, RepairFamilySummary, SearchResponse, TriageSession } from "@/lib/types";
+import {
+  InteractionTelemetryEvent,
+  ProcedureSummary,
+  RepairFamilyDetail,
+  RepairFamilySummary,
+  SearchResponse,
+  TriageSession,
+} from "@/lib/types";
 
 const FAMILY_LOAD_TIMEOUT_MS = 4500;
 const SEARCH_ASSIST_DEBOUNCE_MS = 200;
@@ -697,6 +705,16 @@ export default function HomePage() {
     }
   }
 
+  function trackInteraction(
+    event: InteractionTelemetryEvent,
+    metadata: Record<string, string> = {},
+    status: "info" | "success" | "review" = "info"
+  ) {
+    void recordInteractionTelemetry({ event, status, metadata }).catch(() => {
+      // Interaction telemetry is best-effort and must never block branch operations.
+    });
+  }
+
   function closeReviewGate() {
     setReviewCandidates([]);
     setReviewSelectedProcedureId(null);
@@ -709,6 +727,15 @@ export default function HomePage() {
     }
     setReviewCandidates(candidates);
     setReviewSelectedProcedureId(result.best_match?.id || candidates[0].id);
+    trackInteraction(
+      "confidence_gate_shown",
+      {
+        issue_type: result.structured_intent.issue_type || "unknown",
+        candidate_count: String(candidates.length),
+        confidence_state: result.confidence_state,
+      },
+      "review"
+    );
     return true;
   }
 
@@ -809,6 +836,14 @@ export default function HomePage() {
       return;
     }
 
+    trackInteraction(
+      "best_match_direct_started",
+      {
+        procedure_id: String(searchResult.best_match.id),
+        confidence_state: searchResult.confidence_state,
+      },
+      "success"
+    );
     void openFlow(searchResult.best_match, searchResult.query);
   }
 
@@ -817,15 +852,66 @@ export default function HomePage() {
       return;
     }
     const selectedQuery = searchResult?.query || query;
+    trackInteraction(
+      "confidence_gate_confirmed",
+      {
+        procedure_id: String(selectedReviewProcedure.id),
+        issue_type: searchResult?.structured_intent.issue_type || "unknown",
+      },
+      "success"
+    );
     closeReviewGate();
     void openFlow(selectedReviewProcedure, selectedQuery);
+  }
+
+  function handleReviewCandidateSelect(candidate: ProcedureSummary) {
+    setReviewSelectedProcedureId(candidate.id);
+    trackInteraction(
+      "confidence_gate_option_selected",
+      {
+        procedure_id: String(candidate.id),
+        issue_type: searchResult?.structured_intent.issue_type || "unknown",
+      },
+      "review"
+    );
+  }
+
+  function handleDismissReviewGate() {
+    trackInteraction(
+      "confidence_gate_dismissed",
+      {
+        issue_type: searchResult?.structured_intent.issue_type || "unknown",
+      },
+      "review"
+    );
+    closeReviewGate();
   }
 
   function handleOpenRecoveryFamily() {
     if (!recoveryFamily) {
       return;
     }
+    trackInteraction(
+      "no_match_recovery_family_opened",
+      {
+        family_id: recoveryFamily.id,
+        family_title: recoveryFamily.title,
+      },
+      "review"
+    );
     void openFamily(recoveryFamily.id);
+  }
+
+  function handleRecoveryPromptSearch(prompt: string) {
+    trackInteraction(
+      "no_match_recovery_prompt_used",
+      {
+        prompt,
+        family_id: recoveryFamily?.id || "unknown",
+      },
+      "review"
+    );
+    void runSearch(prompt);
   }
 
   function continueSession() {
@@ -1207,7 +1293,7 @@ export default function HomePage() {
                     className={`family-support-chip ${
                       reviewSelectedProcedureId === candidate.id ? "family-support-chip-active" : ""
                     }`}
-                    onClick={() => setReviewSelectedProcedureId(candidate.id)}
+                    onClick={() => handleReviewCandidateSelect(candidate)}
                     type="button"
                   >
                     {candidate.title}
@@ -1226,7 +1312,7 @@ export default function HomePage() {
                 >
                   Continue with selected flow
                 </button>
-                <button className="secondary-button" onClick={closeReviewGate} type="button">
+                <button className="secondary-button" onClick={handleDismissReviewGate} type="button">
                   Keep reviewing
                 </button>
               </div>
@@ -1262,7 +1348,7 @@ export default function HomePage() {
                   <button
                     key={`recovery-prompt-${prompt}`}
                     className="quick-pill"
-                    onClick={() => runSearch(prompt)}
+                    onClick={() => handleRecoveryPromptSearch(prompt)}
                     type="button"
                   >
                     {prompt}

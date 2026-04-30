@@ -119,6 +119,7 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
 
         self.assertGreaterEqual(telemetry_payload["total_http_requests"], 2)
         self.assertGreaterEqual(telemetry_payload["search"]["total_searches"], 1)
+        self.assertGreaterEqual(telemetry_payload["interaction"]["total_events"], 0)
         self.assertIn(
             payload["structured_intent"]["issue_type"],
             telemetry_payload["search"]["top_issue_types"],
@@ -129,4 +130,30 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
                 endpoint["path"] == "/search" and endpoint["method"] == "POST"
                 for endpoint in telemetry_payload["endpoints"]
             )
+        )
+
+    def test_public_interaction_telemetry_records_events_for_ops_review(self) -> None:
+        with TestClient(self.app) as client:
+            interaction_response = client.post(
+                "/telemetry/interaction",
+                json={
+                    "event": "confidence_gate_shown",
+                    "status": "info",
+                    "metadata": {"issue_type": "Power & Thermal"},
+                },
+            )
+            self.assertEqual(interaction_response.status_code, 200)
+            self.assertEqual(interaction_response.json()["accepted"], True)
+
+            login_response = client.post("/ops/login", json={"password": "ops-password"})
+            self.assertEqual(login_response.status_code, 200)
+
+            telemetry_response = client.get("/ops/telemetry/summary")
+            self.assertEqual(telemetry_response.status_code, 200)
+            telemetry_payload = telemetry_response.json()
+
+        self.assertGreaterEqual(telemetry_payload["interaction"]["total_events"], 1)
+        self.assertEqual(
+            telemetry_payload["interaction"]["event_counts"].get("confidence_gate_shown"),
+            1,
         )

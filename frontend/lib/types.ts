@@ -268,6 +268,25 @@ export type OpsSessionResponse = {
   message?: string | null;
 };
 
+export type InteractionTelemetryEvent =
+  | "confidence_gate_shown"
+  | "confidence_gate_option_selected"
+  | "confidence_gate_confirmed"
+  | "confidence_gate_dismissed"
+  | "no_match_recovery_family_opened"
+  | "no_match_recovery_prompt_used"
+  | "best_match_direct_started";
+
+export type InteractionTelemetryPayload = {
+  event: InteractionTelemetryEvent;
+  status?: "info" | "success" | "review";
+  metadata?: Record<string, string>;
+};
+
+export type InteractionTelemetryResponse = {
+  accepted: boolean;
+};
+
 export type FeedbackSnapshot = {
   id: number;
   helpful: boolean;

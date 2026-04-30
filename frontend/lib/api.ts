@@ -5,6 +5,8 @@ import {
   FeedbackLanguageCandidateResponse,
   FeedbackSummaryResponse,
   FeedbackTagBreakdownResponse,
+  InteractionTelemetryPayload,
+  InteractionTelemetryResponse,
   OpsSessionResponse,
   ProcedureFeedbackBreakdownResponse,
   RepairFamilyDetail,
@@ -308,4 +310,13 @@ export function getOpsFeedbackExportUrl(days: number): string {
 
 export function getOpsFeedbackLanguageExportUrl(days: number, limit = 50): string {
   return `${API_BASE_URL}/feedback/language-candidates/export.csv?days=${days}&limit=${limit}`;
+}
+
+export function recordInteractionTelemetry(
+  payload: InteractionTelemetryPayload
+): Promise<InteractionTelemetryResponse> {
+  return apiRequest<InteractionTelemetryResponse>("/telemetry/interaction", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

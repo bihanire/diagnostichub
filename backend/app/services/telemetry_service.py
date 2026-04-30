@@ -8,6 +8,7 @@ from time import monotonic
 from app.core.logging import request_id_context
 from app.schemas.telemetry import (
     EndpointTelemetryPayload,
+    InteractionTelemetryPayload,
     SearchTelemetryPayload,
     TelemetryEventPayload,
     TelemetrySummaryResponse,
@@ -85,12 +86,29 @@ class _SearchMetric:
         )
 
 
+@dataclass
+class _InteractionMetric:
+    total_events: int = 0
+    event_counts: Counter[str] = field(default_factory=Counter)
+
+    def record(self, event: str) -> None:
+        self.total_events += 1
+        self.event_counts[event] += 1
+
+    def to_payload(self) -> InteractionTelemetryPayload:
+        return InteractionTelemetryPayload(
+            total_events=self.total_events,
+            event_counts=dict(self.event_counts),
+        )
+
+
 class TelemetryCollector:
     def __init__(self) -> None:
         self._lock = Lock()
         self._started_at = monotonic()
         self._endpoint_metrics: dict[tuple[str, str], _EndpointMetric] = {}
         self._search_metrics = _SearchMetric()
+        self._interaction_metrics = _InteractionMetric()
         self._events: deque[TelemetryEventPayload] = deque(maxlen=300)
         self._total_http_requests = 0
 
@@ -132,6 +150,14 @@ class TelemetryCollector:
             if ambiguity_risk:
                 self._search_metrics.ambiguity_risk_counts[ambiguity_risk] += 1
 
+    def record_interaction(
+        self,
+        *,
+        event: str,
+    ) -> None:
+        with self._lock:
+            self._interaction_metrics.record(event)
+
     def record_event(
         self,
         *,
@@ -170,6 +196,7 @@ class TelemetryCollector:
                 )
             ]
             search_payload = self._search_metrics.to_payload()
+            interaction_payload = self._interaction_metrics.to_payload()
             recent_events = list(self._events)[:100]
             total_http_requests = self._total_http_requests
 
@@ -181,6 +208,7 @@ class TelemetryCollector:
             active_endpoints=len(endpoint_payloads),
             endpoints=endpoint_payloads,
             search=search_payload,
+            interaction=interaction_payload,
             recent_events=recent_events,
         )
 

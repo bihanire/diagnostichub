@@ -20,7 +20,8 @@ const apiMocks = vi.hoisted(() => ({
   getCachedRepairFamilies: vi.fn(),
   clearCachedRepairFamilies: vi.fn(),
   getRepairFamilies: vi.fn(),
-  getRepairFamilyDetail: vi.fn()
+  getRepairFamilyDetail: vi.fn(),
+  recordInteractionTelemetry: vi.fn()
 }));
 
 const sessionMocks = vi.hoisted(() => ({
@@ -44,7 +45,8 @@ vi.mock("@/lib/api", () => ({
   getCachedRepairFamilies: apiMocks.getCachedRepairFamilies,
   clearCachedRepairFamilies: apiMocks.clearCachedRepairFamilies,
   getRepairFamilies: apiMocks.getRepairFamilies,
-  getRepairFamilyDetail: apiMocks.getRepairFamilyDetail
+  getRepairFamilyDetail: apiMocks.getRepairFamilyDetail,
+  recordInteractionTelemetry: apiMocks.recordInteractionTelemetry
 }));
 
 vi.mock("@/lib/session", () => ({
@@ -282,6 +284,7 @@ describe("HomePage", () => {
       ]
     });
     apiMocks.getCachedRepairFamilies.mockReturnValue(null);
+    apiMocks.recordInteractionTelemetry.mockResolvedValue({ accepted: true });
   });
 
   it("searches free text and starts the guided flow", async () => {
@@ -516,13 +519,31 @@ describe("HomePage", () => {
 
     await user.click(screen.getByRole("button", { name: /start guided triage/i }));
     expect(await screen.findByText(/pick the closest route before triage/i)).toBeInTheDocument();
+    expect(apiMocks.recordInteractionTelemetry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "confidence_gate_shown",
+        status: "review"
+      })
+    );
 
     await user.click(screen.getByRole("button", { name: "Screen Issue" }));
+    expect(apiMocks.recordInteractionTelemetry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "confidence_gate_option_selected",
+        status: "review"
+      })
+    );
     await user.click(screen.getByRole("button", { name: /continue with selected flow/i }));
 
     await waitFor(() => {
       expect(apiMocks.startTriage).toHaveBeenCalledWith(2);
     });
+    expect(apiMocks.recordInteractionTelemetry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "confidence_gate_confirmed",
+        status: "success"
+      })
+    );
   });
 
   it("offers a recovery family action when search has no match", async () => {
@@ -554,5 +575,11 @@ describe("HomePage", () => {
     await waitFor(() => {
       expect(apiMocks.getRepairFamilyDetail).toHaveBeenCalledWith("display");
     });
+    expect(apiMocks.recordInteractionTelemetry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: "no_match_recovery_family_opened",
+        status: "review"
+      })
+    );
   });
 });
