@@ -10,8 +10,18 @@ if (-not (Test-Path $venvPython)) {
 
 Push-Location $backendDir
 try {
+    $previousPythonWarnings = $env:PYTHONWARNINGS
+    # Python 3.14+ surfaces an upstream FastAPI routing deprecation warning
+    # that is unrelated to app behavior. Keep CI/local test output readable.
+    $env:PYTHONWARNINGS = "ignore::DeprecationWarning:fastapi.routing"
     & $venvPython -m unittest discover -s tests -v
 }
 finally {
+    if ($null -eq $previousPythonWarnings) {
+        Remove-Item Env:PYTHONWARNINGS -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:PYTHONWARNINGS = $previousPythonWarnings
+    }
     Pop-Location
 }
