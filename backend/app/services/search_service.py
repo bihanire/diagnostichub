@@ -15,6 +15,7 @@ from app.services.procedure_service import (
     get_sop_layers,
     to_summary,
 )
+from app.services.semantic_intelligence_service import build_semantic_insight
 
 STOPWORDS = {
     "a",
@@ -454,12 +455,16 @@ def extract_symptoms(tokens: list[str], procedure: Procedure | None = None) -> l
     return meaningful[:6]
 
 
-def infer_issue_type(tokens: list[str]) -> str | None:
+def score_issue_type_signals(tokens: list[str]) -> dict[str, int]:
     token_set = set(tokens)
     scores: dict[str, int] = {}
     for issue_type, keywords in TERM_GROUPS.items():
         scores[issue_type] = len(token_set.intersection(keywords))
+    return scores
 
+
+def infer_issue_type(tokens: list[str], *, precomputed_scores: dict[str, int] | None = None) -> str | None:
+    scores = precomputed_scores or score_issue_type_signals(tokens)
     highest_score = max(scores.values())
     if highest_score <= 0:
         return None
@@ -647,7 +652,8 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
     meaningful_token_set = set(meaningful_tokens)
     normalized_query = normalize_text(clean_query)
     query_ngrams = build_ngrams(query_tokens)
-    issue_type = infer_issue_type(query_tokens)
+    issue_type_scores = score_issue_type_signals(query_tokens)
+    issue_type = infer_issue_type(query_tokens, precomputed_scores=issue_type_scores)
     procedures = db.scalars(
         procedure_query_with(
             include_tags=True,
@@ -660,6 +666,13 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
         return SearchResponse(
             query=clean_query,
             structured_intent=StructuredIntent(issue_type=None, symptoms=[]),
+            semantic_insight=build_semantic_insight(
+                normalized_query=normalized_query,
+                key_terms=meaningful_tokens,
+                confidence=0.0,
+                confidence_margin=0.0,
+                category_scores=issue_type_scores,
+            ),
             confidence=0.0,
             confidence_state="low",
             confidence_margin=0.0,
@@ -698,6 +711,13 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
     second_score = ranked[1][0] if len(ranked) > 1 else 0.0
     margin = max(round(best_score - second_score, 2), 0.0)
     confidence_state, needs_review, review_message = classify_confidence(best_score, margin)
+    semantic_insight = build_semantic_insight(
+        normalized_query=normalized_query,
+        key_terms=meaningful_tokens,
+        confidence=best_score,
+        confidence_margin=margin,
+        category_scores=issue_type_scores,
+    )
     exact_hits = count_exact_hits(query_tokens, best_match_index.searchable_tokens)
     structured_intent_issue_type = (
         issue_type
@@ -726,6 +746,7 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
             return SearchResponse(
                 query=clean_query,
                 structured_intent=structured_intent,
+                semantic_insight=semantic_insight,
                 confidence=round(best_score, 2),
                 confidence_state=confidence_state,
                 confidence_margin=margin,
@@ -743,6 +764,7 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
         return SearchResponse(
             query=clean_query,
             structured_intent=structured_intent,
+            semantic_insight=semantic_insight,
             confidence=round(best_score, 2),
             confidence_state=confidence_state,
             confidence_margin=margin,
@@ -762,6 +784,7 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
     return SearchResponse(
         query=clean_query,
         structured_intent=structured_intent,
+        semantic_insight=semantic_insight,
         confidence=round(best_score, 2),
         confidence_state=confidence_state,
         confidence_margin=margin,

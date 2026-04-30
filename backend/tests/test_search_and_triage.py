@@ -97,6 +97,9 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertEqual(response.best_match.title, "Phone Not Powering On")
         self.assertEqual(response.structured_intent.issue_type, "Power & Thermal")
         self.assertIn("vibrate", response.structured_intent.symptoms)
+        self.assertIsNotNone(response.semantic_insight)
+        self.assertEqual(response.semantic_insight.ambiguity_risk, "low")
+        self.assertGreater(response.semantic_insight.intent_strength, 0.5)
         self.assertGreaterEqual(response.confidence, 0.5)
 
     def test_search_matches_audio_issue_from_mouthpiece_keyword(self) -> None:
@@ -170,6 +173,8 @@ class SearchAndTriageTests(unittest.TestCase):
 
         self.assertTrue(response.no_match)
         self.assertIsNone(response.best_match)
+        self.assertIsNotNone(response.semantic_insight)
+        self.assertEqual(response.semantic_insight.ambiguity_risk, "high")
         self.assertIn("Try a shorter description", response.suggested_next_step)
 
     def test_related_procedures_return_linked_items(self) -> None:

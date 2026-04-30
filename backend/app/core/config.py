@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     cors_allow_local_network: bool = True
     seed_on_startup: bool = True
     strict_workflow_validation: bool = True
+    strict_data_integrity_validation: bool = True
     log_level: str = "INFO"
     ops_auth_enabled: bool = True
     ops_shared_password: str | None = None

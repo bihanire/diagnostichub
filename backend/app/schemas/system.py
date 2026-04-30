@@ -19,7 +19,23 @@ class WorkflowValidationReport(BaseModel):
     issues: list[WorkflowValidationIssue] = Field(default_factory=list)
 
 
+class DataIntegrityIssue(BaseModel):
+    severity: Literal["error", "warning"]
+    message: str
+    procedure_id: int | None = None
+    node_id: int | None = None
+
+
+class DataIntegrityReport(BaseModel):
+    validated_procedures: int
+    validated_nodes: int
+    error_count: int
+    warning_count: int
+    issues: list[DataIntegrityIssue] = Field(default_factory=list)
+
+
 class ReadinessResponse(BaseModel):
     status: Literal["ok", "not_ready"]
     database_ok: bool
     workflow_validation: WorkflowValidationReport
+    data_integrity: DataIntegrityReport | None = None

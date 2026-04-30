@@ -8,6 +8,7 @@ from app.services.ops_auth_service import (
     get_ops_session_from_request,
     verify_ops_password,
 )
+from app.services.telemetry_service import get_telemetry_collector
 
 router = APIRouter(prefix="/ops", tags=["ops"])
 logger = get_logger("relational_encyclopedia.ops")
@@ -19,8 +20,14 @@ def login_ops(
     request: Request,
     response: Response,
 ) -> OpsSessionResponse:
+    telemetry = get_telemetry_collector()
     settings = get_settings()
     if not verify_ops_password(payload.password, settings):
+        telemetry.record_event(
+            event="ops_login_failed",
+            status="error",
+            metadata={"reason": "invalid_password"},
+        )
         logger.warning(
             "ops_login_failed",
             extra={
@@ -55,6 +62,7 @@ def login_ops(
             "status_code": status.HTTP_200_OK,
         },
     )
+    telemetry.record_event(event="ops_login_succeeded", status="success")
     return OpsSessionResponse(
         authenticated=True,
         expires_at=expires_at,
@@ -67,6 +75,7 @@ def logout_ops(
     request: Request,
     response: Response,
 ) -> OpsSessionResponse:
+    telemetry = get_telemetry_collector()
     settings = get_settings()
     response.delete_cookie(
         key=settings.ops_cookie_name,
@@ -83,6 +92,7 @@ def logout_ops(
             "status_code": status.HTTP_200_OK,
         },
     )
+    telemetry.record_event(event="ops_logout_completed", status="success")
     return OpsSessionResponse(
         authenticated=False,
         message="Ops session cleared.",

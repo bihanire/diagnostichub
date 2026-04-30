@@ -4,6 +4,7 @@ from contextvars import ContextVar
 from datetime import datetime, timezone
 
 request_id_context: ContextVar[str] = ContextVar("request_id", default="-")
+_RESERVED_LOG_RECORD_KEYS = set(logging.makeLogRecord({}).__dict__.keys())
 
 
 class RequestContextFilter(logging.Filter):
@@ -39,6 +40,19 @@ class JsonFormatter(logging.Formatter):
         ):
             if hasattr(record, key):
                 payload[key] = getattr(record, key)
+
+        for key, value in record.__dict__.items():
+            if (
+                key in _RESERVED_LOG_RECORD_KEYS
+                or key in payload
+                or key.startswith("_")
+                or key in {"exc_info", "exc_text", "stack_info"}
+            ):
+                continue
+            if isinstance(value, (str, int, float, bool)) or value is None:
+                payload[key] = value
+            else:
+                payload[key] = str(value)
 
         if record.exc_info:
             payload["exception"] = self.formatException(record.exc_info)

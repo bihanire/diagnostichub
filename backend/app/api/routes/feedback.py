@@ -24,6 +24,7 @@ from app.services.feedback_service import (
     get_feedback_summary,
 )
 from app.services.ops_auth_service import require_ops_session
+from app.services.telemetry_service import get_telemetry_collector
 
 router = APIRouter(prefix="/feedback", tags=["feedback"])
 logger = get_logger("relational_encyclopedia.feedback")
@@ -34,11 +35,29 @@ def submit_feedback(
     request: FeedbackCreateRequest,
     db: Session = Depends(get_db),
 ) -> FeedbackCreateResponse:
+    telemetry = get_telemetry_collector()
     try:
         response = create_feedback(db, request)
     except ValueError as exc:
+        telemetry.record_event(
+            event="feedback_rejected",
+            status="error",
+            metadata={
+                "procedure_id": request.procedure_id,
+                "reason": str(exc),
+            },
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
+    telemetry.record_event(
+        event="feedback_saved",
+        status="success",
+        metadata={
+            "procedure_id": request.procedure_id,
+            "helpful": request.helpful,
+            "feedback_id": response.id,
+        },
+    )
     logger.debug(
         "feedback_saved",
         extra={

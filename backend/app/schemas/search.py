@@ -12,9 +12,18 @@ class StructuredIntent(BaseModel):
     symptoms: list[str] = Field(default_factory=list)
 
 
+class SemanticInsight(BaseModel):
+    normalized_query: str
+    key_terms: list[str] = Field(default_factory=list)
+    ambiguity_risk: str
+    intent_strength: float
+    matched_category_signals: dict[str, int] = Field(default_factory=dict)
+
+
 class SearchResponse(BaseModel):
     query: str
     structured_intent: StructuredIntent
+    semantic_insight: SemanticInsight | None = None
     confidence: float
     confidence_state: str
     confidence_margin: float

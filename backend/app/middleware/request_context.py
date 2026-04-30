@@ -6,12 +6,14 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from app.core.logging import get_logger, request_id_context
+from app.services.telemetry_service import get_telemetry_collector
 
 logger = get_logger("relational_encyclopedia.http")
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
+        telemetry = get_telemetry_collector()
         request_id = request.headers.get("X-Request-ID") or uuid4().hex
         request.state.request_id = request_id
 
@@ -22,6 +24,18 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception:
             duration_ms = round((perf_counter() - started_at) * 1000, 2)
+            telemetry.record_http_request(
+                method=request.method,
+                path=request.url.path,
+                status_code=500,
+                duration_ms=duration_ms,
+            )
+            telemetry.record_event(
+                event="request_failed",
+                status="error",
+                metadata={"method": request.method, "path": request.url.path},
+                request_id=request_id,
+            )
             logger.exception(
                 "request_failed",
                 extra={
@@ -40,6 +54,12 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         if response.status_code == 401 and "www-authenticate" in response.headers:
             del response.headers["www-authenticate"]
         duration_ms = round((perf_counter() - started_at) * 1000, 2)
+        telemetry.record_http_request(
+            method=request.method,
+            path=request.url.path,
+            status_code=response.status_code,
+            duration_ms=duration_ms,
+        )
         log_method = logger.warning if response.status_code >= 400 else logger.debug
         log_method(
             "request_completed",
