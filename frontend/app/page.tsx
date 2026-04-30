@@ -1028,6 +1028,19 @@ export default function HomePage() {
   }
 
   async function openQuickDrill(family: RepairFamilySummary, sourceRect: DOMRect) {
+    if (!family?.id) {
+      setError("Could not open this family. Please refresh and try again.");
+      return;
+    }
+
+    if (quickDrillCloseTimeoutRef.current !== null) {
+      window.clearTimeout(quickDrillCloseTimeoutRef.current);
+      quickDrillCloseTimeoutRef.current = null;
+    }
+
+    const familyPrompts = Array.isArray(family.symptom_prompts)
+      ? family.symptom_prompts.filter((prompt) => typeof prompt === "string" && prompt.trim().length > 0)
+      : [];
     const nextRequestId = quickDrillRequestIdRef.current + 1;
     quickDrillRequestIdRef.current = nextRequestId;
 
@@ -1041,7 +1054,7 @@ export default function HomePage() {
     setQuickDrillDetail(null);
     setQuickDrillLoading(true);
     setQuickDrillError(null);
-    setQuickDrillPrompt(family.symptom_prompts[0] || null);
+    setQuickDrillPrompt(familyPrompts[0] || null);
     setQuickDrillPreheat(false);
     setQuickDrillClosing(false);
     setActiveFamily(null);

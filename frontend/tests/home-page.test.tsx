@@ -380,6 +380,63 @@ describe("HomePage", () => {
     expect(screen.getByText(/Escalate faster when you see this/i)).toBeInTheDocument();
   });
 
+  it("opens quick-drill from a visual family card and can start triage", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    await user.click(await screen.findByRole("button", { name: /open display & vision diagnosis family/i }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(screen.getByText(/micro symptoms/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^start triage/i }));
+
+    await waitFor(() => {
+      expect(apiMocks.startTriage).toHaveBeenCalledWith(2);
+    });
+  });
+
+  it("keeps quick-drill stable even when a family arrives without symptom prompts", async () => {
+    const user = userEvent.setup();
+    apiMocks.getRepairFamilies.mockResolvedValueOnce([
+      {
+        id: "custom-family",
+        title: "Custom Family",
+        hint: "Custom family hint.",
+        symptom_prompts: undefined as unknown as string[],
+        procedure_count: 1,
+      }
+    ]);
+    apiMocks.getRepairFamilyDetail.mockResolvedValueOnce({
+      id: "custom-family",
+      title: "Custom Family",
+      hint: "Custom family hint.",
+      diagnostic_goal: "Use this family when custom issues are observed.",
+      symptom_prompts: [],
+      focus_cards: [],
+      common_categories: [],
+      procedure_groups: [],
+      branch_checks: [],
+      escalation_signals: [],
+      in_family_stream: {
+        original_event_count: 0,
+        deduplicated_event_count: 0,
+        critical_entries: [],
+        need_to_know_entries: [],
+        nice_to_know_entries: [],
+        clusters: [],
+      },
+      procedures: []
+    });
+    render(<HomePage />);
+
+    await user.click(await screen.findByRole("button", { name: /open custom family diagnosis family/i }));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/No symptom shortcuts yet for this family/i)).toBeInTheDocument();
+  });
+
   it("shows built-in family cards when the family endpoint fails", async () => {
     apiMocks.getRepairFamilies.mockRejectedValueOnce(new Error("Could not load family data."));
     render(<HomePage />);
