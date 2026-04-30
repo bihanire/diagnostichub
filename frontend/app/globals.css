@@ -2617,6 +2617,13 @@ body.quick-drill-open {
   box-shadow: 0 16px 28px rgba(19, 31, 62, 0.08);
 }
 
+.family-support-chip-active {
+  border-color: rgba(27, 183, 196, 0.4);
+  background: rgba(27, 183, 196, 0.12);
+  color: #0b6d7a;
+  box-shadow: 0 12px 24px rgba(10, 74, 88, 0.14);
+}
+
 .family-routes-toggle {
   margin-top: 0;
 }

@@ -55,16 +55,7 @@ export default function ResultPage() {
     setError(null);
 
     try {
-      const [startResponse, relatedResponse] = await Promise.allSettled([
-        startTriage(procedure.id),
-        getRelated(procedure.id)
-      ]);
-      if (startResponse.status !== "fulfilled") {
-        throw startResponse.reason;
-      }
-      const response = startResponse.value;
-      const relatedItems =
-        relatedResponse.status === "fulfilled" ? relatedResponse.value.items : [];
+      const response = await startTriage(procedure.id);
 
       const nextSession: TriageSession = {
         query: procedure.title,
@@ -74,7 +65,7 @@ export default function ResultPage() {
         customerCare: response.customer_care,
         sop: response.sop,
         outcome: response.outcome || null,
-        related: relatedItems,
+        related: [],
         history: [],
         dispatchGateConfirmed: [],
         updatedAt: new Date().toISOString()
@@ -84,6 +75,38 @@ export default function ResultPage() {
       startTransition(() => {
         setSession(nextSession);
       });
+      void getRelated(procedure.id)
+        .then((relatedResponse) => {
+          const latest = loadSession();
+          if (
+            !latest ||
+            latest.updatedAt !== nextSession.updatedAt ||
+            latest.procedure.id !== nextSession.procedure.id
+          ) {
+            return;
+          }
+          const hydratedSession: TriageSession = {
+            ...latest,
+            related: relatedResponse.items,
+            updatedAt: new Date().toISOString()
+          };
+          saveSession(hydratedSession);
+          startTransition(() => {
+            setSession((current) => {
+              if (
+                !current ||
+                current.updatedAt !== nextSession.updatedAt ||
+                current.procedure.id !== nextSession.procedure.id
+              ) {
+                return current;
+              }
+              return hydratedSession;
+            });
+          });
+        })
+        .catch(() => {
+          // Keep flow startup fast even if related suggestions fail.
+        });
 
       if (response.status === "complete") {
         startTransition(() => {

@@ -123,6 +123,13 @@ export type SearchResponse = {
     issue_type?: string | null;
     symptoms: string[];
   };
+  semantic_insight?: {
+    normalized_query: string;
+    key_terms: string[];
+    ambiguity_risk: string;
+    intent_strength: number;
+    matched_category_signals: Record<string, number>;
+  } | null;
   confidence: number;
   confidence_state: string;
   confidence_margin: number;

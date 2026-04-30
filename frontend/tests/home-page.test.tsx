@@ -310,8 +310,7 @@ describe("HomePage", () => {
       expect(sessionMocks.saveSession).toHaveBeenCalledWith(
         expect.objectContaining({
           procedure: expect.objectContaining({ title: "Phone Not Powering On" }),
-          currentNode: expect.objectContaining({ id: 101 }),
-          related: [expect.objectContaining({ title: "Screen Issue" })]
+          currentNode: expect.objectContaining({ id: 101 })
         })
       );
     });
@@ -484,5 +483,76 @@ describe("HomePage", () => {
 
     await user.click(screen.getByRole("button", { name: /clear search/i }));
     expect((input as HTMLTextAreaElement).value).toBe("");
+  });
+
+  it("opens a confidence gate for ambiguous matches before triage start", async () => {
+    const user = userEvent.setup();
+    apiMocks.searchProcedures.mockResolvedValueOnce({
+      ...searchResponse,
+      confidence_state: "caution",
+      needs_review: true,
+      confidence_margin: 0.08,
+      review_message: "Closest match is tight. Confirm the route first.",
+      alternatives: [
+        {
+          id: 2,
+          title: "Screen Issue",
+          category: "Screen",
+          description: "Use this for cracked displays and black screens.",
+          outcome: "Screen diagnosis complete.",
+          warranty_status: "Depends on visible damage."
+        }
+      ]
+    });
+
+    render(<HomePage />);
+
+    await user.type(
+      screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
+      "phone not turning on but vibrates"
+    );
+    await user.click(screen.getByRole("button", { name: /find the best flow/i }));
+    await screen.findByText("Phone Not Powering On");
+
+    await user.click(screen.getByRole("button", { name: /start guided triage/i }));
+    expect(await screen.findByText(/pick the closest route before triage/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Screen Issue" }));
+    await user.click(screen.getByRole("button", { name: /continue with selected flow/i }));
+
+    await waitFor(() => {
+      expect(apiMocks.startTriage).toHaveBeenCalledWith(2);
+    });
+  });
+
+  it("offers a recovery family action when search has no match", async () => {
+    const user = userEvent.setup();
+    apiMocks.searchProcedures.mockResolvedValueOnce({
+      ...searchResponse,
+      no_match: true,
+      best_match: null,
+      alternatives: [],
+      related: [],
+      message: "I could not find a confident match yet.",
+      structured_intent: {
+        issue_type: "Display & Vision",
+        symptoms: []
+      }
+    });
+
+    render(<HomePage />);
+
+    await user.type(
+      screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
+      "my screen has weird lines"
+    );
+    await user.click(screen.getByRole("button", { name: /find the best flow/i }));
+
+    const openFamily = await screen.findByRole("button", { name: /^open display & vision$/i });
+    await user.click(openFamily);
+
+    await waitFor(() => {
+      expect(apiMocks.getRepairFamilyDetail).toHaveBeenCalledWith("display");
+    });
   });
 });

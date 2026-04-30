@@ -49,6 +49,15 @@ type QuickDrillOrigin = {
   height: number;
 };
 
+const ISSUE_TYPE_TO_FAMILY_ID: Record<string, string> = {
+  "Display & Vision": "display",
+  "Power & Thermal": "power",
+  "Logic & Software": "logic",
+  "Security & Access": "security",
+  "Connectivity & I/O": "connectivity",
+  "Physical & Liquid": "physical",
+};
+
 function getFamilyPrimaryProcedure(familyDetail: RepairFamilyDetail | null): ProcedureSummary | null {
   if (!familyDetail) {
     return null;
@@ -92,6 +101,63 @@ function applyVisualTransition(update: () => void) {
   update();
 }
 
+function uniqueProcedures(items: ProcedureSummary[]): ProcedureSummary[] {
+  const seen = new Set<number>();
+  const ordered: ProcedureSummary[] = [];
+  for (const item of items) {
+    if (!item || seen.has(item.id)) {
+      continue;
+    }
+    seen.add(item.id);
+    ordered.push(item);
+  }
+  return ordered;
+}
+
+function buildReviewCandidates(result: SearchResponse): ProcedureSummary[] {
+  const best = result.best_match ? [result.best_match] : [];
+  const alternatives = result.alternatives.slice(0, 3);
+  return uniqueProcedures([...best, ...alternatives]);
+}
+
+function pickHighestSignalIssueType(
+  signals: Record<string, number> | undefined
+): string | null {
+  if (!signals) {
+    return null;
+  }
+
+  const entries = Object.entries(signals);
+  if (entries.length === 0) {
+    return null;
+  }
+  entries.sort((left, right) => right[1] - left[1]);
+  if (entries[0][1] <= 0) {
+    return null;
+  }
+  return entries[0][0];
+}
+
+function getRecoveryFamily(
+  result: SearchResponse,
+  families: RepairFamilySummary[]
+): RepairFamilySummary | null {
+  const directIssue = result.structured_intent.issue_type || null;
+  const inferredIssue =
+    pickHighestSignalIssueType(result.semantic_insight?.matched_category_signals) || null;
+  const targetIssue = directIssue || inferredIssue;
+  const mappedFamilyId = targetIssue ? ISSUE_TYPE_TO_FAMILY_ID[targetIssue] : null;
+
+  if (mappedFamilyId) {
+    const match = families.find((family) => family.id === mappedFamilyId);
+    if (match) {
+      return match;
+    }
+  }
+
+  return families[0] || null;
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -116,6 +182,8 @@ export default function HomePage() {
   const [quickDrillPrompt, setQuickDrillPrompt] = useState<string | null>(null);
   const [quickDrillPreheat, setQuickDrillPreheat] = useState(false);
   const [quickDrillClosing, setQuickDrillClosing] = useState(false);
+  const [reviewCandidates, setReviewCandidates] = useState<ProcedureSummary[]>([]);
+  const [reviewSelectedProcedureId, setReviewSelectedProcedureId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement | null>(null);
   const familyExplorerRef = useRef<HTMLDivElement | null>(null);
@@ -144,6 +212,10 @@ export default function HomePage() {
   const logicStatusLabel = searching
     ? "Logic identified. Running confidence match..."
     : "Logic identified. Triage signal strengthening.";
+  const reviewGateOpen = reviewCandidates.length > 1;
+  const selectedReviewProcedure =
+    reviewCandidates.find((item) => item.id === reviewSelectedProcedureId) || null;
+  const recoveryFamily = searchResult ? getRecoveryFamily(searchResult, families) : null;
 
   useEffect(() => {
     setResumeSession(loadSession());
@@ -509,6 +581,7 @@ export default function HomePage() {
 
     setSearching(true);
     setError(null);
+    closeReviewGate();
     setSearchAssistOpen(false);
     setSearchAssistLoading(false);
     setActiveFamily(null);
@@ -582,6 +655,7 @@ export default function HomePage() {
     setSearchSuggestions([]);
     setActiveSuggestionIndex(-1);
     setError(null);
+    closeReviewGate();
     setSearchResult(null);
     searchInputRef.current?.focus();
   }
@@ -623,21 +697,65 @@ export default function HomePage() {
     }
   }
 
+  function closeReviewGate() {
+    setReviewCandidates([]);
+    setReviewSelectedProcedureId(null);
+  }
+
+  function tryOpenReviewGate(result: SearchResponse): boolean {
+    const candidates = buildReviewCandidates(result);
+    if (!result.needs_review || candidates.length < 2) {
+      return false;
+    }
+    setReviewCandidates(candidates);
+    setReviewSelectedProcedureId(result.best_match?.id || candidates[0].id);
+    return true;
+  }
+
+  function hydrateRelatedForSession(expectedSession: TriageSession) {
+    void getRelated(expectedSession.procedure.id)
+      .then((response) => {
+        const latest = loadSession();
+        if (
+          !latest ||
+          latest.updatedAt !== expectedSession.updatedAt ||
+          latest.procedure.id !== expectedSession.procedure.id
+        ) {
+          return;
+        }
+
+        const nextSession: TriageSession = {
+          ...latest,
+          related: response.items,
+          updatedAt: new Date().toISOString()
+        };
+        saveSession(nextSession);
+        startTransition(() => {
+          setResumeSession((current) => {
+            if (
+              !current ||
+              current.procedure.id !== expectedSession.procedure.id ||
+              current.updatedAt !== expectedSession.updatedAt
+            ) {
+              return current;
+            }
+            return nextSession;
+          });
+        });
+      })
+      .catch(() => {
+        // Keep triage startup non-blocking even when related suggestions fail.
+      });
+  }
+
   async function openFlow(procedure: ProcedureSummary, searchQuery?: string) {
     setStartingId(procedure.id);
     setError(null);
 
     try {
-      const [startResponse, relatedResponse] = await Promise.allSettled([
-        startTriage(procedure.id),
-        getRelated(procedure.id)
-      ]);
-      if (startResponse.status !== "fulfilled") {
-        throw startResponse.reason;
-      }
-      const response = startResponse.value;
-      const relatedItems =
-        relatedResponse.status === "fulfilled" ? relatedResponse.value.items : [];
+      const response = await startTriage(procedure.id);
+      const seededRelated =
+        searchResult?.best_match?.id === procedure.id ? searchResult.related : [];
 
       const session: TriageSession = {
         query: searchQuery || query,
@@ -651,7 +769,7 @@ export default function HomePage() {
         customerCare: response.customer_care,
         sop: response.sop,
         outcome: response.outcome || null,
-        related: relatedItems,
+        related: seededRelated,
         history: [],
         dispatchGateConfirmed: [],
         updatedAt: new Date().toISOString()
@@ -661,6 +779,7 @@ export default function HomePage() {
       startTransition(() => {
         setResumeSession(session);
       });
+      hydrateRelatedForSession(session);
 
       if (response.status === "complete") {
         startTransition(() => {
@@ -679,6 +798,34 @@ export default function HomePage() {
     } finally {
       setStartingId(null);
     }
+  }
+
+  function handleStartBestMatch() {
+    if (!searchResult?.best_match) {
+      return;
+    }
+
+    if (tryOpenReviewGate(searchResult)) {
+      return;
+    }
+
+    void openFlow(searchResult.best_match, searchResult.query);
+  }
+
+  function handleConfirmReviewSelection() {
+    if (!selectedReviewProcedure) {
+      return;
+    }
+    const selectedQuery = searchResult?.query || query;
+    closeReviewGate();
+    void openFlow(selectedReviewProcedure, selectedQuery);
+  }
+
+  function handleOpenRecoveryFamily() {
+    if (!recoveryFamily) {
+      return;
+    }
+    void openFamily(recoveryFamily.id);
   }
 
   function continueSession() {
@@ -1044,6 +1191,48 @@ export default function HomePage() {
             </div>
           </section>
 
+          {reviewGateOpen ? (
+            <section className="panel panel-compact">
+              <div className="panel-header">
+                <span className="eyebrow">Quick confirm</span>
+                <h3>Pick the closest route before triage</h3>
+              </div>
+              <p className="body-copy">
+                Which one best matches what you can confirm right now?
+              </p>
+              <div className="family-supporting-list">
+                {reviewCandidates.map((candidate) => (
+                  <button
+                    key={`review-candidate-${candidate.id}`}
+                    className={`family-support-chip ${
+                      reviewSelectedProcedureId === candidate.id ? "family-support-chip-active" : ""
+                    }`}
+                    onClick={() => setReviewSelectedProcedureId(candidate.id)}
+                    type="button"
+                  >
+                    {candidate.title}
+                  </button>
+                ))}
+              </div>
+              {selectedReviewProcedure ? (
+                <p className="muted-copy">{selectedReviewProcedure.description}</p>
+              ) : null}
+              <div className="action-grid">
+                <button
+                  className="primary-button"
+                  disabled={!selectedReviewProcedure}
+                  onClick={handleConfirmReviewSelection}
+                  type="button"
+                >
+                  Continue with selected flow
+                </button>
+                <button className="secondary-button" onClick={closeReviewGate} type="button">
+                  Keep reviewing
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           {searchResult.best_match ? (
             <ProcedureMatchCard
               procedure={searchResult.best_match}
@@ -1054,7 +1243,7 @@ export default function HomePage() {
               nextStep={searchResult.suggested_next_step}
               customerCare={searchResult.customer_care}
               busy={startingId === searchResult.best_match.id}
-              onStart={() => openFlow(searchResult.best_match!, searchResult.query)}
+              onStart={handleStartBestMatch}
             />
           ) : (
             <section className="panel">
@@ -1063,6 +1252,23 @@ export default function HomePage() {
                 <h3>{uiCopy.home.noMatch.title}</h3>
               </div>
               <p className="body-copy">{searchResult.message}</p>
+              <div className="quick-pill-row">
+                {recoveryFamily ? (
+                  <button className="primary-button" onClick={handleOpenRecoveryFamily} type="button">
+                    Open {recoveryFamily.title}
+                  </button>
+                ) : null}
+                {recoveryFamily?.symptom_prompts?.slice(0, 2).map((prompt) => (
+                  <button
+                    key={`recovery-prompt-${prompt}`}
+                    className="quick-pill"
+                    onClick={() => runSearch(prompt)}
+                    type="button"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             </section>
           )}
 
@@ -1078,7 +1284,10 @@ export default function HomePage() {
               title={uiCopy.home.suggestions.alternativesTitle}
               items={searchResult.alternatives}
               emptyMessage={uiCopy.home.suggestions.alternativesEmpty}
-              onSelect={(procedure) => openFlow(procedure, searchResult.query)}
+              onSelect={(procedure) => {
+                closeReviewGate();
+                openFlow(procedure, searchResult.query);
+              }}
               embedded
             />
           </details>
@@ -1095,7 +1304,10 @@ export default function HomePage() {
               title={uiCopy.home.suggestions.relatedTitle}
               items={searchResult.related}
               emptyMessage={uiCopy.home.suggestions.relatedEmpty}
-              onSelect={(procedure) => openFlow(procedure, searchResult.query)}
+              onSelect={(procedure) => {
+                closeReviewGate();
+                openFlow(procedure, searchResult.query);
+              }}
               embedded
             />
           </details>
