@@ -20,7 +20,7 @@ import {
   startTriage
 } from "@/lib/api";
 import { recordClientDiagnostic } from "@/lib/client-diagnostics";
-import { quickQueries, uiCopy } from "@/lib/copy";
+import { uiCopy } from "@/lib/copy";
 import {
   BUILT_IN_REPAIR_FAMILIES,
   resolveRepairFamilies
@@ -216,10 +216,6 @@ export default function HomePage() {
       .slice(0, 8) ||
     quickDrillFamily?.symptom_prompts.slice(0, 8) ||
     [];
-  const logicIdentifiedActive = query.trim().length >= 4;
-  const logicStatusLabel = searching
-    ? "Logic identified. Running confidence match..."
-    : "Logic identified. Triage signal strengthening.";
   const reviewGateOpen = reviewCandidates.length > 1;
   const selectedReviewProcedure =
     reviewCandidates.find((item) => item.id === reviewSelectedProcedureId) || null;
@@ -290,7 +286,7 @@ export default function HomePage() {
     assistDebounceRef.current = window.setTimeout(() => {
       const nextSuggestions = getSearchAssistSuggestions(query, families, 5);
       setSearchSuggestions(nextSuggestions);
-      setActiveSuggestionIndex(nextSuggestions.length > 0 ? 0 : -1);
+      setActiveSuggestionIndex(-1);
       setSearchAssistLoading(false);
     }, SEARCH_ASSIST_DEBOUNCE_MS);
 
@@ -457,9 +453,20 @@ export default function HomePage() {
     }
 
     const timer = window.setTimeout(() => {
-      resultsRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
-      resultsRef.current?.focus?.({ preventScroll: true });
-    }, 140);
+      const target = resultsRef.current;
+      if (!target) {
+        return;
+      }
+      const prefersReducedMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      target.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+    }, 170);
 
     return () => window.clearTimeout(timer);
   }, [searchResult, searching]);
@@ -697,10 +704,23 @@ export default function HomePage() {
 
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
-      if (canNavigate && activeSuggestionIndex >= 0) {
-        await applySuggestion(searchSuggestions[activeSuggestionIndex]);
-        return;
+      if (canNavigate) {
+        const selectedSuggestion =
+          activeSuggestionIndex >= 0 ? searchSuggestions[activeSuggestionIndex] : searchSuggestions[0];
+        const nextQuery = selectedSuggestion?.queryValue?.trim();
+
+        if (nextQuery) {
+          if (assistBlurTimeoutRef.current !== null) {
+            window.clearTimeout(assistBlurTimeoutRef.current);
+            assistBlurTimeoutRef.current = null;
+          }
+          setQuery(nextQuery);
+          setSearchAssistOpen(false);
+          await runSearch(nextQuery);
+          return;
+        }
       }
+
       await runSearch(query);
     }
   }
@@ -1200,54 +1220,36 @@ export default function HomePage() {
                     x
                   </button>
                 ) : null}
+                {searchAssistOpen ? (
+                  <div className="search-assist-anchor" id="search-assist-listbox">
+                    <SearchAssistDropdown
+                      activeIndex={activeSuggestionIndex}
+                      loading={searchAssistLoading}
+                      onHover={setActiveSuggestionIndex}
+                      onSelect={(suggestion) => {
+                        void applySuggestion(suggestion);
+                      }}
+                      query={query}
+                      suggestions={searchSuggestions}
+                    />
+                  </div>
+                ) : null}
               </div>
               <p
                 aria-live="polite"
-                className={`search-hint ${logicIdentifiedActive ? "search-hint-live" : ""}`}
+                className="search-hint"
                 id="problem-search-hint"
               >
                 <span className="search-hint-primary">
-                  Use customer wording. The hub will pick out the issue family and symptoms.
+                  Use customer wording, then press Enter to run diagnosis.
                 </span>
-                <span className="search-hint-secondary">{logicStatusLabel}</span>
               </p>
-              {searchAssistOpen ? (
-                <div id="search-assist-listbox">
-                  <SearchAssistDropdown
-                    activeIndex={activeSuggestionIndex}
-                    loading={searchAssistLoading}
-                    onHover={setActiveSuggestionIndex}
-                    onSelect={(suggestion) => {
-                      void applySuggestion(suggestion);
-                    }}
-                    query={query}
-                    suggestions={searchSuggestions}
-                  />
-                </div>
-              ) : null}
-              <button className="primary-button" disabled={searching} type="submit">
-                {searching ? uiCopy.home.search.submittingLabel : uiCopy.home.search.submitLabel}
-              </button>
             </form>
             {searching ? (
               <div className="search-handshake" role="status">
                 Syncing with the diagnosis engine...
               </div>
             ) : null}
-
-            <div className="quick-pill-row">
-              {quickQueries.map((item) => (
-                <button
-                  key={item.label}
-                  className="quick-pill"
-                  disabled={searching}
-                  onClick={() => runSearch(item.query)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       </section>

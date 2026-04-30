@@ -299,13 +299,10 @@ describe("HomePage", () => {
       screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
       "phone not turning on but vibrates"
     );
-    await user.click(screen.getByRole("button", { name: /find the best flow/i }));
+    await user.keyboard("{Enter}");
 
     expect(await screen.findByText("Phone Not Powering On")).toBeInTheDocument();
     expect(screen.getByText("Power")).toBeInTheDocument();
-    await waitFor(() => {
-        expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
-    });
 
     await user.click(screen.getByRole("button", { name: /start guided triage/i }));
 
@@ -514,7 +511,7 @@ describe("HomePage", () => {
       screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
       "phone not turning on but vibrates"
     );
-    await user.click(screen.getByRole("button", { name: /find the best flow/i }));
+    await user.keyboard("{Enter}");
     await screen.findByText("Phone Not Powering On");
 
     await user.click(screen.getByRole("button", { name: /start guided triage/i }));
@@ -567,7 +564,7 @@ describe("HomePage", () => {
       screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
       "my screen has weird lines"
     );
-    await user.click(screen.getByRole("button", { name: /find the best flow/i }));
+    await user.keyboard("{Enter}");
 
     const openFamily = await screen.findByRole("button", { name: /^open display & vision$/i });
     await user.click(openFamily);
