@@ -1161,13 +1161,16 @@ export default function HomePage() {
           <div
             className={`hero-search-shell ${searching ? "is-searching" : ""} ${
               intakeFocusActive ? "is-intake-focus" : ""
-            }`}
+            } ${searchAssistOpen ? "has-search-assist" : ""}`}
           >
             <div className="search-shell-topline">
               <span>Case intake</span>
               <span>Full sentences work</span>
             </div>
-            <form className="search-form" onSubmit={handleSubmit}>
+            <form
+              className={`search-form ${searchAssistOpen ? "search-form-assist-open" : ""}`}
+              onSubmit={handleSubmit}
+            >
               <label className="search-label" htmlFor="problem-search">
                 Describe the problem
               </label>
