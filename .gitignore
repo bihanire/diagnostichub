@@ -9,3 +9,4 @@ frontend/.env.local
 backend/.env
 runtime-logs/*.log
 frontend/tsconfig.tsbuildinfo
+*.log
