@@ -5,8 +5,7 @@ import type { RepairFamilySummary } from "@/lib/types";
 export type SearchAssistCategory =
   | "Hardware Errors"
   | "Documentation"
-  | "Partners"
-  | "Branch Locations";
+  | "Partners";
 
 type SearchAssistAction = "search" | "link" | "fill";
 
@@ -42,8 +41,7 @@ type SearchAssistEntry = SearchAssistEntrySeed & {
 const CATEGORY_RANK: Record<SearchAssistCategory, number> = {
   "Hardware Errors": 0,
   Documentation: 1,
-  Partners: 2,
-  "Branch Locations": 3
+  Partners: 2
 };
 
 const SYNONYM_GROUPS = [
@@ -120,24 +118,6 @@ const PARTNER_ENTRIES: SearchAssistEntrySeed[] = [
     keywords: ["watu simu hq", "out warranty", "routing", "assessment"]
   }
 ];
-
-const BRANCH_ENTRIES: SearchAssistEntrySeed[] = [
-  "Kampala Central",
-  "Jinja",
-  "Mbarara",
-  "Gulu",
-  "Mukono",
-  "Entebbe",
-  "Masaka"
-].map((label) => ({
-  id: `branch-${label.toLowerCase().replace(/\s+/g, "-")}`,
-  category: "Branch Locations" as const,
-  label,
-  subtitle: "Branch location reference.",
-  queryValue: `${label} branch`,
-  action: "fill" as const,
-  keywords: [label.toLowerCase(), "branch", "location", "after sales"]
-}));
 
 function normalizeText(value: string): string {
   return value
@@ -383,8 +363,7 @@ export function getSearchAssistSuggestions(
   const catalog: SearchAssistEntry[] = [
     ...buildHardwareEntries(families),
     ...DOCUMENTATION_LINKS.map(toCatalogEntry),
-    ...PARTNER_ENTRIES.map(toCatalogEntry),
-    ...BRANCH_ENTRIES.map(toCatalogEntry)
+    ...PARTNER_ENTRIES.map(toCatalogEntry)
   ];
 
   const scored = catalog
