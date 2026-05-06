@@ -59,6 +59,9 @@ export default function ResultPage() {
 
       const nextSession: TriageSession = {
         query: procedure.title,
+        learningFamilyId: null,
+        learningFamilyTitle: null,
+        learningTrackTitle: null,
         procedure: response.procedure,
         currentNode: response.current_node || null,
         progress: response.progress,
@@ -255,6 +258,13 @@ export default function ResultPage() {
               </div>
             </div>
             <h2>{session.procedure.title}</h2>
+            {session.learningFamilyTitle ? (
+              <p className="result-learning-breadcrumb">
+                {session.learningFamilyTitle}
+                {session.learningTrackTitle ? ` -> ${session.learningTrackTitle}` : ""}
+                {" -> Outcome"}
+              </p>
+            ) : null}
             <p>{outcome.follow_up_message}</p>
             <div className="result-hero-footer">
               <span className="result-hero-footer-item">{uiCopy.result.hero.footerLabel}</span>

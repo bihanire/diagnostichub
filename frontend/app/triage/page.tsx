@@ -276,6 +276,13 @@ export default function TriagePage() {
           </span>
         </div>
         <h2>{session.procedure.title}</h2>
+        {session.learningFamilyTitle ? (
+          <p className="triage-learning-breadcrumb">
+            {session.learningFamilyTitle}
+            {session.learningTrackTitle ? ` -> ${session.learningTrackTitle}` : ""}
+            {" -> Guided steps"}
+          </p>
+        ) : null}
         <p>{uiCopy.triage.heroLead}</p>
         <div className="triage-hero-note">
           <span className="triage-hero-note-kicker">Current mode</span>

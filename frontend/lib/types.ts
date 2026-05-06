@@ -341,6 +341,9 @@ export type TriageAnswerRecord = {
 
 export type TriageSession = {
   query?: string;
+  learningFamilyId?: string | null;
+  learningFamilyTitle?: string | null;
+  learningTrackTitle?: string | null;
   searchConfidence?: number | null;
   searchConfidenceState?: string | null;
   searchConfidenceMargin?: number | null;

@@ -906,7 +906,15 @@ export default function HomePage() {
       });
   }
 
-  async function openFlow(procedure: ProcedureSummary, searchQuery?: string) {
+  async function openFlow(
+    procedure: ProcedureSummary,
+    searchQuery?: string,
+    learningContext?: {
+      familyId?: string | null;
+      familyTitle?: string | null;
+      trackTitle?: string | null;
+    }
+  ) {
     setStartingId(procedure.id);
     setError(null);
 
@@ -917,6 +925,9 @@ export default function HomePage() {
 
       const session: TriageSession = {
         query: searchQuery || query,
+        learningFamilyId: learningContext?.familyId || null,
+        learningFamilyTitle: learningContext?.familyTitle || null,
+        learningTrackTitle: learningContext?.trackTitle || null,
         searchConfidence: searchResult?.confidence ?? null,
         searchConfidenceState: searchResult?.confidence_state ?? null,
         searchConfidenceMargin: searchResult?.confidence_margin ?? null,
@@ -1262,7 +1273,15 @@ export default function HomePage() {
   function handleQuickDrillStartTriage() {
     if (quickDrillPrimaryProcedure) {
       requestCloseQuickDrill();
-      void openFlow(quickDrillPrimaryProcedure, quickDrillPrompt || quickDrillPrimaryProcedure.title);
+      void openFlow(
+        quickDrillPrimaryProcedure,
+        quickDrillPrompt || quickDrillPrimaryProcedure.title,
+        {
+          familyId: quickDrillFamily?.id || null,
+          familyTitle: quickDrillFamily?.title || null,
+          trackTitle: quickDrillTracks.find((track) => track.procedure.id === quickDrillPrimaryProcedure.id)?.category || null,
+        }
+      );
       return;
     }
 
@@ -1271,7 +1290,15 @@ export default function HomePage() {
 
   function handleQuickDrillTrackStart(procedure: ProcedureSummary, samplePrompt?: string) {
     requestCloseQuickDrill();
-    void openFlow(procedure, samplePrompt || quickDrillPrompt || procedure.title);
+    void openFlow(
+      procedure,
+      samplePrompt || quickDrillPrompt || procedure.title,
+      {
+        familyId: quickDrillFamily?.id || null,
+        familyTitle: quickDrillFamily?.title || null,
+        trackTitle: quickDrillTracks.find((track) => track.procedure.id === procedure.id)?.category || null,
+      }
+    );
   }
 
   return (
