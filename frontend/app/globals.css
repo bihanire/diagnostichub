@@ -4190,12 +4190,10 @@ body.quick-drill-open {
   font-weight: 620;
 }
 
-.lm-family-picker,
 .lm-utility-menu {
   position: relative;
 }
 
-.lm-family-picker summary,
 .lm-utility-menu summary,
 .lm-ops-link {
   list-style: none;
@@ -4219,7 +4217,6 @@ body.quick-drill-open {
   background: rgba(52, 137, 98, 0.22);
 }
 
-.lm-family-picker-panel,
 .lm-utility-panel {
   position: absolute;
   top: calc(100% + 8px);
@@ -4237,7 +4234,6 @@ body.quick-drill-open {
   z-index: 30;
 }
 
-.lm-family-picker-item,
 .lm-utility-panel a,
 .lm-utility-panel button {
   display: grid;
@@ -4250,20 +4246,6 @@ body.quick-drill-open {
   color: rgba(229, 245, 238, 0.92);
   text-decoration: none;
   font-size: 0.82rem;
-}
-
-.lm-family-picker-item strong {
-  font-size: 0.84rem;
-}
-
-.lm-family-picker-item span {
-  color: rgba(206, 234, 224, 0.72);
-  font-size: 0.74rem;
-}
-
-.lm-family-picker-item.is-active {
-  border-color: rgba(152, 247, 207, 0.5);
-  background: rgba(65, 150, 111, 0.24);
 }
 
 .lm-main-grid {
