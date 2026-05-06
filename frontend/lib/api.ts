@@ -11,6 +11,7 @@ import {
   OpsTelemetrySummaryResponse,
   ProcedureFeedbackBreakdownResponse,
   RepairFamilyDetail,
+  RepairFamilyLearningModule,
   RepairFamilySummary,
   RelatedResponse,
   SearchResponse,
@@ -25,6 +26,7 @@ const API_BASE_URL = configuredApiBaseUrl
 const API_TIMEOUT_MS = 15000;
 const FAMILY_CACHE_KEY = "diaghub-family-summaries";
 const FAMILY_DETAIL_CACHE_PREFIX = "diaghub-family-detail-";
+const FAMILY_MODULE_CACHE_PREFIX = "diaghub-family-module-";
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
@@ -155,6 +157,12 @@ export function clearCachedRepairFamilies(): void {
 export function getRepairFamilyDetail(familyId: string): Promise<RepairFamilyDetail> {
   return withOfflineCache(`${FAMILY_DETAIL_CACHE_PREFIX}${familyId}`, () =>
     apiRequest<RepairFamilyDetail>(`/families/${familyId}`)
+  );
+}
+
+export function getRepairFamilyLearningModule(familyId: string): Promise<RepairFamilyLearningModule> {
+  return withOfflineCache(`${FAMILY_MODULE_CACHE_PREFIX}${familyId}`, () =>
+    apiRequest<RepairFamilyLearningModule>(`/families/${familyId}/module`)
   );
 }
 

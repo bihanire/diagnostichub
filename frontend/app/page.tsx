@@ -15,6 +15,7 @@ import {
   getRelated,
   getRepairFamilies,
   getRepairFamilyDetail,
+  getRepairFamilyLearningModule,
   recordInteractionTelemetry,
   searchProcedures,
   startTriage
@@ -31,6 +32,7 @@ import {
   InteractionTelemetryEvent,
   ProcedureSummary,
   RepairFamilyDetail,
+  RepairFamilyLearningModule,
   RepairFamilySummary,
   SearchResponse,
   TriageSession,
@@ -234,6 +236,7 @@ export default function HomePage() {
   const [quickDrillFamily, setQuickDrillFamily] = useState<RepairFamilySummary | null>(null);
   const [quickDrillOrigin, setQuickDrillOrigin] = useState<QuickDrillOrigin | null>(null);
   const [quickDrillDetail, setQuickDrillDetail] = useState<RepairFamilyDetail | null>(null);
+  const [quickDrillModule, setQuickDrillModule] = useState<RepairFamilyLearningModule | null>(null);
   const [quickDrillLoading, setQuickDrillLoading] = useState(false);
   const [quickDrillError, setQuickDrillError] = useState<string | null>(null);
   const [quickDrillPrompt, setQuickDrillPrompt] = useState<string | null>(null);
@@ -266,12 +269,36 @@ export default function HomePage() {
       .slice(0, 8) ||
     quickDrillFamily?.symptom_prompts.slice(0, 8) ||
     [];
+  const promptByProcedureId =
+    quickDrillDetail?.common_categories.reduce<Record<number, string>>((index, category) => {
+      const firstExample = category.search_examples.find((example) => example.trim().length > 0);
+      if (!firstExample) {
+        return index;
+      }
+      index[category.primary_procedure.id] = firstExample;
+      return index;
+    }, {}) || {};
   const quickDrillTracks =
-    quickDrillDetail?.common_categories
+    quickDrillModule?.tracks.length
+      ? quickDrillModule.tracks.slice(0, 4).map((track) => ({
+          key: `${track.procedure.id}-${track.track_title}`,
+          category: track.track_title,
+          summary: track.track_summary || track.procedure.description,
+          firstQuestion: track.first_question || null,
+          guidedSteps: track.guided_steps,
+          relatedCount: track.related_suggestions.length,
+          prompt: promptByProcedureId[track.procedure.id] || null,
+          procedure: track.procedure,
+        }))
+      : quickDrillDetail?.common_categories
       .map((category) => ({
         key: `${category.primary_procedure.id}-${category.title}`,
         category: category.title,
-        prompts: category.search_examples.slice(0, 2),
+        summary: category.description,
+        firstQuestion: null,
+        guidedSteps: 0,
+        relatedCount: 0,
+        prompt: category.search_examples[0] || null,
         procedure: category.primary_procedure,
       }))
       .filter(
@@ -1116,6 +1143,7 @@ export default function HomePage() {
       setQuickDrillFamily(null);
       setQuickDrillOrigin(null);
       setQuickDrillDetail(null);
+      setQuickDrillModule(null);
       setQuickDrillLoading(false);
       setQuickDrillError(null);
       setQuickDrillPrompt(null);
@@ -1150,6 +1178,7 @@ export default function HomePage() {
       height: sourceRect.height
     });
     setQuickDrillDetail(null);
+    setQuickDrillModule(null);
     setQuickDrillLoading(true);
     setQuickDrillError(null);
     setQuickDrillPrompt(familyPrompts[0] || null);
@@ -1158,11 +1187,15 @@ export default function HomePage() {
     setActiveFamily(null);
 
     try {
-      const detail = await getRepairFamilyDetail(family.id);
+      const [detail, module] = await Promise.all([
+        getRepairFamilyDetail(family.id),
+        getRepairFamilyLearningModule(family.id).catch(() => null),
+      ]);
       if (quickDrillRequestIdRef.current !== nextRequestId) {
         return;
       }
       setQuickDrillDetail(detail);
+      setQuickDrillModule(module);
       if (detail.symptom_prompts.length > 0) {
         setQuickDrillPrompt(detail.symptom_prompts[0]);
       }
@@ -1634,21 +1667,29 @@ export default function HomePage() {
                       <div className="quick-drill-track-copy">
                         <span className="eyebrow">{track.category}</span>
                         <strong>{track.procedure.title}</strong>
-                        <p className="body-copy">{track.procedure.description}</p>
-                        {track.prompts.length ? (
-                          <div className="quick-drill-track-prompts">
-                            {track.prompts.map((prompt) => (
-                              <span className="quick-drill-track-prompt" key={`${track.key}-${prompt}`}>
-                                {prompt}
-                              </span>
-                            ))}
-                          </div>
+                        <p className="body-copy">{track.summary}</p>
+                        <div className="quick-drill-track-prompts">
+                          {track.guidedSteps > 0 ? (
+                            <span className="quick-drill-track-prompt">
+                              {track.guidedSteps} guided steps
+                            </span>
+                          ) : null}
+                          {track.relatedCount > 0 ? (
+                            <span className="quick-drill-track-prompt">
+                              {track.relatedCount} related suggestions
+                            </span>
+                          ) : null}
+                        </div>
+                        {track.firstQuestion ? (
+                          <p className="quick-drill-track-question">
+                            First question: {track.firstQuestion}
+                          </p>
                         ) : null}
                       </div>
                       <button
                         className="quick-drill-track-action"
                         data-magnetic
-                        onClick={() => handleQuickDrillTrackStart(track.procedure, track.prompts[0])}
+                        onClick={() => handleQuickDrillTrackStart(track.procedure, track.prompt || undefined)}
                         type="button"
                       >
                         Start guided steps

@@ -73,3 +73,21 @@ class RepairFamilyDetailResponse(BaseModel):
     escalation_signals: list[str] = Field(default_factory=list)
     in_family_stream: RepairFamilySignalStream = Field(default_factory=RepairFamilySignalStream)
     procedures: list[ProcedureSummary] = Field(default_factory=list)
+
+
+class RepairFamilyLearningTrack(BaseModel):
+    procedure: ProcedureSummary
+    track_title: str
+    track_summary: str
+    first_question: str | None = None
+    guided_steps: int = 1
+    related_suggestions: list[ProcedureSummary] = Field(default_factory=list)
+
+
+class RepairFamilyLearningModuleResponse(BaseModel):
+    id: str
+    title: str
+    hint: str
+    diagnostic_goal: str
+    symptom_prompts: list[str] = Field(default_factory=list)
+    tracks: list[RepairFamilyLearningTrack] = Field(default_factory=list)

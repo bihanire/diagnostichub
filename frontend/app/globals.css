@@ -1985,6 +1985,13 @@ body.quick-drill-open {
   letter-spacing: 0.04em;
 }
 
+.quick-drill-track-question {
+  margin: 0;
+  color: rgba(233, 248, 255, 0.86);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
 .quick-drill-track-action {
   border: 1px solid rgba(149, 244, 180, 0.42);
   border-radius: 12px;

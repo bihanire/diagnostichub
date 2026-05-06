@@ -22,6 +22,7 @@ const apiMocks = vi.hoisted(() => ({
   clearCachedRepairFamilies: vi.fn(),
   getRepairFamilies: vi.fn(),
   getRepairFamilyDetail: vi.fn(),
+  getRepairFamilyLearningModule: vi.fn(),
   recordInteractionTelemetry: vi.fn()
 }));
 
@@ -50,6 +51,7 @@ vi.mock("@/lib/api", () => ({
   clearCachedRepairFamilies: apiMocks.clearCachedRepairFamilies,
   getRepairFamilies: apiMocks.getRepairFamilies,
   getRepairFamilyDetail: apiMocks.getRepairFamilyDetail,
+  getRepairFamilyLearningModule: apiMocks.getRepairFamilyLearningModule,
   recordInteractionTelemetry: apiMocks.recordInteractionTelemetry
 }));
 
@@ -285,6 +287,32 @@ describe("HomePage", () => {
           description: "Use this for cracked displays and black screens.",
           outcome: "Screen diagnosis complete.",
           warranty_status: "Depends on visible damage."
+        }
+      ]
+    });
+    apiMocks.getRepairFamilyLearningModule.mockResolvedValue({
+      id: "display",
+      title: "Display & Vision",
+      hint: "Start here for cracked screens, black display, lines, blur, tint, or touch problems.",
+      diagnostic_goal:
+        "Separate visible damage, temporary display behaviour, and true internal screen faults before repair booking.",
+      symptom_prompts: ["cracked screen"],
+      tracks: [
+        {
+          procedure: {
+            id: 2,
+            title: "Screen Issue",
+            category: "Screen",
+            description: "Use this for cracked displays and black screens.",
+            outcome: "Screen diagnosis complete.",
+            warranty_status: "Depends on visible damage."
+          },
+          track_title: "Cracks and visible panel damage",
+          track_summary:
+            "Use this when the customer or officer can already see impact, broken glass, ink bleed, or pressure marks.",
+          first_question: "Is there visible crack or panel damage?",
+          guided_steps: 4,
+          related_suggestions: []
         }
       ]
     });

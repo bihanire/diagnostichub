@@ -19,7 +19,11 @@ from app.services.feedback_service import (
     get_feedback_language_candidates,
     get_feedback_summary,
 )
-from app.services.family_service import get_repair_family_detail, list_repair_families
+from app.services.family_service import (
+    get_repair_family_detail,
+    get_repair_family_learning_module,
+    list_repair_families,
+)
 from app.services.procedure_service import get_related_procedures
 from app.services.search_service import search_procedures
 from app.services.triage_service import next_triage_step, start_triage
@@ -223,6 +227,19 @@ class SearchAndTriageTests(unittest.TestCase):
                 for item in category.supporting_procedures
             },
         )
+
+    def test_repair_family_learning_module_returns_tracks(self) -> None:
+        with self.SessionLocal() as db:
+            module = get_repair_family_learning_module(db, "power")
+
+        self.assertIsNotNone(module)
+        assert module is not None
+        self.assertEqual(module.id, "power")
+        self.assertGreater(len(module.tracks), 0)
+        first_track = module.tracks[0]
+        self.assertGreaterEqual(first_track.guided_steps, 1)
+        self.assertIsNotNone(first_track.procedure.id)
+        self.assertTrue(first_track.track_title.strip())
 
     def test_start_triage_returns_first_question_and_progress(self) -> None:
         with self.SessionLocal() as db:

@@ -73,6 +73,24 @@ export type RepairFamilyDetail = {
   procedures: ProcedureSummary[];
 };
 
+export type RepairFamilyLearningTrack = {
+  procedure: ProcedureSummary;
+  track_title: string;
+  track_summary: string;
+  first_question?: string | null;
+  guided_steps: number;
+  related_suggestions: ProcedureSummary[];
+};
+
+export type RepairFamilyLearningModule = {
+  id: string;
+  title: string;
+  hint: string;
+  diagnostic_goal: string;
+  symptom_prompts: string[];
+  tracks: RepairFamilyLearningTrack[];
+};
+
 export type CustomerCare = {
   greeting: string;
   listening: string;

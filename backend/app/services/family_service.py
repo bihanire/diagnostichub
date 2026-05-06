@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.models import Procedure
@@ -9,6 +10,8 @@ from app.schemas.family import (
     RepairFamilyCategoryCard,
     RepairFamilyDetailResponse,
     RepairFamilyFocusCard,
+    RepairFamilyLearningModuleResponse,
+    RepairFamilyLearningTrack,
     RepairFamilyProcedureGroup,
     RepairFamilySignalCluster,
     RepairFamilySignalEntry,
@@ -16,6 +19,7 @@ from app.schemas.family import (
     RepairFamilySummary,
 )
 from app.services.procedure_service import procedure_query_with, to_summary
+from app.services.triage_service import calculate_depths, find_root_node
 
 FAMILY_DEFINITIONS = {
     "display": {
@@ -1021,4 +1025,77 @@ def get_repair_family_detail(db: Session, family_id: str) -> RepairFamilyDetailR
         escalation_signals=escalation_signals,
         in_family_stream=in_family_stream,
         procedures=[summary_for(procedure) for procedure in ordered_procedures],
+    )
+
+
+def get_repair_family_learning_module(
+    db: Session, family_id: str
+) -> RepairFamilyLearningModuleResponse | None:
+    family_detail = get_repair_family_detail(db, family_id)
+    if family_detail is None:
+        return None
+
+    ordered_procedures = sorted(family_detail.procedures, key=lambda item: item.title)
+    if not ordered_procedures:
+        return RepairFamilyLearningModuleResponse(
+            id=family_detail.id,
+            title=family_detail.title,
+            hint=family_detail.hint,
+            diagnostic_goal=family_detail.diagnostic_goal,
+            symptom_prompts=family_detail.symptom_prompts,
+            tracks=[],
+        )
+
+    procedure_ids = [item.id for item in ordered_procedures]
+    hydrated_procedures = db.scalars(
+        procedure_query_with(
+            include_tags=False,
+            include_decision_nodes=True,
+            include_links=True,
+        ).where(Procedure.id.in_(procedure_ids))
+    ).all()
+    hydrated_by_id = {procedure.id: procedure for procedure in hydrated_procedures}
+
+    category_by_procedure_id: dict[int, tuple[str, str]] = {}
+    for category in family_detail.common_categories:
+        category_by_procedure_id.setdefault(
+            category.primary_procedure.id,
+            (category.title, category.description),
+        )
+
+    tracks: list[RepairFamilyLearningTrack] = []
+    for summary in ordered_procedures:
+        procedure = hydrated_by_id.get(summary.id)
+        if procedure is None:
+            continue
+
+        root_node = find_root_node(procedure)
+        _, total_steps = calculate_depths(procedure)
+        related_suggestions = [
+            to_summary(link.linked_procedure)
+            for link in procedure.links[:3]
+            if link.linked_procedure is not None
+        ]
+        category_title, category_summary = category_by_procedure_id.get(
+            summary.id,
+            (summary.category, summary.description),
+        )
+        tracks.append(
+            RepairFamilyLearningTrack(
+                procedure=summary,
+                track_title=category_title,
+                track_summary=category_summary,
+                first_question=root_node.question if root_node else None,
+                guided_steps=max(total_steps, 1),
+                related_suggestions=related_suggestions,
+            )
+        )
+
+    return RepairFamilyLearningModuleResponse(
+        id=family_detail.id,
+        title=family_detail.title,
+        hint=family_detail.hint,
+        diagnostic_goal=family_detail.diagnostic_goal,
+        symptom_prompts=family_detail.symptom_prompts,
+        tracks=tracks,
     )
