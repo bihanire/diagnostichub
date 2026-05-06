@@ -3,11 +3,14 @@
 import { FormEvent, KeyboardEvent, PointerEvent, Suspense, startTransition, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import { AIDiagnosticWorkspace } from "@/components/AIDiagnosticWorkspace";
+import { AppShell } from "@/components/AppShell";
+import { ContextIntelligencePanel } from "@/components/ContextIntelligencePanel";
 import { FamilyExplorer } from "@/components/FamilyExplorer";
+import { LearningRail } from "@/components/LearningRail";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
-import { RepairFamilyGrid } from "@/components/RepairFamilyGrid";
-import { SearchAssistDropdown } from "@/components/SearchAssistDropdown";
-import { SuggestionList } from "@/components/SuggestionList";
+import { StatusStrip } from "@/components/StatusStrip";
+import { TopCommandBar } from "@/components/TopCommandBar";
 import {
   ApiError,
   clearCachedRepairFamilies,
@@ -218,6 +221,8 @@ function FamilyIntentSync({ onIntent }: { onIntent: (familyId: string | null) =>
 
 export default function HomePage() {
   const router = useRouter();
+  const [moduleMode, setModuleMode] = useState("diagnostic");
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [familyIntentId, setFamilyIntentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
@@ -247,7 +252,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLElement | null>(null);
   const familyExplorerRef = useRef<HTMLDivElement | null>(null);
-  const searchInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const searchInputRef = useRef<HTMLTextAreaElement>(null);
   const quickDrillPanelRef = useRef<HTMLDivElement | null>(null);
   const quickDrillShroudRef = useRef<HTMLButtonElement | null>(null);
   const searchAbortRef = useRef<AbortController | null>(null);
@@ -311,6 +316,36 @@ export default function HomePage() {
   const selectedReviewProcedure =
     reviewCandidates.find((item) => item.id === reviewSelectedProcedureId) || null;
   const recoveryFamily = searchResult ? getRecoveryFamily(searchResult, families) : null;
+  const selectedFamilyId =
+    quickDrillFamily?.id || activeFamily?.id || familyLoadingId || familyIntentId || null;
+  const selectedFamily =
+    (selectedFamilyId ? families.find((item) => item.id === selectedFamilyId) : null) || null;
+  const activeProcedureTitle =
+    searchResult?.best_match?.title ||
+    resumeSession?.procedure.title ||
+    quickDrillPrimaryProcedure?.title ||
+    "Not selected";
+  const riskFlags = [
+    ...(activeFamily?.escalation_signals || []),
+    ...(quickDrillDetail?.escalation_signals || []),
+  ].filter((item, index, allItems) => allItems.indexOf(item) === index);
+  const eligibilityChecks = [
+    ...(activeFamily?.branch_checks || []),
+    ...(quickDrillDetail?.branch_checks || []),
+  ].filter((item, index, allItems) => allItems.indexOf(item) === index);
+  const contextAlternatives = searchResult?.alternatives || [];
+  const contextRelated = searchResult?.related || [];
+  const phaseLabel = searching
+    ? "AI interpretation"
+    : searchResult
+      ? "Action planning"
+      : activeFamily || quickDrillFamily
+        ? "Learning path"
+        : "Case intake";
+  const confidenceLabel = searchResult
+    ? `${Math.round(searchResult.confidence * 100)}% (${searchResult.confidence_state})`
+    : "Awaiting query";
+  const readinessLabel = error ? "Attention needed" : "Operational";
 
   useEffect(() => {
     setResumeSession(loadSession());
@@ -320,6 +355,45 @@ export default function HomePage() {
     router.prefetch("/triage");
     router.prefetch("/result");
   }, [router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const inEditableField = Boolean(
+        target &&
+          (target.tagName === "INPUT" ||
+            target.tagName === "TEXTAREA" ||
+            target.isContentEditable)
+      );
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
+      }
+
+      if (event.key === "/" && !inEditableField) {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (event.key === "Escape") {
+        setCommandPaletteOpen(false);
+        setSearchAssistOpen(false);
+        if (quickDrillFamily) {
+          requestCloseQuickDrill();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [quickDrillFamily]);
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -1090,6 +1164,26 @@ export default function HomePage() {
     }
   }
 
+  function handleSelectFamilyFromRail(family: RepairFamilySummary, trigger: HTMLButtonElement) {
+    setError(null);
+    void openQuickDrill(family, trigger.getBoundingClientRect());
+  }
+
+  function handleOpenProcedureFromRail(procedureId: number) {
+    const procedure =
+      activeFamily?.procedures.find((item) => item.id === procedureId) ||
+      quickDrillDetail?.procedures.find((item) => item.id === procedureId);
+    if (!procedure) {
+      return;
+    }
+    void openFlow(procedure, procedure.title, {
+      familyId: activeFamily?.id || quickDrillFamily?.id || null,
+      familyTitle: activeFamily?.title || quickDrillFamily?.title || null,
+      trackTitle:
+        activeFamily?.common_categories.find((item) => item.primary_procedure.id === procedure.id)?.title || null,
+    });
+  }
+
   function requestCloseQuickDrill() {
     if (!quickDrillFamily || quickDrillClosing) {
       return;
@@ -1162,6 +1256,23 @@ export default function HomePage() {
       setQuickDrillClosing(false);
       quickDrillPointerRef.current = null;
     }, reducedMotion ? 0 : 280);
+  }
+
+  function closeQuickDrillImmediately() {
+    if (quickDrillCloseTimeoutRef.current !== null) {
+      window.clearTimeout(quickDrillCloseTimeoutRef.current);
+      quickDrillCloseTimeoutRef.current = null;
+    }
+    setQuickDrillFamily(null);
+    setQuickDrillOrigin(null);
+    setQuickDrillDetail(null);
+    setQuickDrillModule(null);
+    setQuickDrillLoading(false);
+    setQuickDrillError(null);
+    setQuickDrillPrompt(null);
+    setQuickDrillPreheat(false);
+    setQuickDrillClosing(false);
+    quickDrillPointerRef.current = null;
   }
 
   async function openQuickDrill(family: RepairFamilySummary, sourceRect: DOMRect) {
@@ -1266,7 +1377,7 @@ export default function HomePage() {
     }
 
     const familyId = quickDrillFamily.id;
-    requestCloseQuickDrill();
+    closeQuickDrillImmediately();
     void openFamily(familyId);
   }
 
@@ -1309,324 +1420,243 @@ export default function HomePage() {
       <Suspense fallback={null}>
         <FamilyIntentSync onIntent={setFamilyIntentId} />
       </Suspense>
-      <section className="hero hero-compact hero-world">
-        <div className="hero-ambient-map" aria-hidden="true">
-          <span className="hero-map-node hero-map-node-search" />
-          <span className="hero-map-node hero-map-node-triage" />
-          <span className="hero-map-node hero-map-node-action" />
-          <span className="hero-map-line hero-map-line-one" />
-          <span className="hero-map-line hero-map-line-two" />
-        </div>
-        <div className="hero-compact-grid">
-          <div className="hero-copy">
-            <span className="eyebrow">{uiCopy.home.hero.eyebrow}</span>
-            <h1 className="home-hero-title">{uiCopy.home.hero.title}</h1>
-            <p>{uiCopy.home.hero.description}</p>
-            <div className="hero-command-strip" aria-label="Diagnosis workflow">
-              <span className="hero-command-chip hero-command-chip-active">
-                <strong>01</strong>
-                Search
-              </span>
-              <span className="hero-command-chip">
-                <strong>02</strong>
-                Triage
-              </span>
-              <span className="hero-command-chip">
-                <strong>03</strong>
-                Action
-              </span>
-            </div>
-          </div>
-          <div
-            id="case-intake"
-            className={`hero-search-shell ${searching ? "is-searching" : ""} ${
-              intakeFocusActive ? "is-intake-focus" : ""
-            } ${searchAssistOpen ? "has-search-assist" : ""}`}
-          >
-            <div className="search-shell-topline">
-              <span>Case intake</span>
-              <span>Full sentences work</span>
-            </div>
-            <form
-              className={`search-form ${searchAssistOpen ? "search-form-assist-open" : ""}`}
+      <AppShell
+        topBar={
+          <TopCommandBar
+            moduleMode={moduleMode}
+            onFocusSearch={() => searchInputRef.current?.focus()}
+            onModuleModeChange={setModuleMode}
+            onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          />
+        }
+        learningRail={
+          <LearningRail
+            activeFamily={activeFamily || quickDrillDetail}
+            activeFamilyId={selectedFamilyId}
+            families={families}
+            loadError={familiesError}
+            onOpenProcedure={handleOpenProcedureFromRail}
+            onRetryFamilies={() => {
+              void reloadFamilies();
+            }}
+            onSelectFamily={handleSelectFamilyFromRail}
+          />
+        }
+        workspace={
+          <section className="lm-workspace-zone" id="case-intake">
+            <AIDiagnosticWorkspace
+              activeSuggestionIndex={activeSuggestionIndex}
+              description={uiCopy.home.hero.description}
+              inputRef={searchInputRef}
+              moduleMode={moduleMode}
+              onBlur={() => {
+                if (assistBlurTimeoutRef.current !== null) {
+                  window.clearTimeout(assistBlurTimeoutRef.current);
+                }
+                assistBlurTimeoutRef.current = window.setTimeout(() => {
+                  setSearchAssistOpen(false);
+                }, 120);
+              }}
+              onClear={clearSearchInput}
+              onFocus={() => {
+                if (assistBlurTimeoutRef.current !== null) {
+                  window.clearTimeout(assistBlurTimeoutRef.current);
+                  assistBlurTimeoutRef.current = null;
+                }
+                setSearchAssistOpen(Boolean(query.trim()));
+              }}
+              onHoverSuggestion={setActiveSuggestionIndex}
+              onKeyDown={handleSearchInputKeyDown}
+              onPromptClick={(value) => {
+                setQuery(value);
+                void runSearch(value);
+              }}
+              onQueryChange={(value) => {
+                setQuery(value);
+                setSearchAssistOpen(Boolean(value.trim()));
+              }}
+              onRun={() => {
+                void runSearch(query);
+              }}
+              onSelectSuggestion={(suggestion) => {
+                void applySuggestion(suggestion);
+              }}
               onSubmit={handleSubmit}
+              promptChips={[
+                "Ask the module to explain this SOP",
+                "Guide me step-by-step",
+                "Check customer eligibility",
+                "Show related procedures",
+                "What should I do next?",
+              ]}
+              query={query}
+              searchAssistLoading={searchAssistLoading}
+              searchAssistOpen={searchAssistOpen}
+              searching={searching}
+              suggestions={searchSuggestions}
+              title={uiCopy.home.hero.title}
+            />
+
+            <section
+              key={`${searchResultKey}-${searchResult?.query || "empty"}`}
+              ref={resultsRef}
+              aria-label="Search results"
+              className="lm-results"
+              tabIndex={-1}
             >
-              <label className="search-label" htmlFor="problem-search">
-                Describe the problem
-              </label>
-              <div className="search-input-wrap">
-                <textarea
-                  id="problem-search"
-                  ref={searchInputRef}
-                  className="search-input search-input-enhanced"
-                  disabled={searching}
-                  value={query}
-                  onBlur={() => {
-                    if (assistBlurTimeoutRef.current !== null) {
-                      window.clearTimeout(assistBlurTimeoutRef.current);
-                    }
-                    assistBlurTimeoutRef.current = window.setTimeout(() => {
-                      setSearchAssistOpen(false);
-                    }, 120);
-                  }}
-                  onChange={(event) => {
-                    const nextValue = event.target.value;
-                    setQuery(nextValue);
-                    setSearchAssistOpen(Boolean(nextValue.trim()));
-                  }}
-                  onFocus={() => {
-                    if (assistBlurTimeoutRef.current !== null) {
-                      window.clearTimeout(assistBlurTimeoutRef.current);
-                      assistBlurTimeoutRef.current = null;
-                    }
-                    setSearchAssistOpen(Boolean(query.trim()));
-                  }}
-                  onKeyDown={handleSearchInputKeyDown}
-                  placeholder={uiCopy.home.search.placeholder}
-                  aria-activedescendant={
-                    activeSuggestionIndex >= 0
-                      ? `search-assist-option-${activeSuggestionIndex}`
-                      : undefined
-                  }
-                  aria-controls="search-assist-listbox"
-                  aria-describedby="problem-search-hint"
-                  aria-expanded={searchAssistOpen}
-                  aria-haspopup="listbox"
-                />
-                {query.trim() ? (
-                  <button
-                    aria-label="Clear search"
-                    className="search-clear-button"
-                    onClick={clearSearchInput}
-                    type="button"
-                  >
-                    x
-                  </button>
-                ) : null}
-                {searchAssistOpen ? (
-                  <div className="search-assist-anchor" id="search-assist-listbox">
-                    <SearchAssistDropdown
-                      activeIndex={activeSuggestionIndex}
-                      loading={searchAssistLoading}
-                      onHover={setActiveSuggestionIndex}
-                      onSelect={(suggestion) => {
-                        void applySuggestion(suggestion);
-                      }}
-                      query={query}
-                      suggestions={searchSuggestions}
+              {searchResult ? (
+                <>
+                  <section className="panel lm-intent-panel">
+                    <div className="panel-header">
+                      <span className="eyebrow">{uiCopy.home.intent.eyebrow}</span>
+                      <h3>{uiCopy.home.intent.title}</h3>
+                    </div>
+                    <div className="chip-row">
+                      {searchResult.structured_intent.issue_type ? (
+                        <span className="chip">{searchResult.structured_intent.issue_type}</span>
+                      ) : null}
+                      {searchResult.structured_intent.symptoms.map((symptom) => (
+                        <span className="chip" key={symptom}>
+                          {symptom}
+                        </span>
+                      ))}
+                    </div>
+                  </section>
+
+                  {reviewGateOpen ? (
+                    <section className="panel panel-compact">
+                      <div className="panel-header">
+                        <span className="eyebrow">Quick confirm</span>
+                        <h3>Pick the closest route before triage</h3>
+                      </div>
+                      <div className="family-supporting-list">
+                        {reviewCandidates.map((candidate) => (
+                          <button
+                            key={`review-candidate-${candidate.id}`}
+                            className={`family-support-chip ${
+                              reviewSelectedProcedureId === candidate.id ? "family-support-chip-active" : ""
+                            }`}
+                            onClick={() => handleReviewCandidateSelect(candidate)}
+                            type="button"
+                          >
+                            {candidate.title}
+                          </button>
+                        ))}
+                      </div>
+                      {selectedReviewProcedure ? (
+                        <p className="muted-copy">{selectedReviewProcedure.description}</p>
+                      ) : null}
+                      <div className="action-grid">
+                        <button
+                          className="primary-button"
+                          disabled={!selectedReviewProcedure}
+                          onClick={handleConfirmReviewSelection}
+                          type="button"
+                        >
+                          Continue with selected flow
+                        </button>
+                        <button className="secondary-button" onClick={handleDismissReviewGate} type="button">
+                          Keep reviewing
+                        </button>
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {searchResult.best_match ? (
+                    <ProcedureMatchCard
+                      procedure={searchResult.best_match}
+                      confidence={searchResult.confidence}
+                      confidenceState={searchResult.confidence_state}
+                      confidenceMargin={searchResult.confidence_margin}
+                      reviewMessage={searchResult.review_message}
+                      nextStep={searchResult.suggested_next_step}
+                      customerCare={searchResult.customer_care}
+                      busy={startingId === searchResult.best_match.id}
+                      onStart={handleStartBestMatch}
                     />
+                  ) : (
+                    <section className="panel">
+                      <div className="panel-header">
+                        <span className="eyebrow">{uiCopy.home.noMatch.eyebrow}</span>
+                        <h3>{uiCopy.home.noMatch.title}</h3>
+                      </div>
+                      <p className="body-copy">{searchResult.message}</p>
+                      <div className="quick-pill-row">
+                        {recoveryFamily ? (
+                          <button className="primary-button" onClick={handleOpenRecoveryFamily} type="button">
+                            Open {recoveryFamily.title}
+                          </button>
+                        ) : null}
+                        {recoveryFamily?.symptom_prompts?.slice(0, 2).map((prompt) => (
+                          <button
+                            key={`recovery-prompt-${prompt}`}
+                            className="quick-pill"
+                            onClick={() => handleRecoveryPromptSearch(prompt)}
+                            type="button"
+                          >
+                            {prompt}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </>
+              ) : searching ? (
+                <section className="panel search-skeleton-card" aria-hidden="true">
+                  <span className="skeleton-line skeleton-line-strong search-skeleton-line-lg" />
+                  <span className="skeleton-line search-skeleton-line" />
+                  <span className="skeleton-line search-skeleton-line-md" />
+                </section>
+              ) : resumeSession ? (
+                <section className="panel panel-compact saved-strip">
+                  <div className="saved-strip-copy">
+                    <h3>{uiCopy.home.savedProgress.title}</h3>
+                    <p className="body-copy">
+                      {resumeSession.procedure.title} {uiCopy.home.savedProgress.savedDeviceSuffix}
+                    </p>
                   </div>
-                ) : null}
-              </div>
-              <p
-                aria-live="polite"
-                className="search-hint"
-                id="problem-search-hint"
-              >
-                <span className="search-hint-primary">
-                  Use customer wording, then press Enter to run diagnosis.
-                </span>
-              </p>
-            </form>
-            {searching ? (
-              <div className="search-handshake" role="status">
-                Syncing with the diagnosis engine...
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      {searchResult ? (
-        <section
-          key={`${searchResultKey}-${searchResult.query}`}
-          ref={resultsRef}
-          aria-label="Search results"
-          className={`search-results-stage ${searching ? "search-results-stage-busy" : ""}`}
-          tabIndex={-1}
-        >
-          <section className="panel">
-            <div className="panel-header">
-              <span className="eyebrow">{uiCopy.home.intent.eyebrow}</span>
-              <h3>{uiCopy.home.intent.title}</h3>
-            </div>
-            <div className="chip-row">
-              {searchResult.structured_intent.issue_type ? (
-                <span className="chip">{searchResult.structured_intent.issue_type}</span>
-              ) : null}
-              {searchResult.structured_intent.symptoms.map((symptom) => (
-                <span className="chip" key={symptom}>
-                  {symptom}
-                </span>
-              ))}
-            </div>
-          </section>
-
-          {reviewGateOpen ? (
-            <section className="panel panel-compact">
-              <div className="panel-header">
-                <span className="eyebrow">Quick confirm</span>
-                <h3>Pick the closest route before triage</h3>
-              </div>
-              <p className="body-copy">
-                Which one best matches what you can confirm right now?
-              </p>
-              <div className="family-supporting-list">
-                {reviewCandidates.map((candidate) => (
-                  <button
-                    key={`review-candidate-${candidate.id}`}
-                    className={`family-support-chip ${
-                      reviewSelectedProcedureId === candidate.id ? "family-support-chip-active" : ""
-                    }`}
-                    onClick={() => handleReviewCandidateSelect(candidate)}
-                    type="button"
-                  >
-                    {candidate.title}
-                  </button>
-                ))}
-              </div>
-              {selectedReviewProcedure ? (
-                <p className="muted-copy">{selectedReviewProcedure.description}</p>
-              ) : null}
-              <div className="action-grid">
-                <button
-                  className="primary-button"
-                  disabled={!selectedReviewProcedure}
-                  onClick={handleConfirmReviewSelection}
-                  type="button"
-                >
-                  Continue with selected flow
-                </button>
-                <button className="secondary-button" onClick={handleDismissReviewGate} type="button">
-                  Keep reviewing
-                </button>
-              </div>
+                  <div className="saved-strip-actions">
+                    <button className="primary-button" onClick={continueSession} type="button">
+                      {uiCopy.home.savedProgress.continueLabel}
+                    </button>
+                    <button className="secondary-button" onClick={resetSession} type="button">
+                      {uiCopy.home.savedProgress.clearLabel}
+                    </button>
+                  </div>
+                </section>
+              ) : (
+                <section className="panel panel-compact">
+                  <p className="body-copy">
+                    Customer issue → AI interpretation → diagnostic path → SOP action → related procedures.
+                  </p>
+                </section>
+              )}
             </section>
-          ) : null}
-
-          {searchResult.best_match ? (
-            <ProcedureMatchCard
-              procedure={searchResult.best_match}
-              confidence={searchResult.confidence}
-              confidenceState={searchResult.confidence_state}
-              confidenceMargin={searchResult.confidence_margin}
-              reviewMessage={searchResult.review_message}
-              nextStep={searchResult.suggested_next_step}
-              customerCare={searchResult.customer_care}
-              busy={startingId === searchResult.best_match.id}
-              onStart={handleStartBestMatch}
-            />
-          ) : (
-            <section className="panel">
-              <div className="panel-header">
-                <span className="eyebrow">{uiCopy.home.noMatch.eyebrow}</span>
-                <h3>{uiCopy.home.noMatch.title}</h3>
-              </div>
-              <p className="body-copy">{searchResult.message}</p>
-              <div className="quick-pill-row">
-                {recoveryFamily ? (
-                  <button className="primary-button" onClick={handleOpenRecoveryFamily} type="button">
-                    Open {recoveryFamily.title}
-                  </button>
-                ) : null}
-                {recoveryFamily?.symptom_prompts?.slice(0, 2).map((prompt) => (
-                  <button
-                    key={`recovery-prompt-${prompt}`}
-                    className="quick-pill"
-                    onClick={() => handleRecoveryPromptSearch(prompt)}
-                    type="button"
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          <details className="panel panel-compact detail-toggle">
-            <summary className="detail-toggle-summary">
-              <div className="panel-header">
-                <span className="eyebrow">{uiCopy.home.suggestions.alternativesTitle}</span>
-                <h3>{uiCopy.home.suggestions.alternativesTitle}</h3>
-              </div>
-              <span className="detail-toggle-action">Open</span>
-            </summary>
-            <SuggestionList
-              title={uiCopy.home.suggestions.alternativesTitle}
-              items={searchResult.alternatives}
-              emptyMessage={uiCopy.home.suggestions.alternativesEmpty}
-              onSelect={(procedure) => {
-                closeReviewGate();
-                openFlow(procedure, searchResult.query);
-              }}
-              embedded
-            />
-          </details>
-
-          <details className="panel panel-compact detail-toggle">
-            <summary className="detail-toggle-summary">
-              <div className="panel-header">
-                <span className="eyebrow">{uiCopy.home.suggestions.relatedTitle}</span>
-                <h3>{uiCopy.home.suggestions.relatedTitle}</h3>
-              </div>
-              <span className="detail-toggle-action">Open</span>
-            </summary>
-            <SuggestionList
-              title={uiCopy.home.suggestions.relatedTitle}
-              items={searchResult.related}
-              emptyMessage={uiCopy.home.suggestions.relatedEmpty}
-              onSelect={(procedure) => {
-                closeReviewGate();
-                openFlow(procedure, searchResult.query);
-              }}
-              embedded
-            />
-          </details>
-        </section>
-      ) : null}
-
-      {searching && !searchResult ? (
-        <section className="search-results-stage search-results-stage-skeleton" aria-hidden="true">
-          <section className="panel search-skeleton-card">
-            <span className="skeleton-line skeleton-line-strong search-skeleton-line-lg" />
-            <span className="skeleton-line search-skeleton-line" />
-            <span className="skeleton-line search-skeleton-line-md" />
           </section>
-          <section className="panel search-skeleton-card">
-            <span className="skeleton-line skeleton-line-strong search-skeleton-line-lg" />
-            <span className="skeleton-line search-skeleton-line" />
-            <span className="skeleton-line search-skeleton-line-sm" />
-            <span className="skeleton-line search-skeleton-line" />
-          </section>
-        </section>
-      ) : null}
-
-      {resumeSession ? (
-        <section className="panel panel-compact saved-strip">
-          <div className="saved-strip-copy">
-            <h3>{uiCopy.home.savedProgress.title}</h3>
-            <p className="body-copy">
-              {resumeSession.procedure.title} {uiCopy.home.savedProgress.savedDeviceSuffix}
-            </p>
-          </div>
-          <div className="saved-strip-actions">
-            <button className="primary-button" onClick={continueSession} type="button">
-              {uiCopy.home.savedProgress.continueLabel}
-            </button>
-            <button className="secondary-button" onClick={resetSession} type="button">
-              {uiCopy.home.savedProgress.clearLabel}
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      <RepairFamilyGrid
-        activeFamilyId={familyLoadingId || quickDrillFamily?.id || activeFamily?.id || null}
-        families={families}
-        loadError={familiesError}
-        onSelect={openQuickDrill}
-        onRetry={reloadFamilies}
+        }
+        contextPanel={
+          <ContextIntelligencePanel
+            alternatives={contextAlternatives}
+            eligibilityChecks={eligibilityChecks}
+            onSelectProcedure={(procedure) => {
+              closeReviewGate();
+              void openFlow(procedure, searchResult?.query || procedure.title);
+            }}
+            related={contextRelated}
+            riskFlags={riskFlags}
+          />
+        }
+        statusStrip={
+          <StatusStrip
+            confidence={confidenceLabel}
+            family={selectedFamily?.title || "Not selected"}
+            phase={phaseLabel}
+            procedure={activeProcedureTitle === "Not selected" ? activeProcedureTitle : `Flow: ${activeProcedureTitle}`}
+            readiness={readinessLabel}
+          />
+        }
       />
+
       {activeFamily ? (
         <div className="family-explorer-anchor" ref={familyExplorerRef}>
           <FamilyExplorer
@@ -1636,6 +1666,46 @@ export default function HomePage() {
             openingProcedureId={startingId}
           />
         </div>
+      ) : null}
+
+      {commandPaletteOpen ? (
+        <section aria-modal="true" className="lm-palette-layer" role="dialog">
+          <button
+            aria-label="Close command palette"
+            className="lm-palette-shroud"
+            onClick={() => setCommandPaletteOpen(false)}
+            type="button"
+          />
+          <div className="lm-palette">
+            <div className="panel-header">
+              <span className="eyebrow">Command palette</span>
+              <h3>What should I do next?</h3>
+            </div>
+            <div className="lm-palette-grid">
+              <button className="lm-palette-item" onClick={() => setModuleMode("guided")} type="button">
+                Guide me step-by-step
+              </button>
+              <button className="lm-palette-item" onClick={() => setModuleMode("explain")} type="button">
+                Explain this SOP
+              </button>
+              <button className="lm-palette-item" onClick={() => searchInputRef.current?.focus()} type="button">
+                Focus diagnosis input
+              </button>
+              <button
+                className="lm-palette-item"
+                onClick={() => {
+                  setCommandPaletteOpen(false);
+                  if (searchResult?.best_match) {
+                    void openFlow(searchResult.best_match, searchResult.query);
+                  }
+                }}
+                type="button"
+              >
+                Start best-match triage
+              </button>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       {quickDrillFamily ? (
