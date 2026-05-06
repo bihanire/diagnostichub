@@ -4120,7 +4120,7 @@ body.quick-drill-open {
 
 .lm-topbar {
   display: grid;
-  grid-template-columns: auto minmax(180px, 1.5fr) minmax(160px, 0.8fr) auto auto auto;
+  grid-template-columns: auto minmax(180px, 1.5fr) minmax(160px, 0.8fr) auto auto;
   align-items: center;
   gap: 10px;
   padding: 10px 14px;
@@ -4611,6 +4611,37 @@ body.quick-drill-open {
   font-size: 0.72rem;
 }
 
+.lm-context-count {
+  color: rgba(179, 234, 212, 0.82);
+  font-style: normal;
+  margin-left: 4px;
+}
+
+.lm-context-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.lm-context-summary-grid span {
+  display: grid;
+  gap: 2px;
+  border: 1px solid rgba(146, 227, 204, 0.16);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  color: rgba(211, 236, 227, 0.88);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.lm-context-summary-grid strong {
+  color: rgba(225, 247, 239, 0.96);
+  font-size: 0.84rem;
+  letter-spacing: 0;
+}
+
 .lm-status-strip {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -4692,7 +4723,7 @@ body.quick-drill-open {
   }
 
   .lm-topbar {
-    grid-template-columns: auto minmax(140px, 1fr) minmax(140px, 0.9fr) auto auto auto;
+    grid-template-columns: auto minmax(140px, 1fr) minmax(140px, 0.9fr) auto auto;
   }
 }
 
@@ -4704,6 +4735,10 @@ body.quick-drill-open {
   .lm-rail-wrap,
   .lm-context-wrap {
     max-height: 220px;
+  }
+
+  .lm-context-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .lm-status-strip {

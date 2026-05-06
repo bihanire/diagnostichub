@@ -16,7 +16,9 @@ function renderProcedureList(
   return (
     <section className="lm-context-card">
       <div className="panel-header">
-        <span className="eyebrow">{title}</span>
+        <span className="eyebrow">
+          {title} <em className="lm-context-count">{items.length}</em>
+        </span>
       </div>
       {items.length > 0 ? (
         <div className="lm-context-list">
@@ -46,8 +48,35 @@ export function ContextIntelligencePanel({
   eligibilityChecks,
   onSelectProcedure,
 }: ContextIntelligencePanelProps) {
+  const hasSignals = related.length > 0 || alternatives.length > 0 || riskFlags.length > 0 || eligibilityChecks.length > 0;
+
   return (
-    <div className="lm-context">
+    <div className="lm-context" aria-live="polite">
+      <section className="lm-context-card lm-context-summary">
+        <div className="panel-header">
+          <span className="eyebrow">Context intelligence</span>
+        </div>
+        <div className="lm-context-summary-grid">
+          <span>
+            <strong>{related.length}</strong>
+            Related
+          </span>
+          <span>
+            <strong>{alternatives.length}</strong>
+            Next routes
+          </span>
+          <span>
+            <strong>{riskFlags.length}</strong>
+            Risks
+          </span>
+          <span>
+            <strong>{eligibilityChecks.length}</strong>
+            Checks
+          </span>
+        </div>
+        {!hasSignals ? <p className="muted-copy">Run diagnosis or open a family to populate intelligence.</p> : null}
+      </section>
+
       {renderProcedureList("Related procedures", related, onSelectProcedure)}
       {renderProcedureList("Recommended next routes", alternatives, onSelectProcedure)}
 
