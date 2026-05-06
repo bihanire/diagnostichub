@@ -266,6 +266,20 @@ export default function HomePage() {
       .slice(0, 8) ||
     quickDrillFamily?.symptom_prompts.slice(0, 8) ||
     [];
+  const quickDrillTracks =
+    quickDrillDetail?.common_categories
+      .map((category) => ({
+        key: `${category.primary_procedure.id}-${category.title}`,
+        category: category.title,
+        prompts: category.search_examples.slice(0, 2),
+        procedure: category.primary_procedure,
+      }))
+      .filter(
+        (track, index, allTracks) =>
+          allTracks.findIndex((candidate) => candidate.procedure.id === track.procedure.id) === index
+      )
+      .slice(0, 4) ||
+    [];
   const reviewGateOpen = reviewCandidates.length > 1;
   const selectedReviewProcedure =
     reviewCandidates.find((item) => item.id === reviewSelectedProcedureId) || null;
@@ -1222,6 +1236,11 @@ export default function HomePage() {
     handleQuickDrillOpenWorkspace();
   }
 
+  function handleQuickDrillTrackStart(procedure: ProcedureSummary, samplePrompt?: string) {
+    requestCloseQuickDrill();
+    void openFlow(procedure, samplePrompt || quickDrillPrompt || procedure.title);
+  }
+
   return (
     <main
       className={`app-shell ${intakeFocusActive ? "app-shell-intake-focus" : ""}`}
@@ -1601,6 +1620,43 @@ export default function HomePage() {
                   </span>
                 ))}
               </div>
+            ) : null}
+
+            {quickDrillTracks.length ? (
+              <section className="quick-drill-track-block">
+                <div className="quick-drill-track-head">
+                  <strong>Procedure tracks</strong>
+                  <span>Choose one path before guided steps.</span>
+                </div>
+                <div className="quick-drill-track-grid">
+                  {quickDrillTracks.map((track) => (
+                    <article className="quick-drill-track-card" key={track.key}>
+                      <div className="quick-drill-track-copy">
+                        <span className="eyebrow">{track.category}</span>
+                        <strong>{track.procedure.title}</strong>
+                        <p className="body-copy">{track.procedure.description}</p>
+                        {track.prompts.length ? (
+                          <div className="quick-drill-track-prompts">
+                            {track.prompts.map((prompt) => (
+                              <span className="quick-drill-track-prompt" key={`${track.key}-${prompt}`}>
+                                {prompt}
+                              </span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                      <button
+                        className="quick-drill-track-action"
+                        data-magnetic
+                        onClick={() => handleQuickDrillTrackStart(track.procedure, track.prompts[0])}
+                        type="button"
+                      >
+                        Start guided steps
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </section>
             ) : null}
 
             <section className="quick-drill-chip-block">

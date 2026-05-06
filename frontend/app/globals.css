@@ -1905,6 +1905,110 @@ body.quick-drill-open {
   text-transform: uppercase;
 }
 
+.quick-drill-track-block {
+  display: grid;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.quick-drill-track-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.quick-drill-track-head strong {
+  color: rgba(240, 250, 255, 0.9);
+  font-size: 0.84rem;
+  font-weight: 820;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.quick-drill-track-head span {
+  color: rgba(226, 242, 250, 0.72);
+  font-size: 0.76rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.quick-drill-track-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.quick-drill-track-card {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.06));
+}
+
+.quick-drill-track-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-drill-track-copy strong {
+  color: rgba(244, 251, 255, 0.96);
+  font-size: 0.98rem;
+  line-height: 1.25;
+}
+
+.quick-drill-track-copy .body-copy {
+  margin: 0;
+  color: rgba(223, 240, 249, 0.8);
+  font-size: 0.84rem;
+}
+
+.quick-drill-track-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-drill-track-prompt {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(133, 222, 244, 0.26);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(214, 244, 255, 0.9);
+  font-size: 0.72rem;
+  font-weight: 720;
+  letter-spacing: 0.04em;
+}
+
+.quick-drill-track-action {
+  border: 1px solid rgba(149, 244, 180, 0.42);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(7, 29, 30, 0.86);
+  color: rgba(232, 255, 243, 0.95);
+  font-size: 0.82rem;
+  font-weight: 790;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    transform 0.22s var(--ease-premium),
+    border-color 0.22s var(--ease-premium),
+    background 0.22s var(--ease-premium),
+    box-shadow 0.22s var(--ease-premium);
+}
+
+.quick-drill-track-action:hover {
+  transform: translateY(-1px);
+  border-color: rgba(171, 251, 196, 0.64);
+  background: rgba(12, 44, 38, 0.92);
+  box-shadow: 0 14px 22px rgba(6, 33, 30, 0.24);
+}
+
 .quick-drill-chip-block {
   display: grid;
   gap: 10px;
@@ -3969,6 +4073,7 @@ body.quick-drill-open {
   }
 
   .quick-drill-chip-grid,
+  .quick-drill-track-grid,
   .quick-drill-actions {
     grid-template-columns: 1fr;
   }
