@@ -10,7 +10,8 @@ import type { SearchResponse, TriageSession, TriageStartResponse } from "@/lib/t
 const navigationMocks = vi.hoisted(() => ({
   push: vi.fn(),
   replace: vi.fn(),
-  prefetch: vi.fn()
+  prefetch: vi.fn(),
+  searchParams: new URLSearchParams()
 }));
 
 const apiMocks = vi.hoisted(() => ({
@@ -35,6 +36,9 @@ vi.mock("next/navigation", () => ({
     push: navigationMocks.push,
     replace: navigationMocks.replace,
     prefetch: navigationMocks.prefetch
+  }),
+  useSearchParams: () => ({
+    get: (key: string) => navigationMocks.searchParams.get(key)
   })
 }));
 
@@ -114,6 +118,7 @@ describe("HomePage", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    navigationMocks.searchParams = new URLSearchParams();
     HTMLElement.prototype.scrollIntoView = vi.fn();
     sessionMocks.loadSession.mockReturnValue(null);
     apiMocks.searchProcedures.mockResolvedValue(searchResponse);

@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, PointerEvent, startTransition, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, KeyboardEvent, PointerEvent, Suspense, startTransition, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { FamilyExplorer } from "@/components/FamilyExplorer";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
@@ -56,6 +56,43 @@ type QuickDrillOrigin = {
   width: number;
   height: number;
 };
+
+function createSyntheticQuickDrillOrigin(): DOMRect {
+  if (typeof window === "undefined") {
+    return {
+      top: 96,
+      left: 96,
+      width: 220,
+      height: 56,
+      x: 96,
+      y: 96,
+      right: 316,
+      bottom: 152,
+      toJSON: () => ({})
+    } as DOMRect;
+  }
+
+  const width = Math.max(180, Math.min(280, Math.round(window.innerWidth * 0.22)));
+  const height = 56;
+  const left = Math.max(12, Math.round(window.innerWidth - width - 28));
+  const top = 96;
+
+  if (typeof DOMRect === "function") {
+    return new DOMRect(left, top, width, height);
+  }
+
+  return {
+    top,
+    left,
+    width,
+    height,
+    x: left,
+    y: top,
+    right: left + width,
+    bottom: top + height,
+    toJSON: () => ({})
+  } as DOMRect;
+}
 
 const ISSUE_TYPE_TO_FAMILY_ID: Record<string, string> = {
   "Display & Vision": "display",
@@ -166,8 +203,20 @@ function getRecoveryFamily(
   return families[0] || null;
 }
 
+function FamilyIntentSync({ onIntent }: { onIntent: (familyId: string | null) => void }) {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const nextFamilyIntent = searchParams.get("family")?.trim().toLowerCase() || null;
+    onIntent(nextFamilyIntent);
+  }, [onIntent, searchParams]);
+
+  return null;
+}
+
 export default function HomePage() {
   const router = useRouter();
+  const [familyIntentId, setFamilyIntentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
   const [resumeSession, setResumeSession] = useState<TriageSession | null>(null);
@@ -206,6 +255,7 @@ export default function HomePage() {
   const quickDrillPreheatTimeoutRef = useRef<number | null>(null);
   const quickDrillRequestIdRef = useRef(0);
   const quickDrillPointerRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const quickDrillIntentRef = useRef<string | null>(null);
   const quickDrillActive = Boolean(quickDrillFamily);
   const intakeFocusActive = searching || searchAssistOpen || query.trim().length > 0;
   const quickDrillPrimaryProcedure = getFamilyPrimaryProcedure(quickDrillDetail);
@@ -470,6 +520,26 @@ export default function HomePage() {
 
     return () => window.clearTimeout(timer);
   }, [searchResult, searching]);
+
+  useEffect(() => {
+    if (!familyIntentId) {
+      quickDrillIntentRef.current = null;
+      return;
+    }
+
+    const requestedFamily = families.find((family) => family.id === familyIntentId);
+    if (!requestedFamily) {
+      return;
+    }
+
+    if (quickDrillIntentRef.current === familyIntentId) {
+      return;
+    }
+
+    quickDrillIntentRef.current = familyIntentId;
+    setError(null);
+    void openQuickDrill(requestedFamily, createSyntheticQuickDrillOrigin());
+  }, [families, familyIntentId, quickDrillFamily?.id]);
 
   useEffect(() => {
     if (!activeFamily) {
@@ -972,6 +1042,20 @@ export default function HomePage() {
     if (!quickDrillFamily || quickDrillClosing) {
       return;
     }
+
+    if (familyIntentId) {
+      quickDrillIntentRef.current = null;
+      setFamilyIntentId(null);
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("family");
+        const nextHref = `${url.pathname}${url.search}${url.hash}`;
+        startTransition(() => {
+          router.replace(nextHref, { scroll: false });
+        });
+      }
+    }
+
     quickDrillRequestIdRef.current += 1;
     if (quickDrillPreheatTimeoutRef.current !== null) {
       window.clearTimeout(quickDrillPreheatTimeoutRef.current);
@@ -1143,6 +1227,9 @@ export default function HomePage() {
       className={`app-shell ${intakeFocusActive ? "app-shell-intake-focus" : ""}`}
       id="main-content"
     >
+      <Suspense fallback={null}>
+        <FamilyIntentSync onIntent={setFamilyIntentId} />
+      </Suspense>
       <section className="hero hero-compact hero-world">
         <div className="hero-ambient-map" aria-hidden="true">
           <span className="hero-map-node hero-map-node-search" />
@@ -1172,6 +1259,7 @@ export default function HomePage() {
             </div>
           </div>
           <div
+            id="case-intake"
             className={`hero-search-shell ${searching ? "is-searching" : ""} ${
               intakeFocusActive ? "is-intake-focus" : ""
             } ${searchAssistOpen ? "has-search-assist" : ""}`}

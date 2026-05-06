@@ -248,27 +248,39 @@ export function AppStatusShell() {
       return;
     }
 
-    const utilitySummary = document.querySelector<HTMLElement>(".site-utility-trigger");
-    if (!utilitySummary) {
+    const utilitySummaries = Array.from(
+      document.querySelectorAll<HTMLElement>(".site-utility-trigger")
+    );
+    if (utilitySummaries.length === 0) {
       return;
     }
 
-    let lastToggleAt = 0;
+    const lastToggleMap = new WeakMap<HTMLElement, number>();
     const debounceMs = 220;
 
     const handleClick = (event: MouseEvent) => {
+      const target = event.currentTarget as HTMLElement | null;
+      if (!target) {
+        return;
+      }
       const now = performance.now();
+      const lastToggleAt = lastToggleMap.get(target) || 0;
       if (now - lastToggleAt < debounceMs) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
-      lastToggleAt = now;
+      lastToggleMap.set(target, now);
     };
 
-    utilitySummary.addEventListener("click", handleClick, true);
+    utilitySummaries.forEach((summary) => {
+      summary.addEventListener("click", handleClick, true);
+    });
+
     return () => {
-      utilitySummary.removeEventListener("click", handleClick, true);
+      utilitySummaries.forEach((summary) => {
+        summary.removeEventListener("click", handleClick, true);
+      });
     };
   }, [mounted]);
 

@@ -327,6 +327,12 @@ body.low-power-visuals {
   animation: chrome-settle 0.8s var(--ease-premium) both;
 }
 
+.site-header-left {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
 .site-header-hairline {
   width: min(100% - 32px, 1120px);
   height: 0.5px;
@@ -339,13 +345,13 @@ body.low-power-visuals {
   display: inline-flex;
   align-items: center;
   align-self: center;
-  gap: 14px;
+  gap: 10px;
   padding: 4px 2px 4px 2px;
-  color: #f8fbfb;
+  color: #31d986;
   font-family: var(--font-display), "Segoe UI", sans-serif;
-  font-size: clamp(2.5rem, 5vw, 3.4rem);
-  font-weight: 680;
-  letter-spacing: -0.06em;
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
   line-height: 0.94;
   text-decoration: none;
   text-transform: lowercase;
@@ -388,14 +394,22 @@ body.low-power-visuals {
 
 .site-wordmark:hover {
   transform: translateY(-1px);
-  filter: brightness(1.04);
+  filter: brightness(1.08);
+}
+
+.site-wordmark-right {
+  margin-left: 2px;
 }
 
 .site-nav {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: flex-end;
   gap: 12px;
+}
+
+.site-nav-right {
+  flex-wrap: wrap;
 }
 
 .site-nav-link {
@@ -419,6 +433,16 @@ body.low-power-visuals {
     border-color 0.26s var(--ease-premium),
     background 0.26s var(--ease-premium),
     filter 0.1s linear;
+}
+
+.site-nav-link-search {
+  padding: 9px 12px;
+  border-color: rgba(103, 232, 145, 0.34);
+  background: linear-gradient(135deg, rgba(17, 65, 54, 0.62), rgba(20, 79, 64, 0.52));
+  color: rgba(221, 255, 233, 0.95);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .site-nav-link:hover {
@@ -481,8 +505,13 @@ body.low-power-visuals {
   z-index: 3;
 }
 
+.site-family-panel {
+  min-width: 320px;
+}
+
 .site-utility-link {
-  display: block;
+  display: grid;
+  gap: 3px;
   padding: 10px 12px;
   border-radius: 12px;
   color: rgba(236, 246, 255, 0.95);
@@ -504,6 +533,14 @@ body.low-power-visuals {
 .site-utility-link:active {
   filter: brightness(0.9);
   transition-duration: 100ms;
+}
+
+.site-utility-link-subtle {
+  color: rgba(188, 223, 215, 0.82);
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
 }
 
 .hero {

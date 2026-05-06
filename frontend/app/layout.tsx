@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { AppStatusShell } from "@/components/AppStatusShell";
 import { uiCopy } from "@/lib/copy";
+import { repairFamilyShortcuts } from "@/lib/issue-visuals";
 
 import "./globals.css";
 
@@ -35,14 +36,33 @@ export default function RootLayout({
         <div className="site-chrome">
           <header className="site-header">
             <div className="site-header-inner">
-              <Link className="site-wordmark" href="/">
-                <span className="site-wordmark-mark" aria-hidden="true">
-                  <span />
-                  <span />
-                </span>
-                <span className="site-wordmark-text">watu</span>
-              </Link>
-              <nav aria-label="Reference tools" className="site-nav">
+              <div className="site-header-left">
+                <Link className="site-nav-link site-nav-link-search" data-magnetic href="/#case-intake">
+                  Search case
+                </Link>
+              </div>
+              <nav aria-label="Primary tools" className="site-nav site-nav-right">
+                <details className="site-utility-menu site-family-menu">
+                  <summary className="site-nav-link site-utility-trigger" data-magnetic>
+                    Flow Library
+                    <span className="site-utility-caret" aria-hidden="true">
+                      v
+                    </span>
+                  </summary>
+                  <div className="site-utility-panel site-family-panel">
+                    {repairFamilyShortcuts.map((family) => (
+                      <Link
+                        className="site-utility-link"
+                        data-magnetic
+                        href={`/?family=${family.id}`}
+                        key={family.id}
+                      >
+                        <span>{family.label}</span>
+                        <span className="site-utility-link-subtle">{family.hint}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </details>
                 <details className="site-utility-menu">
                   <summary className="site-nav-link site-utility-trigger" data-magnetic>
                     System Utilities
@@ -73,6 +93,13 @@ export default function RootLayout({
                 </details>
                 <Link className="site-nav-link site-nav-link-ops" data-magnetic href="/ops/login">
                   Ops
+                </Link>
+                <Link className="site-wordmark site-wordmark-right" href="/">
+                  <span className="site-wordmark-mark" aria-hidden="true">
+                    <span />
+                    <span />
+                  </span>
+                  <span className="site-wordmark-text">watu</span>
                 </Link>
               </nav>
             </div>
