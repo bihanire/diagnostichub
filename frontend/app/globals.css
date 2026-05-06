@@ -4376,6 +4376,23 @@ body.quick-drill-open {
   gap: 6px;
 }
 
+.lm-rail-children-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lm-rail-toggle {
+  border: 1px solid rgba(148, 225, 205, 0.26);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(221, 245, 236, 0.88);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+}
+
 .lm-rail-child {
   display: grid;
   gap: 4px;
@@ -4392,6 +4409,12 @@ body.quick-drill-open {
   font-size: 0.72rem;
 }
 
+.lm-rail-collapsed-copy {
+  margin: 0;
+  font-size: 0.74rem;
+  color: rgba(198, 228, 219, 0.76);
+}
+
 .lm-workspace-zone {
   height: 100%;
   overflow-y: auto;
@@ -4404,6 +4427,24 @@ body.quick-drill-open {
   margin: 2px 0 6px;
   font-size: clamp(1.25rem, 2vw, 1.8rem);
   line-height: 1.12;
+}
+
+.lm-workspace-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.lm-workspace-flow span {
+  border: 1px solid rgba(145, 224, 202, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(205, 234, 224, 0.86);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
 }
 
 .lm-workspace-head p {

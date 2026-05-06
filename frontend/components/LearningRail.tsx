@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import { RepairFamilyDetail, RepairFamilySummary } from "@/lib/types";
 
 type LearningRailProps = {
@@ -29,6 +31,12 @@ export function LearningRail({
   onOpenProcedure,
   onRetryFamilies,
 }: LearningRailProps) {
+  const [showProcedureTree, setShowProcedureTree] = useState(true);
+
+  useEffect(() => {
+    setShowProcedureTree(true);
+  }, [activeFamily?.id]);
+
   return (
     <div className="lm-rail">
       <div className="lm-rail-head">
@@ -65,18 +73,31 @@ export function LearningRail({
 
       {activeFamily ? (
         <div className="lm-rail-children">
-          <span className="eyebrow">Procedure tree</span>
-          {activeFamily.common_categories.slice(0, 5).map((category) => (
+          <div className="lm-rail-children-head">
+            <span className="eyebrow">Procedure tree</span>
             <button
-              className="lm-rail-child"
-              key={`child-${activeFamily.id}-${category.title}`}
-              onClick={() => onOpenProcedure(category.primary_procedure.id)}
+              className="lm-rail-toggle"
+              onClick={() => setShowProcedureTree((value) => !value)}
               type="button"
             >
-              <strong>{category.primary_procedure.title}</strong>
-              <span>Track: {category.title}</span>
+              {showProcedureTree ? "Hide" : "Show"}
             </button>
-          ))}
+          </div>
+          {showProcedureTree ? (
+            activeFamily.common_categories.slice(0, 5).map((category) => (
+              <button
+                className="lm-rail-child"
+                key={`child-${activeFamily.id}-${category.title}`}
+                onClick={() => onOpenProcedure(category.primary_procedure.id)}
+                type="button"
+              >
+                <strong>{category.primary_procedure.title}</strong>
+                <span>Track: {category.title}</span>
+              </button>
+            ))
+          ) : (
+            <p className="lm-rail-collapsed-copy">Procedure list collapsed. Expand to continue guided learning.</p>
+          )}
         </div>
       ) : null}
     </div>

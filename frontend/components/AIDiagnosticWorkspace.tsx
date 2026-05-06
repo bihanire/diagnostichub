@@ -33,6 +33,13 @@ const modeMap: Record<string, string> = {
   explain: "Explain this SOP clearly",
 };
 
+const workflowMilestones = [
+  "Families",
+  "Procedures",
+  "Guided steps",
+  "Related suggestions",
+];
+
 export function AIDiagnosticWorkspace({
   title,
   description,
@@ -62,6 +69,11 @@ export function AIDiagnosticWorkspace({
         <span className="eyebrow">LLM learning module for aftersales operations</span>
         <h1>{title}</h1>
         <p>{description}</p>
+        <div className="lm-workspace-flow" aria-label="Learning flow">
+          {workflowMilestones.map((milestone) => (
+            <span key={`workflow-${milestone}`}>{milestone}</span>
+          ))}
+        </div>
       </header>
 
       <form className="lm-diagnosis-form" onSubmit={onSubmit}>
@@ -73,6 +85,7 @@ export function AIDiagnosticWorkspace({
           <textarea
             ref={inputRef}
             aria-label="Describe the customer issue"
+            aria-describedby="diagnosis-helper"
             className="lm-diagnosis-input"
             disabled={searching}
             onBlur={onBlur}
@@ -109,7 +122,7 @@ export function AIDiagnosticWorkspace({
           <button className="primary-button lm-run-btn" onClick={onRun} type="submit">
             {searching ? "Thinking..." : "Run diagnosis"}
           </button>
-          <span>Enter to run, Esc to close overlays, Ctrl/Cmd+K for command palette</span>
+          <span id="diagnosis-helper">Enter to run, Esc to close overlays, Ctrl/Cmd+K for command palette</span>
         </div>
       </form>
 
