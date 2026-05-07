@@ -102,7 +102,7 @@ export function ContextIntelligencePanel({
         "Recommended next routes",
         alternatives,
         onSelectProcedure,
-        "Recommended next actions will appear after AI interpretation."
+        "Recommended next actions will appear after issue interpretation."
       )}
 
       <section className="lm-context-card">

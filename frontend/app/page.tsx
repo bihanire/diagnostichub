@@ -7,7 +7,7 @@ import { AIDiagnosticWorkspace } from "@/components/AIDiagnosticWorkspace";
 import { AppShell } from "@/components/AppShell";
 import { ContextIntelligencePanel } from "@/components/ContextIntelligencePanel";
 import { FamilyExplorer } from "@/components/FamilyExplorer";
-import { LearningRail } from "@/components/LearningRail";
+import { FamilyFlowSelector } from "@/components/FamilyFlowSelector";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
 import { StatusStrip } from "@/components/StatusStrip";
 import { TopCommandBar } from "@/components/TopCommandBar";
@@ -61,43 +61,6 @@ type QuickDrillOrigin = {
   width: number;
   height: number;
 };
-
-function createSyntheticQuickDrillOrigin(): DOMRect {
-  if (typeof window === "undefined") {
-    return {
-      top: 96,
-      left: 96,
-      width: 220,
-      height: 56,
-      x: 96,
-      y: 96,
-      right: 316,
-      bottom: 152,
-      toJSON: () => ({})
-    } as DOMRect;
-  }
-
-  const width = Math.max(180, Math.min(280, Math.round(window.innerWidth * 0.22)));
-  const height = 56;
-  const left = Math.max(12, Math.round(window.innerWidth - width - 28));
-  const top = 96;
-
-  if (typeof DOMRect === "function") {
-    return new DOMRect(left, top, width, height);
-  }
-
-  return {
-    top,
-    left,
-    width,
-    height,
-    x: left,
-    y: top,
-    right: left + width,
-    bottom: top + height,
-    toJSON: () => ({})
-  } as DOMRect;
-}
 
 const ISSUE_TYPE_TO_FAMILY_ID: Record<string, string> = {
   "Display & Vision": "display",
@@ -336,7 +299,7 @@ export default function HomePage() {
   const contextAlternatives = searchResult?.alternatives || [];
   const contextRelated = searchResult?.related || [];
   const phaseLabel = searching
-    ? "AI interpretation"
+    ? "Issue interpretation"
     : searchResult
       ? "Action planning"
       : activeFamily || quickDrillFamily
@@ -660,20 +623,8 @@ export default function HomePage() {
 
     quickDrillIntentRef.current = familyIntentId;
     setError(null);
-    void openQuickDrill(requestedFamily, createSyntheticQuickDrillOrigin());
-  }, [families, familyIntentId, quickDrillFamily?.id]);
-
-  useEffect(() => {
-    if (!activeFamily) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      familyExplorerRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
-    }, 90);
-
-    return () => window.clearTimeout(timer);
-  }, [activeFamily]);
+    void openFamily(requestedFamily.id);
+  }, [families, familyIntentId]);
 
   useEffect(() => {
     if (!quickDrillFamily || quickDrillClosing) {
@@ -1171,24 +1122,16 @@ export default function HomePage() {
     }
   }
 
-  function handleSelectFamilyFromRail(family: RepairFamilySummary, trigger: HTMLButtonElement) {
+  function handleSelectFamilyFromMenu(familyId: string, trigger: HTMLButtonElement) {
     setError(null);
-    void openQuickDrill(family, trigger.getBoundingClientRect());
-  }
-
-  function handleOpenProcedureFromRail(procedureId: number) {
-    const procedure =
-      activeFamily?.procedures.find((item) => item.id === procedureId) ||
-      quickDrillDetail?.procedures.find((item) => item.id === procedureId);
-    if (!procedure) {
+    const selected = families.find((family) => family.id === familyId);
+    if (!selected) {
       return;
     }
-    void openFlow(procedure, procedure.title, {
-      familyId: activeFamily?.id || quickDrillFamily?.id || null,
-      familyTitle: activeFamily?.title || quickDrillFamily?.title || null,
-      trackTitle:
-        activeFamily?.common_categories.find((item) => item.primary_procedure.id === procedure.id)?.title || null,
-    });
+    if (quickDrillActive) {
+      closeQuickDrillImmediately();
+    }
+    void openQuickDrill(selected, trigger.getBoundingClientRect());
   }
 
   function requestCloseQuickDrill() {
@@ -1385,7 +1328,20 @@ export default function HomePage() {
 
     const familyId = quickDrillFamily.id;
     closeQuickDrillImmediately();
-    void openFamily(familyId);
+    void openFamily(familyId).finally(() => {
+      const explorerAnchor = familyExplorerRef.current;
+      if (!explorerAnchor) {
+        return;
+      }
+      const prefersReducedMotion =
+        typeof window.matchMedia === "function" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      explorerAnchor.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start",
+        inline: "nearest"
+      });
+    });
   }
 
   function handleQuickDrillStartTriage() {
@@ -1430,23 +1386,13 @@ export default function HomePage() {
       <AppShell
         topBar={
           <TopCommandBar
+            families={families}
             moduleMode={moduleMode}
             onFocusSearch={() => searchInputRef.current?.focus()}
             onModuleModeChange={setModuleMode}
             onOpenCommandPalette={() => setCommandPaletteOpen(true)}
-          />
-        }
-        learningRail={
-          <LearningRail
-            activeFamily={activeFamily || quickDrillDetail}
-            activeFamilyId={selectedFamilyId}
-            families={families}
-            loadError={familiesError}
-            onOpenProcedure={handleOpenProcedureFromRail}
-            onRetryFamilies={() => {
-              void reloadFamilies();
-            }}
-            onSelectFamily={handleSelectFamilyFromRail}
+            onSelectFamily={handleSelectFamilyFromMenu}
+            selectedFamilyId={selectedFamilyId}
           />
         }
         workspace={
@@ -1505,6 +1451,28 @@ export default function HomePage() {
               suggestions={searchSuggestions}
               title={uiCopy.home.hero.title}
             />
+
+            <FamilyFlowSelector
+              family={activeFamily}
+              onSelectFlow={(procedure, trackTitle) => {
+                void openFlow(procedure, query || procedure.title, {
+                  familyId: activeFamily?.id || null,
+                  familyTitle: activeFamily?.title || null,
+                  trackTitle,
+                });
+              }}
+            />
+
+            {familiesError ? (
+              <section className="panel panel-compact lm-family-fallback-notice" role="status">
+                <p className="body-copy">
+                  Showing backup family guide while live family data refreshes.
+                </p>
+                <button className="secondary-button" onClick={() => void reloadFamilies()} type="button">
+                  Retry
+                </button>
+              </section>
+            ) : null}
 
             <section
               key={`${searchResultKey}-${searchResult?.query || "empty"}`}
@@ -1636,7 +1604,7 @@ export default function HomePage() {
               ) : (
                 <section className="panel panel-compact">
                   <p className="body-copy">
-                    Customer issue → AI interpretation → diagnostic path → SOP action → related procedures.
+                    Customer issue → interpretation → diagnostic path → SOP action → related procedures.
                   </p>
                 </section>
               )}
@@ -1668,12 +1636,21 @@ export default function HomePage() {
 
       {activeFamily ? (
         <div className="family-explorer-anchor" ref={familyExplorerRef}>
-          <FamilyExplorer
-            family={activeFamily}
-            onRunPrompt={runSearch}
-            onSelectProcedure={(procedure) => openFlow(procedure, procedure.title)}
-            openingProcedureId={startingId}
-          />
+          <details className="panel panel-compact detail-toggle lm-deep-guide">
+            <summary className="detail-toggle-summary">
+              <div className="panel-header">
+                <span className="eyebrow">Deep learning guide</span>
+                <h3>Open full family workspace</h3>
+              </div>
+              <span className="detail-toggle-action">Open</span>
+            </summary>
+            <FamilyExplorer
+              family={activeFamily}
+              onRunPrompt={runSearch}
+              onSelectProcedure={(procedure) => openFlow(procedure, procedure.title)}
+              openingProcedureId={startingId}
+            />
+          </details>
         </div>
       ) : null}
 
@@ -1755,7 +1732,7 @@ export default function HomePage() {
               <div className="quick-drill-stream">
                 {quickDrillDetail.common_categories.slice(0, 3).map((category) => (
                   <span className="quick-drill-stream-pill" key={`${quickDrillFamily.id}-${category.title}`}>
-                    {category.title}
+                    {category.title} route
                   </span>
                 ))}
               </div>

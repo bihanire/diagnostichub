@@ -1,17 +1,25 @@
 import Link from "next/link";
 
+import { RepairFamilySummary } from "@/lib/types";
+
 type TopCommandBarProps = {
+  families: RepairFamilySummary[];
+  selectedFamilyId: string | null;
   moduleMode: string;
   onModuleModeChange: (value: string) => void;
   onFocusSearch: () => void;
   onOpenCommandPalette: () => void;
+  onSelectFamily: (familyId: string, trigger: HTMLButtonElement) => void;
 };
 
 export function TopCommandBar({
+  families,
+  selectedFamilyId,
   moduleMode,
   onModuleModeChange,
   onFocusSearch,
   onOpenCommandPalette,
+  onSelectFamily,
 }: TopCommandBarProps) {
   const modeLabel =
     moduleMode === "diagnostic"
@@ -53,9 +61,33 @@ export function TopCommandBar({
             <option value="guided">Guide me step-by-step</option>
             <option value="explain">Explain this SOP</option>
           </select>
-          <span className={`lm-mode-badge lm-mode-badge-${moduleMode}`}>{modeLabel}</span>
+        <span className={`lm-mode-badge lm-mode-badge-${moduleMode}`}>{modeLabel}</span>
         </div>
       </div>
+
+      <details className="lm-family-menu">
+        <summary>Families</summary>
+        <div className="lm-family-menu-panel">
+          {families.map((family) => (
+            <button
+              aria-label={`Open ${family.title} diagnosis family`}
+              className={`lm-family-menu-item ${selectedFamilyId === family.id ? "is-active" : ""}`}
+              key={`family-menu-${family.id}`}
+              onClick={(event) => onSelectFamily(family.id, event.currentTarget)}
+              type="button"
+            >
+              <span className="lm-family-menu-glyph" aria-hidden="true">
+                {family.title.charAt(0)}
+              </span>
+              <span className="lm-family-menu-copy">
+                <strong>{family.title}</strong>
+                <small>{family.procedure_count} flows</small>
+                <span>{family.hint}</span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </details>
 
       <details className="lm-utility-menu">
         <summary>System utilities</summary>

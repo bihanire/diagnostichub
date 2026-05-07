@@ -4,7 +4,7 @@ type LearningPathProps = {
 
 const phaseSteps = [
   { id: "intake", label: "Customer issue" },
-  { id: "interpretation", label: "AI interpretation" },
+  { id: "interpretation", label: "Issue interpretation" },
   { id: "action", label: "SOP action" },
   { id: "related", label: "Related flow" },
 ] as const;

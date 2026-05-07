@@ -7,7 +7,7 @@ export function AssistantActionGrid({ items, onSelect }: AssistantActionGridProp
   return (
     <section className="lm-assistant-actions" aria-label="Assistant actions">
       <div className="lm-assistant-actions-head">
-        <span className="eyebrow">AI assistant actions</span>
+        <span className="eyebrow">Assistant actions</span>
       </div>
       <div className="lm-assistant-actions-grid">
         {items.map((item) => (

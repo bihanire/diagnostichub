@@ -92,7 +92,7 @@ export function AIDiagnosticWorkspace({
           <span>{modeMap[moduleMode] || modeMap.diagnostic}</span>
         </div>
         <div className="lm-ai-cues">
-          <span>AI interpretation</span>
+          <span>Issue interpretation</span>
           <span>Recommended diagnostic path</span>
           <span>Next best SOP action</span>
         </div>
