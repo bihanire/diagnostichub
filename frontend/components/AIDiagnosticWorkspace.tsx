@@ -1,11 +1,14 @@
 import { FormEvent, KeyboardEvent } from "react";
 
+import { AssistantActionGrid } from "@/components/AssistantActionGrid";
+import { LearningPath } from "@/components/LearningPath";
 import { SearchAssistDropdown } from "@/components/SearchAssistDropdown";
 import { SearchAssistSuggestion } from "@/lib/search-assist";
 
 type AIDiagnosticWorkspaceProps = {
   title: string;
   description: string;
+  activeFamilyTitle: string | null;
   moduleMode: string;
   query: string;
   searching: boolean;
@@ -24,6 +27,7 @@ type AIDiagnosticWorkspaceProps = {
   promptChips: string[];
   onPromptClick: (value: string) => void;
   onRun: () => void;
+  learningPhase: "intake" | "interpretation" | "action" | "related";
   inputRef: React.RefObject<HTMLTextAreaElement>;
 };
 
@@ -43,6 +47,7 @@ const workflowMilestones = [
 export function AIDiagnosticWorkspace({
   title,
   description,
+  activeFamilyTitle,
   moduleMode,
   query,
   searching,
@@ -61,6 +66,7 @@ export function AIDiagnosticWorkspace({
   promptChips,
   onPromptClick,
   onRun,
+  learningPhase,
   inputRef,
 }: AIDiagnosticWorkspaceProps) {
   return (
@@ -69,6 +75,10 @@ export function AIDiagnosticWorkspace({
         <span className="eyebrow">LLM learning module for aftersales operations</span>
         <h1>{title}</h1>
         <p>{description}</p>
+        <div className="lm-active-focus">
+          <strong>Current focus</strong>
+          <span>{activeFamilyTitle || "No family selected yet. Choose one from the learning rail."}</span>
+        </div>
         <div className="lm-workspace-flow" aria-label="Learning flow">
           {workflowMilestones.map((milestone) => (
             <span key={`workflow-${milestone}`}>{milestone}</span>
@@ -80,6 +90,11 @@ export function AIDiagnosticWorkspace({
         <div className="lm-diagnosis-head">
           <strong>Intelligent diagnosis input</strong>
           <span>{modeMap[moduleMode] || modeMap.diagnostic}</span>
+        </div>
+        <div className="lm-ai-cues">
+          <span>AI interpretation</span>
+          <span>Recommended diagnostic path</span>
+          <span>Next best SOP action</span>
         </div>
         <div className="lm-diagnosis-input-wrap">
           <textarea
@@ -126,8 +141,23 @@ export function AIDiagnosticWorkspace({
         </div>
       </form>
 
+      <LearningPath phase={learningPhase} />
+
+      <AssistantActionGrid
+        items={[
+          "Ask the Module",
+          "Explain SOP",
+          "Guide Step-by-Step",
+          "Convert Issue to Action Plan",
+          "Show Related Procedures",
+          "Check Eligibility",
+          "Surface Risk Flags",
+        ]}
+        onSelect={onPromptClick}
+      />
+
       <section className="lm-prompt-chips">
-        <span className="eyebrow">Ask the module</span>
+        <span className="eyebrow">Suggested prompts</span>
         <div className="lm-chip-grid">
           {promptChips.map((chip) => (
             <button

@@ -342,6 +342,13 @@ export default function HomePage() {
       : activeFamily || quickDrillFamily
         ? "Learning path"
         : "Case intake";
+  const learningPhase = searching
+    ? "interpretation"
+    : searchResult
+      ? "action"
+      : activeFamily || quickDrillFamily
+        ? "related"
+        : "intake";
   const confidenceLabel = searchResult
     ? `${Math.round(searchResult.confidence * 100)}% (${searchResult.confidence_state})`
     : "Awaiting query";
@@ -1446,6 +1453,7 @@ export default function HomePage() {
           <section className="lm-workspace-zone" id="case-intake">
             <AIDiagnosticWorkspace
               activeSuggestionIndex={activeSuggestionIndex}
+              activeFamilyTitle={selectedFamily?.title || null}
               description={uiCopy.home.hero.description}
               inputRef={searchInputRef}
               moduleMode={moduleMode}
@@ -1478,16 +1486,17 @@ export default function HomePage() {
               onRun={() => {
                 void runSearch(query);
               }}
+              learningPhase={learningPhase}
               onSelectSuggestion={(suggestion) => {
                 void applySuggestion(suggestion);
               }}
               onSubmit={handleSubmit}
               promptChips={[
-                "Ask the module to explain this SOP",
-                "Guide me step-by-step",
-                "Check customer eligibility",
-                "Show related procedures",
-                "What should I do next?",
+                "The phone overheats during charging",
+                "Guide me step-by-step for a black screen",
+                "Check eligibility for replacement",
+                "Show related procedures for FRP lock",
+                "Convert this issue into branch actions",
               ]}
               query={query}
               searchAssistLoading={searchAssistLoading}

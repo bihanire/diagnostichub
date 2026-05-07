@@ -13,11 +13,19 @@ export function TopCommandBar({
   onFocusSearch,
   onOpenCommandPalette,
 }: TopCommandBarProps) {
+  const modeLabel =
+    moduleMode === "diagnostic"
+      ? "Diagnostic learning"
+      : moduleMode === "guided"
+        ? "Guide step-by-step"
+        : "Explain SOP";
+
   return (
     <div className="lm-topbar">
       <button className="lm-brand" onClick={onFocusSearch} type="button">
         <span className="lm-brand-dot" aria-hidden="true" />
         <span>watu</span>
+        <small>Simu triage module</small>
       </button>
 
       <button
@@ -26,19 +34,28 @@ export function TopCommandBar({
         type="button"
       >
         <span>/</span>
-        <span>Ask the Module</span>
+        <span>Ask the Module, search procedures, or run a command...</span>
       </button>
 
-      <select
-        aria-label="Learning module mode"
-        className="lm-module-selector"
-        onChange={(event) => onModuleModeChange(event.target.value)}
-        value={moduleMode}
-      >
-        <option value="diagnostic">Diagnostic learning</option>
-        <option value="guided">Guide me step-by-step</option>
-        <option value="explain">Explain this SOP</option>
-      </select>
+      <div className="lm-module-control">
+        <label className="lm-module-control-label" htmlFor="learning-mode">
+          Active learning mode
+        </label>
+        <div className="lm-module-control-row">
+          <select
+            aria-label="Learning module mode"
+            className="lm-module-selector"
+            id="learning-mode"
+            onChange={(event) => onModuleModeChange(event.target.value)}
+            value={moduleMode}
+          >
+            <option value="diagnostic">Diagnostic learning</option>
+            <option value="guided">Guide me step-by-step</option>
+            <option value="explain">Explain this SOP</option>
+          </select>
+          <span className={`lm-mode-badge lm-mode-badge-${moduleMode}`}>{modeLabel}</span>
+        </div>
+      </div>
 
       <details className="lm-utility-menu">
         <summary>System utilities</summary>

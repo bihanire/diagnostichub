@@ -11,7 +11,8 @@ type ContextIntelligencePanelProps = {
 function renderProcedureList(
   title: string,
   items: ProcedureSummary[],
-  onSelectProcedure: (procedure: ProcedureSummary) => void
+  onSelectProcedure: (procedure: ProcedureSummary) => void,
+  placeholder: string
 ) {
   return (
     <section className="lm-context-card">
@@ -35,7 +36,12 @@ function renderProcedureList(
           ))}
         </div>
       ) : (
-        <p className="muted-copy">No recommendations yet. Run diagnosis first.</p>
+        <div className="lm-context-empty">
+          <span className="lm-context-empty-icon" aria-hidden="true">
+            ⌁
+          </span>
+          <p className="muted-copy">{placeholder}</p>
+        </div>
       )}
     </section>
   );
@@ -74,21 +80,40 @@ export function ContextIntelligencePanel({
             Checks
           </span>
         </div>
-        {!hasSignals ? <p className="muted-copy">Run diagnosis or open a family to populate intelligence.</p> : null}
+        {!hasSignals ? (
+          <div className="lm-context-empty">
+            <span className="lm-context-empty-icon" aria-hidden="true">
+              ✦
+            </span>
+            <p className="muted-copy">
+              Select a family to reveal linked routes. Run diagnosis to generate risk flags and eligibility checks.
+            </p>
+          </div>
+        ) : null}
       </section>
 
-      {renderProcedureList("Related procedures", related, onSelectProcedure)}
-      {renderProcedureList("Recommended next routes", alternatives, onSelectProcedure)}
+      {renderProcedureList(
+        "Related procedures",
+        related,
+        onSelectProcedure,
+        "Show related procedures by selecting a family or completing one diagnosis."
+      )}
+      {renderProcedureList(
+        "Recommended next routes",
+        alternatives,
+        onSelectProcedure,
+        "Recommended next actions will appear after AI interpretation."
+      )}
 
       <section className="lm-context-card">
         <div className="panel-header">
           <span className="eyebrow">Risk flags</span>
         </div>
-        <ul className="bullet-list">
+        <ul className="bullet-list lm-context-bullets">
           {riskFlags.length > 0 ? (
             riskFlags.slice(0, 4).map((flag) => <li key={`risk-${flag}`}>{flag}</li>)
           ) : (
-            <li>No major risk flags surfaced yet.</li>
+            <li>Run diagnosis to generate risk flags from issue signals.</li>
           )}
         </ul>
       </section>
@@ -97,11 +122,11 @@ export function ContextIntelligencePanel({
         <div className="panel-header">
           <span className="eyebrow">Eligibility checks</span>
         </div>
-        <ul className="bullet-list">
+        <ul className="bullet-list lm-context-bullets">
           {eligibilityChecks.length > 0 ? (
             eligibilityChecks.slice(0, 4).map((item) => <li key={`elig-${item}`}>{item}</li>)
           ) : (
-            <li>Eligibility checks appear after family or procedure selection.</li>
+            <li>Eligibility checks appear here after family or procedure selection.</li>
           )}
         </ul>
       </section>

@@ -66,6 +66,14 @@ export function LearningRail({
             <span className="lm-rail-copy">
               <strong>{family.title}</strong>
               <small>{family.procedure_count} flows</small>
+              <span className="lm-rail-hint">{family.hint}</span>
+              <span className="lm-rail-meter" aria-hidden="true">
+                <span
+                  style={{
+                    width: `${Math.max(12, Math.min(100, family.procedure_count * 10))}%`,
+                  }}
+                />
+              </span>
             </span>
           </button>
         ))}
