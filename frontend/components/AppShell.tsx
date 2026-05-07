@@ -5,6 +5,7 @@ type AppShellProps = {
   workspace: ReactNode;
   contextPanel: ReactNode;
   statusStrip: ReactNode;
+  isGateway?: boolean;
 };
 
 export function AppShell({
@@ -12,9 +13,10 @@ export function AppShell({
   workspace,
   contextPanel,
   statusStrip,
+  isGateway = false,
 }: AppShellProps) {
   return (
-    <section className="lm-shell">
+    <section className={`lm-shell ${isGateway ? "lm-shell-gateway" : "lm-shell-workspace"}`}>
       <div className="lm-shell-ambient" aria-hidden="true">
         <span className="lm-shell-aura lm-shell-aura-left" />
         <span className="lm-shell-aura lm-shell-aura-right" />

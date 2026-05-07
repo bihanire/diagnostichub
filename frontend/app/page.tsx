@@ -316,6 +316,8 @@ export default function HomePage() {
     ? `${Math.round(searchResult.confidence * 100)}% (${searchResult.confidence_state})`
     : "Awaiting query";
   const readinessLabel = error ? "Attention needed" : "Operational";
+  const hasDeepWorkspace = Boolean(searching || searchResult || activeFamily || resumeSession || quickDrillActive);
+  const isGatewayState = !hasDeepWorkspace;
 
   useEffect(() => {
     setResumeSession(loadSession());
@@ -1375,6 +1377,34 @@ export default function HomePage() {
     );
   }
 
+  function handleReturnHome() {
+    closeQuickDrillImmediately();
+    setCommandPaletteOpen(false);
+    setSearchAssistOpen(false);
+    setSearchAssistLoading(false);
+    setSearchSuggestions([]);
+    setActiveSuggestionIndex(-1);
+    setSearchResult(null);
+    setActiveFamily(null);
+    setFamilyLoadingId(null);
+    setError(null);
+    closeReviewGate();
+    if (familyIntentId) {
+      setFamilyIntentId(null);
+    }
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has("family")) {
+        url.searchParams.delete("family");
+        const nextHref = `${url.pathname}${url.search}${url.hash}`;
+        startTransition(() => {
+          router.replace(nextHref, { scroll: false });
+        });
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   return (
     <main
       className={`app-shell ${intakeFocusActive ? "app-shell-intake-focus" : ""}`}
@@ -1384,13 +1414,18 @@ export default function HomePage() {
         <FamilyIntentSync onIntent={setFamilyIntentId} />
       </Suspense>
       <AppShell
+        isGateway={isGatewayState}
         topBar={
           <TopCommandBar
             families={families}
             moduleMode={moduleMode}
-            onFocusSearch={() => searchInputRef.current?.focus()}
+            onFocusSearch={() => {
+              setCommandPaletteOpen(true);
+              searchInputRef.current?.focus();
+            }}
             onModuleModeChange={setModuleMode}
             onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+            onGoHome={handleReturnHome}
             onSelectFamily={handleSelectFamilyFromMenu}
             selectedFamilyId={selectedFamilyId}
           />
@@ -1450,18 +1485,21 @@ export default function HomePage() {
               searching={searching}
               suggestions={searchSuggestions}
               title={uiCopy.home.hero.title}
+              isGateway={isGatewayState}
             />
 
-            <FamilyFlowSelector
-              family={activeFamily}
-              onSelectFlow={(procedure, trackTitle) => {
-                void openFlow(procedure, query || procedure.title, {
-                  familyId: activeFamily?.id || null,
-                  familyTitle: activeFamily?.title || null,
-                  trackTitle,
-                });
-              }}
-            />
+            {activeFamily ? (
+              <FamilyFlowSelector
+                family={activeFamily}
+                onSelectFlow={(procedure, trackTitle) => {
+                  void openFlow(procedure, query || procedure.title, {
+                    familyId: activeFamily?.id || null,
+                    familyTitle: activeFamily?.title || null,
+                    trackTitle,
+                  });
+                }}
+              />
+            ) : null}
 
             {familiesError ? (
               <section className="panel panel-compact lm-family-fallback-notice" role="status">
@@ -1474,13 +1512,14 @@ export default function HomePage() {
               </section>
             ) : null}
 
-            <section
-              key={`${searchResultKey}-${searchResult?.query || "empty"}`}
-              ref={resultsRef}
-              aria-label="Search results"
-              className="lm-results"
-              tabIndex={-1}
-            >
+            {isGatewayState ? null : (
+              <section
+                key={`${searchResultKey}-${searchResult?.query || "empty"}`}
+                ref={resultsRef}
+                aria-label="Search results"
+                className="lm-results"
+                tabIndex={-1}
+              >
               {searchResult ? (
                 <>
                   <section className="panel lm-intent-panel">
@@ -1608,20 +1647,60 @@ export default function HomePage() {
                   </p>
                 </section>
               )}
-            </section>
+              </section>
+            )}
           </section>
         }
         contextPanel={
-          <ContextIntelligencePanel
-            alternatives={contextAlternatives}
-            eligibilityChecks={eligibilityChecks}
-            onSelectProcedure={(procedure) => {
-              closeReviewGate();
-              void openFlow(procedure, searchResult?.query || procedure.title);
-            }}
-            related={contextRelated}
-            riskFlags={riskFlags}
-          />
+          isGatewayState ? (
+            <div className="lm-context lm-context-gateway" aria-live="polite">
+              <section className="lm-context-card lm-context-gateway-card">
+                <div className="panel-header">
+                  <span className="eyebrow">Guided start</span>
+                  <h3>Start calm, then go deep</h3>
+                </div>
+                <ul className="bullet-list lm-context-bullets">
+                  <li>Use customer wording in search for fastest routing.</li>
+                  <li>Pick a family to reveal targeted operational flows.</li>
+                  <li>Run one diagnosis to unlock related procedures and checks.</li>
+                </ul>
+              </section>
+              <section className="lm-context-card lm-context-gateway-card">
+                <div className="panel-header">
+                  <span className="eyebrow">What appears next</span>
+                </div>
+                <div className="lm-context-summary-grid">
+                  <span>
+                    <strong>Routes</strong>
+                    Flow suggestions
+                  </span>
+                  <span>
+                    <strong>Checks</strong>
+                    Eligibility + risks
+                  </span>
+                  <span>
+                    <strong>Actions</strong>
+                    Guided resolution
+                  </span>
+                  <span>
+                    <strong>Related</strong>
+                    Linked procedures
+                  </span>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <ContextIntelligencePanel
+              alternatives={contextAlternatives}
+              eligibilityChecks={eligibilityChecks}
+              onSelectProcedure={(procedure) => {
+                closeReviewGate();
+                void openFlow(procedure, searchResult?.query || procedure.title);
+              }}
+              related={contextRelated}
+              riskFlags={riskFlags}
+            />
+          )
         }
         statusStrip={
           <StatusStrip
@@ -1666,6 +1745,40 @@ export default function HomePage() {
             <div className="panel-header">
               <span className="eyebrow">Command palette</span>
               <h3>What should I do next?</h3>
+            </div>
+            <div className="lm-palette-search-wrap">
+              <input
+                aria-label="Global learning search"
+                className="lm-palette-search"
+                onChange={(event) => setQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    setCommandPaletteOpen(false);
+                    void runSearch(query);
+                  }
+                }}
+                placeholder="Search families, flows, procedures, or customer wording"
+                value={query}
+              />
+              {query.trim() && searchSuggestions.length ? (
+                <div className="lm-palette-suggestions">
+                  {searchSuggestions.slice(0, 5).map((suggestion) => (
+                    <button
+                      className="lm-palette-suggestion"
+                      key={`palette-${suggestion.id}`}
+                      onClick={() => {
+                        setCommandPaletteOpen(false);
+                        void applySuggestion(suggestion);
+                      }}
+                      type="button"
+                    >
+                      <strong>{suggestion.label}</strong>
+                      <span>{suggestion.subtitle}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div className="lm-palette-grid">
               <button className="lm-palette-item" onClick={() => setModuleMode("guided")} type="button">

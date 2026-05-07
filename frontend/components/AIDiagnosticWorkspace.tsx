@@ -29,6 +29,7 @@ type AIDiagnosticWorkspaceProps = {
   onRun: () => void;
   learningPhase: "intake" | "interpretation" | "action" | "related";
   inputRef: React.RefObject<HTMLTextAreaElement>;
+  isGateway?: boolean;
 };
 
 const modeMap: Record<string, string> = {
@@ -68,22 +69,25 @@ export function AIDiagnosticWorkspace({
   onRun,
   learningPhase,
   inputRef,
+  isGateway = false,
 }: AIDiagnosticWorkspaceProps) {
   return (
-    <section className="lm-workspace">
+    <section className={`lm-workspace ${isGateway ? "lm-workspace-gateway" : "lm-workspace-deep"}`}>
       <header className="lm-workspace-head">
         <span className="eyebrow">LLM learning module for aftersales operations</span>
         <h1>{title}</h1>
         <p>{description}</p>
         <div className="lm-active-focus">
           <strong>Current focus</strong>
-          <span>{activeFamilyTitle || "No family selected yet. Choose one from the learning rail."}</span>
+          <span>{activeFamilyTitle || "Select a family from the top bar, or start with customer wording."}</span>
         </div>
-        <div className="lm-workspace-flow" aria-label="Learning flow">
-          {workflowMilestones.map((milestone) => (
-            <span key={`workflow-${milestone}`}>{milestone}</span>
-          ))}
-        </div>
+        {isGateway ? null : (
+          <div className="lm-workspace-flow" aria-label="Learning flow">
+            {workflowMilestones.map((milestone) => (
+              <span key={`workflow-${milestone}`}>{milestone}</span>
+            ))}
+          </div>
+        )}
       </header>
 
       <form className="lm-diagnosis-form" onSubmit={onSubmit}>
@@ -141,20 +145,22 @@ export function AIDiagnosticWorkspace({
         </div>
       </form>
 
-      <LearningPath phase={learningPhase} />
+      {isGateway ? null : <LearningPath phase={learningPhase} />}
 
-      <AssistantActionGrid
-        items={[
-          "Ask the Module",
-          "Explain SOP",
-          "Guide Step-by-Step",
-          "Convert Issue to Action Plan",
-          "Show Related Procedures",
-          "Check Eligibility",
-          "Surface Risk Flags",
-        ]}
-        onSelect={onPromptClick}
-      />
+      {isGateway ? null : (
+        <AssistantActionGrid
+          items={[
+            "Ask the Module",
+            "Explain SOP",
+            "Guide Step-by-Step",
+            "Convert Issue to Action Plan",
+            "Show Related Procedures",
+            "Check Eligibility",
+            "Surface Risk Flags",
+          ]}
+          onSelect={onPromptClick}
+        />
+      )}
 
       <section className="lm-prompt-chips">
         <span className="eyebrow">Suggested prompts</span>
