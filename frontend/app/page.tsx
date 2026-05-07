@@ -1418,12 +1418,10 @@ export default function HomePage() {
         topBar={
           <TopCommandBar
             families={families}
-            moduleMode={moduleMode}
             onFocusSearch={() => {
               setCommandPaletteOpen(true);
               searchInputRef.current?.focus();
             }}
-            onModuleModeChange={setModuleMode}
             onOpenCommandPalette={() => setCommandPaletteOpen(true)}
             onGoHome={handleReturnHome}
             onSelectFamily={handleSelectFamilyFromMenu}
@@ -1656,42 +1654,41 @@ export default function HomePage() {
             <div className="lm-context lm-context-gateway" aria-live="polite">
               <section className="lm-context-card lm-context-gateway-card">
                 <div className="panel-header">
-                  <span className="eyebrow">Guided start</span>
                   <h3>Start calm, then go deep</h3>
                 </div>
                 <div className="lm-guided-steps">
                   <div className="lm-guided-step">
                     <span className="lm-step-dot">1</span>
                     <p>
-                      Use <strong>customer wording</strong> in search for fastest routing.
+                      Say what the <strong>customer told you</strong> — exact words work best.
                     </p>
                   </div>
                   <div className="lm-guided-step">
                     <span className="lm-step-dot">2</span>
                     <p>
-                      Pick a <strong>family</strong> to reveal targeted operational flows.
+                      Pick a <strong>device family</strong> to unlock flows for that model.
                     </p>
                   </div>
                   <div className="lm-guided-step">
                     <span className="lm-step-dot">3</span>
                     <p>
-                      Run one diagnosis to <strong>unlock</strong> related procedures and checks.
+                      One diagnosis <strong>opens</strong> the full procedure trail.
                     </p>
                   </div>
                 </div>
               </section>
               <section className="lm-context-card lm-context-gateway-card">
                 <div className="panel-header">
-                  <span className="eyebrow">What appears next</span>
+                  <span className="eyebrow">After diagnosis</span>
                 </div>
                 <div className="lm-context-summary-grid">
                   <span>
                     <strong>Routes</strong>
-                    Flow suggestions
+                    Flow Suggestions
                   </span>
                   <span>
                     <strong>Checks</strong>
-                    Eligibility + risks
+                    Eligibility + Risks
                   </span>
                   <span>
                     <strong>Actions</strong>

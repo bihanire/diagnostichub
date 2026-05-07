@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent } from "react";
+import { FormEvent, KeyboardEvent, useState } from "react";
 
 import { AssistantActionGrid } from "@/components/AssistantActionGrid";
 import { LearningPath } from "@/components/LearningPath";
@@ -38,31 +38,26 @@ const modeMap: Record<string, string> = {
   explain: "Explain this SOP clearly",
 };
 
-const workflowMilestones = [
-  "Families",
-  "Procedures",
-  "Guided steps",
-  "Related suggestions",
-];
+const workflowMilestones = ["Families", "Procedures", "Guided steps", "Related suggestions"];
 
 function promptIcon(prompt: string): string {
   const clean = prompt.toLowerCase();
   if (clean.includes("overheat")) {
-    return "🔥";
+    return "!";
   }
   if (clean.includes("step-by-step")) {
-    return "🧭";
+    return ">";
   }
   if (clean.includes("eligibility")) {
-    return "🛡";
+    return "#";
   }
   if (clean.includes("procedure")) {
-    return "≣";
+    return "=";
   }
   if (clean.includes("branch")) {
-    return "⑂";
+    return "@";
   }
-  return "•";
+  return "*";
 }
 
 export function AIDiagnosticWorkspace({
@@ -91,15 +86,29 @@ export function AIDiagnosticWorkspace({
   inputRef,
   isGateway = false,
 }: AIDiagnosticWorkspaceProps) {
+  const [selectedOutput, setSelectedOutput] = useState("Issue interpretation");
+  const [diagnosisPulse, setDiagnosisPulse] = useState(false);
+
+  const modeLabel =
+    moduleMode === "diagnostic" ? "Diagnostic Learning" : moduleMode === "guided" ? "Guided Steps" : "SOP Explain";
+
+  function handlePromptPick(value: string) {
+    onPromptClick(value);
+    setDiagnosisPulse(true);
+    window.setTimeout(() => setDiagnosisPulse(false), 520);
+  }
+
   return (
     <section className={`lm-workspace ${isGateway ? "lm-workspace-gateway" : "lm-workspace-deep"}`}>
-      <header className="lm-workspace-head">
-        <span className="eyebrow">LLM learning module for aftersales operations</span>
+      <header className="lm-workspace-head hero">
         <h1>{title}</h1>
         <p>{description}</p>
-        <div className="lm-active-focus">
-          <strong>Current focus</strong>
-          <span>{activeFamilyTitle || "Select a family from the top bar, or start with customer wording."}</span>
+        <div className="lm-active-focus focus-bar">
+          <span className="focus-dot" aria-hidden="true" />
+          <span className="focus-eyebrow">Current focus</span>
+          <span className="focus-text">
+            {activeFamilyTitle ? `${activeFamilyTitle} · ${modeLabel}` : "No family selected · Diagnostic Learning"}
+          </span>
         </div>
         {isGateway ? null : (
           <div className="lm-workspace-flow" aria-label="Learning flow">
@@ -110,43 +119,45 @@ export function AIDiagnosticWorkspace({
         )}
       </header>
 
-      <form className="lm-diagnosis-form diag-panel" onSubmit={onSubmit}>
+      <form className={`lm-diagnosis-form diag-panel ${diagnosisPulse ? "diag-panel-pulse" : ""}`} onSubmit={onSubmit}>
         <span className="scan-line" aria-hidden="true" />
-        <div className="lm-diagnosis-head">
+        <div className="lm-diagnosis-head diag-header">
           <strong>
             <span className="diag-head-icon" aria-hidden="true">
-              ✦
+              *
             </span>
             Intelligent diagnosis input
           </strong>
           <span className="diag-convert-link">{modeMap[moduleMode] || modeMap.diagnostic}</span>
         </div>
-        <div className="lm-ai-cues lm-mini-chip-row">
-          <span>Issue interpretation</span>
-          <span>Recommended diagnostic path</span>
-          <span>Next best SOP action</span>
+        <div className="lm-ai-cues lm-mini-chip-row" role="group" aria-label="Output selectors">
+          {["Issue interpretation", "Diagnostic path", "SOP action"].map((item) => (
+            <button
+              className={`output-chip ${selectedOutput === item ? "selected" : ""}`}
+              key={`output-${item}`}
+              onClick={() => setSelectedOutput(item)}
+              type="button"
+            >
+              {item}
+            </button>
+          ))}
         </div>
         <div className="lm-diagnosis-input-wrap">
           <textarea
             ref={inputRef}
             aria-label="Describe the customer issue"
             aria-describedby="diagnosis-helper"
-            className="lm-diagnosis-input"
+            className="lm-diagnosis-input diag-textarea"
             disabled={searching}
             onBlur={onBlur}
             onChange={(event) => onQueryChange(event.target.value)}
             onFocus={onFocus}
             onKeyDown={onKeyDown}
-            placeholder="Example: phone is not turning on but it vibrates when I hold the power button"
+            placeholder="e.g. phone won't turn on but vibrates when I hold power"
             value={query}
           />
           {query.trim() ? (
-            <button
-              aria-label="Clear search"
-              className="lm-clear-btn"
-              onClick={onClear}
-              type="button"
-            >
+            <button aria-label="Clear search" className="lm-clear-btn" onClick={onClear} type="button">
               x
             </button>
           ) : null}
@@ -164,10 +175,20 @@ export function AIDiagnosticWorkspace({
           ) : null}
         </div>
         <div className="lm-action-bar">
-          <button className="primary-button lm-run-btn" onClick={onRun} type="submit">
-            {searching ? "Thinking..." : "Run diagnosis"}
+          <button className="primary-button lm-run-btn run-btn" onClick={onRun} type="submit">
+            {searching ? "Analyzing issue..." : "Run diagnosis"}
           </button>
-          <span id="diagnosis-helper">Enter to run, Esc to close overlays, Ctrl/Cmd+K for command palette</span>
+          <div className="lm-kbd-hints" id="diagnosis-helper">
+            <span>
+              <kbd>Enter</kbd> run
+            </span>
+            <span>
+              <kbd>Esc</kbd> close overlays
+            </span>
+            <span>
+              <kbd>Ctrl/Cmd + K</kbd> command palette
+            </span>
+          </div>
         </div>
       </form>
 
@@ -191,11 +212,11 @@ export function AIDiagnosticWorkspace({
       <section className="lm-prompt-chips">
         <span className="eyebrow">Suggested prompts</span>
         <div className="lm-chip-grid lm-chip-grid-primary">
-          {promptChips.slice(0, 3).map((chip, index) => (
+          {promptChips.slice(0, 2).map((chip, index) => (
             <button
               className="lm-chip lm-chip-primary"
               key={`chip-${chip}`}
-              onClick={() => onPromptClick(chip)}
+              onClick={() => handlePromptPick(chip)}
               style={{ animationDelay: `${220 + index * 40}ms` }}
               type="button"
             >
@@ -207,11 +228,11 @@ export function AIDiagnosticWorkspace({
           ))}
         </div>
         <div className="lm-chip-grid lm-chip-grid-secondary">
-          {promptChips.slice(3).map((chip, index) => (
+          {promptChips.slice(2).map((chip, index) => (
             <button
               className="lm-chip lm-chip-secondary"
               key={`chip-secondary-${chip}`}
-              onClick={() => onPromptClick(chip)}
+              onClick={() => handlePromptPick(chip)}
               style={{ animationDelay: `${340 + index * 40}ms` }}
               type="button"
             >

@@ -19,26 +19,23 @@ export function AppShell({
   const orbRef = useRef<HTMLSpanElement | null>(null);
 
   useEffect(() => {
-    const container = shellRef.current;
     const orb = orbRef.current;
-    if (!container || !orb) {
+    if (!orb) {
       return;
     }
 
     function handleMove(event: MouseEvent) {
-      const node = shellRef.current;
       const orbNode = orbRef.current;
-      if (!node || !orbNode) {
+      if (!orbNode || typeof window === "undefined") {
         return;
       }
-      const rect = node.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-      orbNode.style.transform = `translate(${x * 0.04 - 20}px, ${y * 0.04 - 20}px)`;
+      const x = (event.clientX / window.innerWidth - 0.5) * 30;
+      const y = (event.clientY / window.innerHeight - 0.5) * 20;
+      orbNode.style.transform = `translate(${x * 0.035}px, ${y * 0.035}px)`;
     }
 
-    container.addEventListener("mousemove", handleMove);
-    return () => container.removeEventListener("mousemove", handleMove);
+    document.addEventListener("mousemove", handleMove);
+    return () => document.removeEventListener("mousemove", handleMove);
   }, []);
 
   return (

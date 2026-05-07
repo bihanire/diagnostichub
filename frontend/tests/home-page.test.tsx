@@ -329,7 +329,7 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
 
     await user.type(
-      screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
+      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
       "phone not turning on but vibrates"
     );
     await user.keyboard("{Enter}");
@@ -543,7 +543,7 @@ describe("HomePage", () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    const input = screen.getByPlaceholderText(/phone is not turning on but it vibrates/i);
+    const input = screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i);
     await user.type(input, "knox gaurd");
     await user.click(input);
     await waitFor(() => {
@@ -567,7 +567,7 @@ describe("HomePage", () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    const input = screen.getByPlaceholderText(/phone is not turning on but it vibrates/i);
+    const input = screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i);
     await user.type(input, "screen issue");
     expect(screen.getByRole("button", { name: /clear search/i })).toBeInTheDocument();
 
@@ -598,7 +598,7 @@ describe("HomePage", () => {
     render(<HomePage />);
 
     await user.type(
-      screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
+      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
       "phone not turning on but vibrates"
     );
     await user.keyboard("{Enter}");
@@ -651,7 +651,7 @@ describe("HomePage", () => {
     render(<HomePage />);
 
     await user.type(
-      screen.getByPlaceholderText(/phone is not turning on but it vibrates/i),
+      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
       "my screen has weird lines"
     );
     await user.keyboard("{Enter}");

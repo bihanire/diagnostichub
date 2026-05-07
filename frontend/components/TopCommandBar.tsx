@@ -6,8 +6,6 @@ import { RepairFamilySummary } from "@/lib/types";
 type TopCommandBarProps = {
   families: RepairFamilySummary[];
   selectedFamilyId: string | null;
-  moduleMode: string;
-  onModuleModeChange: (value: string) => void;
   onFocusSearch: () => void;
   onOpenCommandPalette: () => void;
   onSelectFamily: (familyId: string, trigger: HTMLButtonElement) => void;
@@ -17,14 +15,11 @@ type TopCommandBarProps = {
 export function TopCommandBar({
   families,
   selectedFamilyId,
-  moduleMode,
-  onModuleModeChange,
   onFocusSearch,
   onOpenCommandPalette,
   onSelectFamily,
   onGoHome,
 }: TopCommandBarProps) {
-  const modeLabel = moduleMode === "diagnostic" ? "Diagnostic learning" : moduleMode === "guided" ? "Guide step-by-step" : "Explain SOP";
   const familyMenuRef = useRef<HTMLDetailsElement | null>(null);
   const familyItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [familyFilter, setFamilyFilter] = useState("");
@@ -77,8 +72,9 @@ export function TopCommandBar({
 
   return (
     <div className="lm-topbar">
+      <span className="lm-topbar-status-dot" aria-hidden="true" />
+
       <button className="lm-brand" onClick={onGoHome} type="button">
-        <span className="lm-brand-dot" aria-hidden="true" />
         <span>watu</span>
       </button>
 
@@ -86,42 +82,25 @@ export function TopCommandBar({
         /
       </span>
 
-      <button
-        aria-label="Open global search"
-        className="lm-nav-search"
-        onClick={onFocusSearch}
-        type="button"
-      >
-        <span aria-hidden="true">⌕</span>
-      </button>
+      <input
+        aria-label="Global search"
+        className="lm-topbar-search"
+        onClick={onOpenCommandPalette}
+        onFocus={onOpenCommandPalette}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onOpenCommandPalette();
+          }
+        }}
+        placeholder="Ask anything — problem, procedure, or family"
+        readOnly
+        value=""
+      />
 
-      <button className="lm-command-trigger" onClick={onOpenCommandPalette} type="button">
-        <span className="lm-command-placeholder">Ask the Module, search procedures, or route a family flow</span>
-      </button>
-
-      <div className="lm-topbar-controls">
-        <div className="lm-module-control">
-          <label className="lm-module-control-label" htmlFor="learning-mode">
-            Mode
-          </label>
-          <div className="lm-module-control-row">
-            <select
-              aria-label="Learning module mode"
-              className="lm-module-selector"
-              id="learning-mode"
-              onChange={(event) => onModuleModeChange(event.target.value)}
-              value={moduleMode}
-            >
-              <option value="diagnostic">Diagnostic learning</option>
-              <option value="guided">Guide me step-by-step</option>
-              <option value="explain">Explain this SOP</option>
-            </select>
-            <span className={`lm-mode-badge lm-mode-badge-${moduleMode}`}>{modeLabel}</span>
-          </div>
-        </div>
-
+      <nav className="lm-nav-tabs" aria-label="Primary navigation">
         <details className="lm-family-menu" ref={familyMenuRef}>
-          <summary>Families</summary>
+          <summary className={`lm-nav-tab ${selectedFamilyId ? "active" : ""}`}>Families</summary>
           <div className="lm-family-menu-panel">
             <label className="lm-family-filter-label" htmlFor="family-filter">
               Find family
@@ -160,16 +139,18 @@ export function TopCommandBar({
                   </button>
                 ))
               ) : (
-                <div className="lm-family-empty">
-                  No families match that filter yet.
-                </div>
+                <div className="lm-family-empty">No families match that filter yet.</div>
               )}
             </div>
           </div>
         </details>
 
+        <button className="lm-nav-tab" onClick={onFocusSearch} type="button">
+          System
+        </button>
+
         <details className="lm-utility-menu">
-          <summary>System utilities</summary>
+          <summary className="lm-nav-tab">Utilities</summary>
           <div className="lm-utility-panel">
             <a
               href="https://docs.google.com/spreadsheets/d/1jlpD74o0F88-wxq8p0x_nCptMLSjMuv6u2WuAcaa9Cs/edit?gid=655564610#gid=655564610"
@@ -186,15 +167,15 @@ export function TopCommandBar({
               SOP guide
             </a>
             <button onClick={onOpenCommandPalette} type="button">
-              Command palette
+              Open command palette
             </button>
           </div>
         </details>
 
-        <Link className="lm-ops-link" href="/ops/login">
+        <Link className="lm-nav-tab lm-nav-tab-ops" href="/ops/login">
           Ops
         </Link>
-      </div>
+      </nav>
     </div>
   );
 }

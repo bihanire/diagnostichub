@@ -36,7 +36,7 @@ export const uiCopy = {
   home: {
     hero: {
       eyebrow: "Watu Simu",
-      title: "Simu Triage and Diagnosis Hub",
+      title: "Diag & Troubleshooting Hub",
       description: "Describe the problem or start from the visible issue."
     },
     savedProgress: {
