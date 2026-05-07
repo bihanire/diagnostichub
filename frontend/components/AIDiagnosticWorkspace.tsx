@@ -45,6 +45,26 @@ const workflowMilestones = [
   "Related suggestions",
 ];
 
+function promptIcon(prompt: string): string {
+  const clean = prompt.toLowerCase();
+  if (clean.includes("overheat")) {
+    return "🔥";
+  }
+  if (clean.includes("step-by-step")) {
+    return "🧭";
+  }
+  if (clean.includes("eligibility")) {
+    return "🛡";
+  }
+  if (clean.includes("procedure")) {
+    return "≣";
+  }
+  if (clean.includes("branch")) {
+    return "⑂";
+  }
+  return "•";
+}
+
 export function AIDiagnosticWorkspace({
   title,
   description,
@@ -90,12 +110,18 @@ export function AIDiagnosticWorkspace({
         )}
       </header>
 
-      <form className="lm-diagnosis-form" onSubmit={onSubmit}>
+      <form className="lm-diagnosis-form diag-panel" onSubmit={onSubmit}>
+        <span className="scan-line" aria-hidden="true" />
         <div className="lm-diagnosis-head">
-          <strong>Intelligent diagnosis input</strong>
-          <span>{modeMap[moduleMode] || modeMap.diagnostic}</span>
+          <strong>
+            <span className="diag-head-icon" aria-hidden="true">
+              ✦
+            </span>
+            Intelligent diagnosis input
+          </strong>
+          <span className="diag-convert-link">{modeMap[moduleMode] || modeMap.diagnostic}</span>
         </div>
-        <div className="lm-ai-cues">
+        <div className="lm-ai-cues lm-mini-chip-row">
           <span>Issue interpretation</span>
           <span>Recommended diagnostic path</span>
           <span>Next best SOP action</span>
@@ -164,14 +190,34 @@ export function AIDiagnosticWorkspace({
 
       <section className="lm-prompt-chips">
         <span className="eyebrow">Suggested prompts</span>
-        <div className="lm-chip-grid">
-          {promptChips.map((chip) => (
+        <div className="lm-chip-grid lm-chip-grid-primary">
+          {promptChips.slice(0, 3).map((chip, index) => (
             <button
-              className="lm-chip"
+              className="lm-chip lm-chip-primary"
               key={`chip-${chip}`}
               onClick={() => onPromptClick(chip)}
+              style={{ animationDelay: `${220 + index * 40}ms` }}
               type="button"
             >
+              <span className="lm-chip-icon" aria-hidden="true">
+                {promptIcon(chip)}
+              </span>
+              <span>{chip}</span>
+            </button>
+          ))}
+        </div>
+        <div className="lm-chip-grid lm-chip-grid-secondary">
+          {promptChips.slice(3).map((chip, index) => (
+            <button
+              className="lm-chip lm-chip-secondary"
+              key={`chip-secondary-${chip}`}
+              onClick={() => onPromptClick(chip)}
+              style={{ animationDelay: `${340 + index * 40}ms` }}
+              type="button"
+            >
+              <span className="lm-chip-icon" aria-hidden="true">
+                {promptIcon(chip)}
+              </span>
               {chip}
             </button>
           ))}

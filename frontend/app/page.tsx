@@ -1659,11 +1659,26 @@ export default function HomePage() {
                   <span className="eyebrow">Guided start</span>
                   <h3>Start calm, then go deep</h3>
                 </div>
-                <ul className="bullet-list lm-context-bullets">
-                  <li>Use customer wording in search for fastest routing.</li>
-                  <li>Pick a family to reveal targeted operational flows.</li>
-                  <li>Run one diagnosis to unlock related procedures and checks.</li>
-                </ul>
+                <div className="lm-guided-steps">
+                  <div className="lm-guided-step">
+                    <span className="lm-step-dot">1</span>
+                    <p>
+                      Use <strong>customer wording</strong> in search for fastest routing.
+                    </p>
+                  </div>
+                  <div className="lm-guided-step">
+                    <span className="lm-step-dot">2</span>
+                    <p>
+                      Pick a <strong>family</strong> to reveal targeted operational flows.
+                    </p>
+                  </div>
+                  <div className="lm-guided-step">
+                    <span className="lm-step-dot">3</span>
+                    <p>
+                      Run one diagnosis to <strong>unlock</strong> related procedures and checks.
+                    </p>
+                  </div>
+                </div>
               </section>
               <section className="lm-context-card lm-context-gateway-card">
                 <div className="panel-header">

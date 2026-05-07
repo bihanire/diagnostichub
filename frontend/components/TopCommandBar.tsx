@@ -77,17 +77,26 @@ export function TopCommandBar({
 
   return (
     <div className="lm-topbar">
-      <button aria-label="Open global search" className="lm-nav-search" onClick={onFocusSearch} type="button">
+      <button className="lm-brand" onClick={onGoHome} type="button">
+        <span className="lm-brand-dot" aria-hidden="true" />
+        <span>watu</span>
+      </button>
+
+      <span className="lm-command-kbd lm-command-kbd-static" aria-hidden="true">
+        /
+      </span>
+
+      <button
+        aria-label="Open global search"
+        className="lm-nav-search"
+        onClick={onFocusSearch}
+        type="button"
+      >
         <span aria-hidden="true">⌕</span>
       </button>
 
-      <button
-        className="lm-command-trigger"
-        onClick={onOpenCommandPalette}
-        type="button"
-      >
-        <span className="lm-command-kbd">/</span>
-        <span>Ask the Module, search procedures, or route a family flow</span>
+      <button className="lm-command-trigger" onClick={onOpenCommandPalette} type="button">
+        <span className="lm-command-placeholder">Ask the Module, search procedures, or route a family flow</span>
       </button>
 
       <div className="lm-topbar-controls">
@@ -186,10 +195,6 @@ export function TopCommandBar({
           Ops
         </Link>
       </div>
-
-      <button aria-label="Return home" className="lm-home-logo" onClick={onGoHome} type="button">
-        watu
-      </button>
     </div>
   );
 }
