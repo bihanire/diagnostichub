@@ -35,7 +35,10 @@ class DataIntegrityReport(BaseModel):
 
 
 class ReadinessResponse(BaseModel):
-    status: Literal["ok", "not_ready"]
+    status: Literal["ok", "degraded"]
+    checks: dict[str, Literal["ok", "failed"]] = Field(default_factory=dict)
+    failed: list[str] = Field(default_factory=list)
+    latency_ms: float
     database_ok: bool
     workflow_validation: WorkflowValidationReport
     data_integrity: DataIntegrityReport | None = None

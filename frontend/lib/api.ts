@@ -20,6 +20,18 @@ import {
 } from "@/lib/types";
 
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
+const effectiveApiBaseUrl = configuredApiBaseUrl || "/api";
+const enforceGatewayInProduction =
+  process.env.NODE_ENV === "production"
+    ? process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY !== "false"
+    : process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY === "true";
+
+if (enforceGatewayInProduction && process.env.NODE_ENV === "production" && effectiveApiBaseUrl !== "/api") {
+  throw new Error(
+    "Invalid NEXT_PUBLIC_API_BASE_URL for production. Set NEXT_PUBLIC_API_BASE_URL=/api so all frontend traffic flows through the Next.js gateway."
+  );
+}
+
 const API_BASE_URL = configuredApiBaseUrl
   ? configuredApiBaseUrl.replace(/\/$/, "")
   : "/api";

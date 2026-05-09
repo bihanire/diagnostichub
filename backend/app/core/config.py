@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     ops_session_ttl_hours: int = 8
     ops_cookie_name: str = "rel_ops_session"
     ops_cookie_secure: bool = False
+    readiness_probe_enabled: bool = True
+    readiness_probe_timeout_ms: int = 450
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

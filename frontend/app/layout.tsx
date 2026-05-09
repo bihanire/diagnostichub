@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 
 import { AppStatusShell } from "@/components/AppStatusShell";
+import { StartupHandshakeGate } from "@/components/StartupHandshakeGate";
 import { uiCopy } from "@/lib/copy";
 
 import "./globals.css";
+import "./startup-gate.css";
 
 const bodyFont = Manrope({
   subsets: ["latin"],
@@ -32,7 +34,7 @@ export default function RootLayout({
       <body className={`${bodyFont.variable} ${displayFont.variable}`} suppressHydrationWarning>
         <AppStatusShell />
         <div className="site-chrome">
-          {children}
+          <StartupHandshakeGate>{children}</StartupHandshakeGate>
         </div>
       </body>
     </html>
