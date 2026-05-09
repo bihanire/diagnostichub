@@ -157,3 +157,18 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
             telemetry_payload["interaction"]["event_counts"].get("confidence_gate_shown"),
             1,
         )
+
+    def test_search_accepts_output_mode_hint_without_breaking_response_contract(self) -> None:
+        with TestClient(self.app) as client:
+            response = client.post(
+                "/search",
+                json={
+                    "query": "phone not charging when i insert a charger",
+                    "output_mode": "sop_action",
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("best_match", payload)
+        self.assertIn("confidence_state", payload)

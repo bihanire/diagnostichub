@@ -19,6 +19,8 @@ import {
   TriageStartResponse
 } from "@/lib/types";
 
+export type SearchOutputMode = "issue_interpretation" | "diagnostic_path" | "sop_action";
+
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
 const effectiveApiBaseUrl = configuredApiBaseUrl || "/api";
 const enforceGatewayInProduction =
@@ -146,11 +148,23 @@ async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise
   return (await response.json()) as T;
 }
 
-export function searchProcedures(query: string, signal?: AbortSignal): Promise<SearchResponse> {
+type SearchProceduresOptions = {
+  signal?: AbortSignal;
+  outputMode?: SearchOutputMode;
+};
+
+export function searchProcedures(
+  query: string,
+  options?: SearchProceduresOptions
+): Promise<SearchResponse> {
+  const payload: Record<string, string> = { query };
+  if (options?.outputMode) {
+    payload.output_mode = options.outputMode;
+  }
   return apiRequest<SearchResponse>("/search", {
     method: "POST",
-    body: JSON.stringify({ query }),
-    signal
+    body: JSON.stringify(payload),
+    signal: options?.signal
   });
 }
 

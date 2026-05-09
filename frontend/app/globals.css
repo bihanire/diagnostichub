@@ -4700,6 +4700,11 @@ body.quick-drill-open {
   text-align: left;
 }
 
+.lm-palette-item:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1280px) {
   .lm-main-grid {
     grid-template-columns: minmax(210px, 15rem) minmax(0, 1fr) minmax(220px, 18rem);

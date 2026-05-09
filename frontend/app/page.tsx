@@ -20,6 +20,7 @@ import {
   getRepairFamilyDetail,
   getRepairFamilyLearningModule,
   recordInteractionTelemetry,
+  SearchOutputMode,
   searchProcedures,
   startTriage
 } from "@/lib/api";
@@ -185,6 +186,7 @@ function FamilyIntentSync({ onIntent }: { onIntent: (familyId: string | null) =>
 export default function HomePage() {
   const router = useRouter();
   const [moduleMode, setModuleMode] = useState("diagnostic");
+  const [outputMode, setOutputMode] = useState<SearchOutputMode>("issue_interpretation");
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [familyIntentId, setFamilyIntentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -726,7 +728,7 @@ export default function HomePage() {
     };
   }, [quickDrillFamily]);
 
-  async function runSearch(nextQuery: string) {
+  async function runSearch(nextQuery: string, mode: SearchOutputMode = outputMode) {
     const cleanQuery = nextQuery.trim();
     if (!cleanQuery) {
       setError(uiCopy.home.search.emptyQuery);
@@ -747,7 +749,10 @@ export default function HomePage() {
     setActiveFamily(null);
 
     try {
-      const response = await searchProcedures(cleanQuery, abortController.signal);
+      const response = await searchProcedures(cleanQuery, {
+        signal: abortController.signal,
+        outputMode: mode,
+      });
       if (requestId !== searchRequestIdRef.current) {
         return;
       }
@@ -1458,6 +1463,7 @@ export default function HomePage() {
                 setQuery(value);
                 void runSearch(value);
               }}
+              onOutputModeChange={setOutputMode}
               onQueryChange={(value) => {
                 setQuery(value);
                 setSearchAssistOpen(Boolean(value.trim()));
@@ -1484,6 +1490,7 @@ export default function HomePage() {
               suggestions={searchSuggestions}
               title={uiCopy.home.hero.title}
               isGateway={isGatewayState}
+              outputMode={outputMode}
             />
 
             {activeFamily ? (
@@ -1805,11 +1812,15 @@ export default function HomePage() {
               <button
                 className="lm-palette-item"
                 onClick={() => {
-                  setCommandPaletteOpen(false);
                   if (searchResult?.best_match) {
+                    setCommandPaletteOpen(false);
                     void openFlow(searchResult.best_match, searchResult.query);
+                    return;
                   }
+                  setError("Run diagnosis first to unlock best-match triage.");
+                  searchInputRef.current?.focus();
                 }}
+                disabled={!searchResult?.best_match}
                 type="button"
               >
                 Start best-match triage

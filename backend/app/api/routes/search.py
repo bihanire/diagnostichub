@@ -26,6 +26,7 @@ def search(request: SearchRequest, db: Session = Depends(get_db)) -> SearchRespo
         event="search_completed",
         status="success" if not response.no_match else "review",
         metadata={
+            "output_mode": request.output_mode or "default",
             "issue_type": response.structured_intent.issue_type,
             "confidence_state": response.confidence_state,
             "needs_review": response.needs_review,
@@ -36,6 +37,7 @@ def search(request: SearchRequest, db: Session = Depends(get_db)) -> SearchRespo
         "search_completed",
         extra={
             "event": "search_completed",
+            "output_mode": request.output_mode or "default",
             "procedure_id": response.best_match.id if response.best_match else None,
             "confidence": response.confidence,
             "confidence_state": response.confidence_state,

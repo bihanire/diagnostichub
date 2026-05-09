@@ -10,9 +10,15 @@ Searches procedures from free-text input.
 
 ```json
 {
-  "query": "phone not turning on but vibrates"
+  "query": "phone not turning on but vibrates",
+  "output_mode": "issue_interpretation"
 }
 ```
+
+`output_mode` is optional and accepts:
+- `issue_interpretation`
+- `diagnostic_path`
+- `sop_action`
 
 ### Response
 
@@ -224,7 +230,7 @@ Checks live database readiness and the last startup workflow-validation result.
 }
 ```
 
-When the app is not ready, this endpoint returns HTTP `503` with the same response shape and `status: "not_ready"`.
+When the app is not ready, this endpoint returns HTTP `503` with the same response shape and `status: "degraded"`.
 
 ## `POST /feedback`
 

@@ -3,6 +3,7 @@ import { FormEvent, KeyboardEvent, useState } from "react";
 import { AssistantActionGrid } from "@/components/AssistantActionGrid";
 import { LearningPath } from "@/components/LearningPath";
 import { SearchAssistDropdown } from "@/components/SearchAssistDropdown";
+import { SearchOutputMode } from "@/lib/api";
 import { SearchAssistSuggestion } from "@/lib/search-assist";
 
 type AIDiagnosticWorkspaceProps = {
@@ -30,6 +31,8 @@ type AIDiagnosticWorkspaceProps = {
   learningPhase: "intake" | "interpretation" | "action" | "related";
   inputRef: React.RefObject<HTMLTextAreaElement>;
   isGateway?: boolean;
+  outputMode: SearchOutputMode;
+  onOutputModeChange: (mode: SearchOutputMode) => void;
 };
 
 const modeMap: Record<string, string> = {
@@ -60,6 +63,18 @@ function promptIcon(prompt: string): string {
   return "*";
 }
 
+const outputModeLabels: Record<SearchOutputMode, string> = {
+  issue_interpretation: "Issue interpretation",
+  diagnostic_path: "Diagnostic path",
+  sop_action: "SOP action",
+};
+
+const outputModeOptions: Array<{ label: string; value: SearchOutputMode }> = [
+  { label: outputModeLabels.issue_interpretation, value: "issue_interpretation" },
+  { label: outputModeLabels.diagnostic_path, value: "diagnostic_path" },
+  { label: outputModeLabels.sop_action, value: "sop_action" },
+];
+
 export function AIDiagnosticWorkspace({
   title,
   description,
@@ -85,8 +100,9 @@ export function AIDiagnosticWorkspace({
   learningPhase,
   inputRef,
   isGateway = false,
+  outputMode,
+  onOutputModeChange,
 }: AIDiagnosticWorkspaceProps) {
-  const [selectedOutput, setSelectedOutput] = useState("Issue interpretation");
   const [diagnosisPulse, setDiagnosisPulse] = useState(false);
 
   const modeLabel =
@@ -131,14 +147,14 @@ export function AIDiagnosticWorkspace({
           <span className="diag-convert-link">{modeMap[moduleMode] || modeMap.diagnostic}</span>
         </div>
         <div className="lm-ai-cues lm-mini-chip-row" role="group" aria-label="Output selectors">
-          {["Issue interpretation", "Diagnostic path", "SOP action"].map((item) => (
+          {outputModeOptions.map((item) => (
             <button
-              className={`output-chip ${selectedOutput === item ? "selected" : ""}`}
-              key={`output-${item}`}
-              onClick={() => setSelectedOutput(item)}
+              className={`output-chip ${outputMode === item.value ? "selected" : ""}`}
+              key={`output-${item.value}`}
+              onClick={() => onOutputModeChange(item.value)}
               type="button"
             >
-              {item}
+              {item.label}
             </button>
           ))}
         </div>

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.schemas.common import CustomerCare, ProcedureSummary, SopLayers
@@ -5,6 +7,7 @@ from app.schemas.common import CustomerCare, ProcedureSummary, SopLayers
 
 class SearchRequest(BaseModel):
     query: str = Field(min_length=1, max_length=500)
+    output_mode: Literal["issue_interpretation", "diagnostic_path", "sop_action"] | None = None
 
 
 class StructuredIntent(BaseModel):

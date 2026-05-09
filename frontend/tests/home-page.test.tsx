@@ -350,6 +350,25 @@ describe("HomePage", () => {
     expect(navigationMocks.push).toHaveBeenCalledWith("/triage");
   });
 
+  it("wires diagnosis output selector into the search request payload", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    await user.click(screen.getByRole("button", { name: "SOP action" }));
+    await user.type(
+      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
+      "phone not turning on but vibrates"
+    );
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(apiMocks.searchProcedures).toHaveBeenCalledWith(
+        "phone not turning on but vibrates",
+        expect.objectContaining({ outputMode: "sop_action" })
+      );
+    });
+  });
+
   it("shows the saved session banner and can continue or clear it", async () => {
     const user = userEvent.setup();
     const savedSession: TriageSession = {
