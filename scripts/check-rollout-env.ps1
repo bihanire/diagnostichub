@@ -72,7 +72,8 @@ foreach ($requiredKey in @(
     "OPS_COOKIE_SECURE",
     "API_VERSION",
     "SCHEMA_VERSION",
-    "REQUEST_CORRELATION_ENABLED"
+    "REQUEST_CORRELATION_ENABLED",
+    "STANDARDIZE_ERROR_RESPONSES"
 )) {
     if (-not $backendEnv.ContainsKey($requiredKey)) {
         Add-Finding -Bucket $errors -Message "Backend env is missing $requiredKey."

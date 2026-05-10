@@ -269,6 +269,7 @@ Ops review now uses a separate sign-in route:
 - `SCHEMA_VERSION`
 - `BUILD_SHA`
 - `REQUEST_CORRELATION_ENABLED`
+- `STANDARDIZE_ERROR_RESPONSES`
 
 ### Frontend
 

@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
-  ApiError,
   getRepairFamilies,
   getOpsFeedbackByBranch,
   getOpsFeedbackByTag,
@@ -11,7 +10,8 @@ import {
   getOpsFeedbackSummary,
   getOpsSession,
   loginOps,
-  logoutOps
+  logoutOps,
+  parseApiError
 } from "@/lib/api";
 
 describe("ops API helpers", () => {
@@ -122,6 +122,42 @@ describe("ops API helpers", () => {
       code: "UPSTREAM_ERROR",
       message: expect.stringContaining("Request ID: req-ops-500")
     });
-    expect(consoleSpy).toHaveBeenCalledWith("Request ID: req-ops-500 — copy this for support.");
+    expect(consoleSpy).toHaveBeenCalledWith("Request ID: req-ops-500 - copy this for support.");
+  });
+
+  it("safely falls back when an error response is malformed JSON", async () => {
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response("{broken-json", {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "X-Request-ID": "req-malformed-1"
+        }
+      })
+    );
+
+    await expect(getOpsSession()).rejects.toMatchObject({
+      status: 500,
+      requestId: "req-malformed-1",
+      message: expect.stringContaining("Something went wrong. Please try again.")
+    });
+  });
+
+  it("parseApiError never throws on HTML error payloads", async () => {
+    const htmlResponse = new Response("<html><body>500</body></html>", {
+      status: 500,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "X-Request-ID": "req-html-500"
+      }
+    });
+
+    await expect(parseApiError(htmlResponse)).resolves.toEqual(
+      expect.objectContaining({
+        message: "Something went wrong. Please try again.",
+        requestId: "req-html-500",
+        code: null
+      })
+    );
   });
 });

@@ -9,7 +9,9 @@ _RESERVED_LOG_RECORD_KEYS = set(logging.makeLogRecord({}).__dict__.keys())
 
 class RequestContextFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        record.request_id = request_id_context.get()
+        existing = getattr(record, "request_id", None)
+        if not isinstance(existing, str) or not existing.strip():
+            record.request_id = request_id_context.get()
         return True
 
 

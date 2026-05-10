@@ -49,10 +49,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 },
                 request_id=request_id,
             )
-            logger.exception(
-                "request_failed",
+            logger.warning(
+                "request_failed_forwarded",
                 extra={
-                    "event": "request_failed",
+                    "event": "request_failed_forwarded",
                     "method": request.method,
                     "path": request.url.path,
                     "duration_ms": duration_ms,

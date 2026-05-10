@@ -80,15 +80,73 @@ function createClientRequestId(): string {
 }
 
 function formatSupportRequestIdHint(requestId: string | null): string {
-  return `Request ID: ${requestId || "Unavailable"} — copy this for support.`;
+  return `Request ID: ${requestId || "Unavailable"} - copy this for support.`;
 }
 
-type ApiErrorEnvelope = {
-  code?: string;
-  message?: string;
-  detail?: string;
-  request_id?: string;
+type ParsedApiError = {
+  message: string;
+  detail: string | null;
+  code: string | null;
+  requestId: string | null;
 };
+
+function isObjectRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function pickStringField(record: Record<string, unknown>, key: string): string | null {
+  const value = record[key];
+  return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+export async function parseApiError(
+  response: Response,
+  fallbackMessage = "Something went wrong. Please try again."
+): Promise<ParsedApiError> {
+  const headerRequestId = response.headers.get("X-Request-ID");
+  let code: string | null = null;
+  let message: string | null = null;
+  let detail: string | null = null;
+  let envelopeRequestId: string | null = null;
+
+  try {
+    const contentType = response.headers.get("Content-Type") || "";
+    if (contentType.toLowerCase().includes("application/json")) {
+      const payload = (await response.json()) as unknown;
+      if (isObjectRecord(payload)) {
+        code = pickStringField(payload, "code");
+        message = pickStringField(payload, "message");
+        detail = pickStringField(payload, "detail");
+        envelopeRequestId = pickStringField(payload, "request_id");
+      }
+    } else {
+      const rawText = await response.text();
+      if (rawText.trim().startsWith("{")) {
+        try {
+          const payload = JSON.parse(rawText) as unknown;
+          if (isObjectRecord(payload)) {
+            code = pickStringField(payload, "code");
+            message = pickStringField(payload, "message");
+            detail = pickStringField(payload, "detail");
+            envelopeRequestId = pickStringField(payload, "request_id");
+          }
+        } catch {
+          // Ignore malformed text bodies and use fallback messaging below.
+        }
+      }
+    }
+  } catch {
+    // Ignore parse errors entirely so this helper never throws.
+  }
+
+  const normalizedDetail = detail || message || fallbackMessage;
+  return {
+    message: normalizedDetail,
+    detail,
+    code,
+    requestId: envelopeRequestId || headerRequestId
+  };
+}
 
 async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise<T> {
   if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -167,23 +225,13 @@ async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise
 
   if (!response.ok) {
     const fallbackMessage = "Something went wrong. Please try again.";
-    let detail = fallbackMessage;
-    let envelope: ApiErrorEnvelope | null = null;
-    const requestId = response.headers.get("X-Request-ID");
-
-    try {
-      envelope = (await response.json()) as ApiErrorEnvelope;
-      detail = envelope.detail || envelope.message || fallbackMessage;
-    } catch {
-      detail = fallbackMessage;
-    }
-
-    const supportHint = formatSupportRequestIdHint(requestId);
+    const parsedError = await parseApiError(response, fallbackMessage);
+    const supportHint = formatSupportRequestIdHint(parsedError.requestId);
     console.error(supportHint);
-    throw new ApiError(`${detail} ${supportHint}`, response.status, {
-      requestId: envelope?.request_id || requestId,
-      code: envelope?.code || null,
-      detail: envelope?.detail || null
+    throw new ApiError(`${parsedError.message} ${supportHint}`, response.status, {
+      requestId: parsedError.requestId,
+      code: parsedError.code,
+      detail: parsedError.detail
     });
   }
 

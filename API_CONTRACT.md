@@ -42,6 +42,29 @@ Frontend:
 - Backend returns `X-Request-ID` on every response and logs the `(client_request_id, request_id)` pair.
 - Backend correlation logic can be toggled with `REQUEST_CORRELATION_ENABLED`.
 
+## Standardized error envelope
+
+When `STANDARDIZE_ERROR_RESPONSES=true`, backend non-2xx responses follow:
+
+```json
+{
+  "code": "NOT_FOUND",
+  "message": "The requested resource was not found.",
+  "detail": "Repair family not found.",
+  "request_id": "<request-id>"
+}
+```
+
+Supported `code` values:
+- `NOT_READY`
+- `AUTH_REQUIRED`
+- `FORBIDDEN`
+- `VALIDATION_ERROR`
+- `NOT_FOUND`
+- `TIMEOUT`
+- `UPSTREAM_ERROR`
+- `INTERNAL_ERROR`
+
 ## Gateway boundary
 
 The frontend must use `NEXT_PUBLIC_API_BASE_URL=/api` in production.

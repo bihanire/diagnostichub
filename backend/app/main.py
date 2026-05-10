@@ -13,6 +13,7 @@ from app.api.routes.telemetry import router as telemetry_router
 from app.api.routes.triage import router as triage_router
 from app.core.config import get_settings
 from app.core.database import SessionLocal
+from app.core.error_handling import register_error_handlers
 from app.core.logging import configure_logging, get_logger
 from app.db.seed import create_schema, seed_data
 from app.middleware.request_context import RequestContextMiddleware
@@ -101,6 +102,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
+if settings.standardize_error_responses:
+    register_error_handlers(app)
+
 app.add_middleware(RequestContextMiddleware)
 app.add_middleware(
     CORSMiddleware,

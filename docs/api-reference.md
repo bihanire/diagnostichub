@@ -425,3 +425,16 @@ Every API response includes an `X-Request-ID` header. Frontend requests include 
 On frontend failures, DiagnosticHub surfaces:
 
 `Request ID: <id> — copy this for support.`
+
+## Error envelope
+
+When `STANDARDIZE_ERROR_RESPONSES=true`, non-2xx responses use:
+
+```json
+{
+  "code": "NOT_FOUND",
+  "message": "The requested resource was not found.",
+  "detail": "Repair family not found.",
+  "request_id": "abc123"
+}
+```
