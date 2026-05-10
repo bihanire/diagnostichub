@@ -42,3 +42,9 @@ class ReadinessResponse(BaseModel):
     database_ok: bool
     workflow_validation: WorkflowValidationReport
     data_integrity: DataIntegrityReport | None = None
+
+
+class ApiMetaResponse(BaseModel):
+    api_version: str
+    schema_version: str
+    build: str

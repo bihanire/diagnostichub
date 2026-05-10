@@ -262,10 +262,21 @@ Ops review now uses a separate sign-in route:
 - `OPS_SESSION_TTL_HOURS`
 - `OPS_COOKIE_NAME`
 - `OPS_COOKIE_SECURE`
+- `READINESS_PROBE_ENABLED`
+- `READINESS_PROBE_TIMEOUT_MS`
+- `API_META_ENABLED`
+- `API_VERSION`
+- `SCHEMA_VERSION`
+- `BUILD_SHA`
 
 ### Frontend
 
 - `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_ENFORCE_API_GATEWAY`
+- `NEXT_PUBLIC_BOOT_HANDSHAKE_ENABLED`
+- `NEXT_PUBLIC_BOOT_HANDSHAKE_TIMEOUT_MS`
+- `NEXT_PUBLIC_API_VERSION_CHECK_ENABLED`
+- `NEXT_PUBLIC_EXPECTED_API_VERSION`
 
 ## API summary
 
@@ -275,6 +286,7 @@ Ops review now uses a separate sign-in route:
 - `GET /related/{procedure_id}`
 - `GET /health`
 - `GET /ready`
+- `GET /meta`
 - `POST /feedback`
 - `POST /ops/login`
 - `POST /ops/logout`
@@ -285,6 +297,7 @@ Ops review now uses a separate sign-in route:
 - `GET /feedback/export.csv`
 
 Detailed request and response examples are in [docs/api-reference.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/docs/api-reference.md).
+Contract-versioning rules are in [API_CONTRACT.md](/C:/Users/eatugonza/Documents/projects/diagnostichub/API_CONTRACT.md).
 
 ## Test commands
 

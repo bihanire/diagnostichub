@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     ops_cookie_secure: bool = False
     readiness_probe_enabled: bool = True
     readiness_probe_timeout_ms: int = 450
+    api_meta_enabled: bool = True
+    api_version: str = "1.0.0"
+    schema_version: str = "1"
+    build_sha: str = "dev"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

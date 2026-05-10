@@ -232,6 +232,22 @@ Checks live database readiness and the last startup workflow-validation result.
 
 When the app is not ready, this endpoint returns HTTP `503` with the same response shape and `status: "degraded"`.
 
+## `GET /meta`
+
+Returns API contract metadata used by the startup handshake gate.
+
+### Example response
+
+```json
+{
+  "api_version": "1.0.0",
+  "schema_version": "1",
+  "build": "abc1234"
+}
+```
+
+If `API_META_ENABLED=false`, this endpoint returns HTTP `404`.
+
 ## `POST /feedback`
 
 Stores branch-user feedback from the result screen.

@@ -2,11 +2,16 @@ import asyncio
 from time import perf_counter
 from typing import Callable, Literal
 
-from fastapi import APIRouter, Request, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 
 from app.core.config import get_settings
 from app.core.database import database_is_ready
-from app.schemas.system import DataIntegrityReport, ReadinessResponse, WorkflowValidationReport
+from app.schemas.system import (
+    ApiMetaResponse,
+    DataIntegrityReport,
+    ReadinessResponse,
+    WorkflowValidationReport,
+)
 
 router = APIRouter(tags=["system"])
 
@@ -58,6 +63,22 @@ def _empty_integrity_report() -> DataIntegrityReport:
 @router.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get("/meta", response_model=ApiMetaResponse)
+async def meta() -> ApiMetaResponse:
+    settings = get_settings()
+    if not settings.api_meta_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API metadata endpoint is disabled.",
+        )
+
+    return ApiMetaResponse(
+        api_version=settings.api_version,
+        schema_version=settings.schema_version,
+        build=settings.build_sha,
+    )
 
 
 @router.get("/ready", response_model=ReadinessResponse)

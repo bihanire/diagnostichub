@@ -20,11 +20,19 @@ class ReadyProbeRouteTests(unittest.TestCase):
             "ops_session_secret": self.settings.ops_session_secret,
             "readiness_probe_enabled": self.settings.readiness_probe_enabled,
             "readiness_probe_timeout_ms": self.settings.readiness_probe_timeout_ms,
+            "api_meta_enabled": self.settings.api_meta_enabled,
+            "api_version": self.settings.api_version,
+            "schema_version": self.settings.schema_version,
+            "build_sha": self.settings.build_sha,
         }
         self.settings.database_url = "sqlite:///./relational_encyclopedia.db"
         self.settings.ops_auth_enabled = False
         self.settings.readiness_probe_enabled = True
         self.settings.readiness_probe_timeout_ms = 450
+        self.settings.api_meta_enabled = True
+        self.settings.api_version = "1.2.3"
+        self.settings.schema_version = "27"
+        self.settings.build_sha = "test-sha-123"
 
         self.app = FastAPI()
         self.app.add_middleware(RequestContextMiddleware)
@@ -72,3 +80,23 @@ class ReadyProbeRouteTests(unittest.TestCase):
         self.assertIn("db", payload["failed"])
         self.assertEqual(payload["checks"]["db"], "failed")
         self.assertTrue(response.headers.get("x-request-id"))
+
+    def test_meta_returns_contract_metadata(self) -> None:
+        with TestClient(self.app) as client:
+            response = client.get("/meta", headers={"X-Request-ID": "req-meta-200"})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["api_version"], "1.2.3")
+        self.assertEqual(payload["schema_version"], "27")
+        self.assertEqual(payload["build"], "test-sha-123")
+        self.assertEqual(response.headers.get("x-request-id"), "req-meta-200")
+
+    def test_meta_returns_404_when_disabled(self) -> None:
+        self.settings.api_meta_enabled = False
+        with TestClient(self.app) as client:
+            response = client.get("/meta")
+
+        self.assertEqual(response.status_code, 404)
+        payload = response.json()
+        self.assertEqual(payload["detail"], "API metadata endpoint is disabled.")

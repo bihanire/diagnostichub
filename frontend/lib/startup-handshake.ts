@@ -7,12 +7,20 @@ export type ReadyProbePayload = {
   latency_ms?: number;
 };
 
+export type MetaProbePayload = {
+  api_version: string;
+  schema_version: string;
+  build: string;
+};
+
 export type StartupHandshakeResult =
   | {
       ok: true;
       requestId: string | null;
       payload: ReadyProbePayload;
       latencyMs: number;
+      meta: MetaProbePayload | null;
+      versionWarning: string | null;
     }
   | {
       ok: false;
@@ -20,6 +28,8 @@ export type StartupHandshakeResult =
       message: string;
       requestId: string | null;
       statusCode: number | null;
+      expectedApiVersion?: string;
+      actualApiVersion?: string | null;
     };
 
 function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean {
@@ -29,9 +39,27 @@ function parseBooleanFlag(value: string | undefined, fallback: boolean): boolean
   return value.toLowerCase() === "true";
 }
 
+const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() || "";
+const effectiveApiBaseUrl = configuredApiBaseUrl || "/api";
+const enforceGatewayInProduction =
+  process.env.NODE_ENV === "production"
+    ? parseBooleanFlag(process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY, true)
+    : parseBooleanFlag(process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY, false);
+
+if (enforceGatewayInProduction && process.env.NODE_ENV === "production" && effectiveApiBaseUrl !== "/api") {
+  throw new Error(
+    "Invalid NEXT_PUBLIC_API_BASE_URL for production startup. Set NEXT_PUBLIC_API_BASE_URL=/api so all frontend requests flow through the Next.js gateway."
+  );
+}
+
 export function isBootHandshakeEnabled(): boolean {
   const defaultEnabled = process.env.NODE_ENV === "production";
   return parseBooleanFlag(process.env.NEXT_PUBLIC_BOOT_HANDSHAKE_ENABLED, defaultEnabled);
+}
+
+export function isApiVersionCheckEnabled(): boolean {
+  const defaultEnabled = true;
+  return parseBooleanFlag(process.env.NEXT_PUBLIC_API_VERSION_CHECK_ENABLED, defaultEnabled);
 }
 
 export function getBootHandshakeTimeoutMs(): number {
@@ -42,22 +70,51 @@ export function getBootHandshakeTimeoutMs(): number {
   return Math.round(configured);
 }
 
+export function getExpectedApiVersion(): string {
+  return process.env.NEXT_PUBLIC_EXPECTED_API_VERSION?.trim() || "1.0.0";
+}
+
+type ParsedSemVer = {
+  major: number;
+  minor: number;
+  patch: number;
+};
+
+function createClientRequestId(prefix: string): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `${prefix}-${Date.now()}`;
+}
+
+function parseSemVer(version: string): ParsedSemVer | null {
+  const trimmed = version.trim();
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(trimmed);
+  if (!match) {
+    return null;
+  }
+
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+  };
+}
+
 export async function probeStartupReadiness(timeoutMs: number): Promise<StartupHandshakeResult> {
   const startedAt = performance.now();
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const expectedApiVersion = getExpectedApiVersion();
+  const readinessController = new AbortController();
+  const readinessTimeout = window.setTimeout(() => readinessController.abort(), timeoutMs);
 
   try {
     const response = await fetch("/api/ready", {
       method: "GET",
       cache: "no-store",
       headers: {
-        "X-Client-Request-ID":
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `boot-${Date.now()}`,
+        "X-Client-Request-ID": createClientRequestId("boot-ready"),
       },
-      signal: controller.signal,
+      signal: readinessController.signal,
     });
     const requestId = response.headers.get("X-Request-ID");
     const latencyMs = Math.round(performance.now() - startedAt);
@@ -82,11 +139,118 @@ export async function probeStartupReadiness(timeoutMs: number): Promise<StartupH
       };
     }
 
+    if (!isApiVersionCheckEnabled()) {
+      return {
+        ok: true,
+        requestId,
+        payload: payload || { status: "ok" },
+        latencyMs,
+        meta: null,
+        versionWarning: null,
+      };
+    }
+
+    const metaController = new AbortController();
+    const metaTimeout = window.setTimeout(() => metaController.abort(), timeoutMs);
+    let metaResponse: Response;
+    try {
+      metaResponse = await fetch("/api/meta", {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "X-Client-Request-ID": createClientRequestId("boot-meta"),
+        },
+        signal: metaController.signal,
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return {
+          ok: false,
+          reason: "version_mismatch",
+          message: "API contract check timed out while reading backend metadata.",
+          requestId,
+          statusCode: null,
+          expectedApiVersion,
+          actualApiVersion: null,
+        };
+      }
+      return {
+        ok: false,
+        reason: "version_mismatch",
+        message: "Backend readiness passed, but API contract metadata could not be read.",
+        requestId,
+        statusCode: null,
+        expectedApiVersion,
+        actualApiVersion: null,
+      };
+    } finally {
+      window.clearTimeout(metaTimeout);
+    }
+
+    const metaRequestId = metaResponse.headers.get("X-Request-ID") || requestId;
+    let metaPayload: MetaProbePayload | null = null;
+    try {
+      metaPayload = (await metaResponse.json()) as MetaProbePayload;
+    } catch {
+      metaPayload = null;
+    }
+
+    if (!metaResponse.ok || !metaPayload?.api_version) {
+      return {
+        ok: false,
+        reason: "version_mismatch",
+        message: "Backend metadata is missing or invalid. An update is required before the workspace can load.",
+        requestId: metaRequestId,
+        statusCode: metaResponse.status,
+        expectedApiVersion,
+        actualApiVersion: metaPayload?.api_version ?? null,
+      };
+    }
+
+    const expectedSemVer = parseSemVer(expectedApiVersion);
+    const actualSemVer = parseSemVer(metaPayload.api_version);
+    if (!expectedSemVer || !actualSemVer) {
+      return {
+        ok: false,
+        reason: "version_mismatch",
+        message:
+          "API version format is invalid. Expected semantic versions like 1.0.0 for both frontend and backend.",
+        requestId: metaRequestId,
+        statusCode: metaResponse.status,
+        expectedApiVersion,
+        actualApiVersion: metaPayload.api_version,
+      };
+    }
+
+    if (expectedSemVer.major !== actualSemVer.major) {
+      return {
+        ok: false,
+        reason: "version_mismatch",
+        message:
+          "The workspace requires a backend with the same major API version. Please update and redeploy both services together.",
+        requestId: metaRequestId,
+        statusCode: metaResponse.status,
+        expectedApiVersion,
+        actualApiVersion: metaPayload.api_version,
+      };
+    }
+
+    const versionWarning =
+      expectedSemVer.minor !== actualSemVer.minor
+        ? `Frontend expects API ${expectedApiVersion}, backend reports ${metaPayload.api_version}. Continuing with caution because major versions match.`
+        : null;
+
+    if (versionWarning) {
+      console.warn(versionWarning);
+    }
+
     return {
       ok: true,
-      requestId,
+      requestId: metaRequestId,
       payload: payload || { status: "ok" },
       latencyMs,
+      meta: metaPayload,
+      versionWarning,
     };
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
@@ -106,6 +270,6 @@ export async function probeStartupReadiness(timeoutMs: number): Promise<StartupH
       statusCode: null,
     };
   } finally {
-    window.clearTimeout(timeout);
+    window.clearTimeout(readinessTimeout);
   }
 }

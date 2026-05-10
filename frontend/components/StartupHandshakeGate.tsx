@@ -17,6 +17,8 @@ type GateState =
       message: string;
       requestId: string | null;
       statusCode: number | null;
+      expectedApiVersion?: string;
+      actualApiVersion?: string | null;
     }
   | { phase: "ready" };
 
@@ -25,7 +27,7 @@ function reasonLabel(reason: HandshakeFailureReason): string {
     return "Backend unhealthy";
   }
   if (reason === "version_mismatch") {
-    return "Version mismatch";
+    return "Contract mismatch";
   }
   return "Backend unreachable";
 }
@@ -61,6 +63,8 @@ export function StartupHandshakeGate({ children }: { children: React.ReactNode }
         message: result.message,
         requestId: result.requestId,
         statusCode: result.statusCode,
+        expectedApiVersion: result.expectedApiVersion,
+        actualApiVersion: result.actualApiVersion,
       });
     });
 
@@ -112,6 +116,12 @@ export function StartupHandshakeGate({ children }: { children: React.ReactNode }
           <p className="startup-gate-meta">
             Request ID: {state.requestId || "Unavailable"}
           </p>
+          {state.reason === "version_mismatch" && (
+            <p className="startup-gate-meta">
+              Expected API: {state.expectedApiVersion || "Unavailable"} | Backend API:{" "}
+              {state.actualApiVersion || "Unavailable"}
+            </p>
+          )}
           <button
             className="startup-gate-retry"
             onClick={() =>

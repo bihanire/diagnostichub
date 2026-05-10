@@ -69,7 +69,9 @@ foreach ($requiredKey in @(
     "CORS_ORIGINS",
     "OPS_SHARED_PASSWORD",
     "OPS_SESSION_SECRET",
-    "OPS_COOKIE_SECURE"
+    "OPS_COOKIE_SECURE",
+    "API_VERSION",
+    "SCHEMA_VERSION"
 )) {
     if (-not $backendEnv.ContainsKey($requiredKey)) {
         Add-Finding -Bucket $errors -Message "Backend env is missing $requiredKey."
@@ -81,7 +83,8 @@ foreach ($requiredKey in @(
     "OPS_SHARED_PASSWORD",
     "OPS_SESSION_SECRET",
     "OPS_COOKIE_SECURE",
-    "FRONTEND_PUBLIC_API_BASE_URL"
+    "FRONTEND_PUBLIC_API_BASE_URL",
+    "FRONTEND_EXPECTED_API_VERSION"
 )) {
     if (-not $composeEnv.ContainsKey($requiredKey)) {
         Add-Finding -Bucket $errors -Message "Compose env is missing $requiredKey."
@@ -106,8 +109,16 @@ if ($composeEnv.ContainsKey("BACKEND_CORS_ORIGINS") -and $composeEnv["BACKEND_CO
     Add-Finding -Bucket $errors -Message "Compose BACKEND_CORS_ORIGINS should be HTTPS for rollout."
 }
 
-if ($composeEnv.ContainsKey("FRONTEND_PUBLIC_API_BASE_URL") -and $composeEnv["FRONTEND_PUBLIC_API_BASE_URL"] -notmatch "^https://") {
-    Add-Finding -Bucket $errors -Message "Compose FRONTEND_PUBLIC_API_BASE_URL should be HTTPS for rollout."
+if ($composeEnv.ContainsKey("FRONTEND_PUBLIC_API_BASE_URL") -and $composeEnv["FRONTEND_PUBLIC_API_BASE_URL"] -ne "/api") {
+    Add-Finding -Bucket $errors -Message "Compose FRONTEND_PUBLIC_API_BASE_URL must be /api so the frontend always uses the Next.js gateway."
+}
+
+if ($composeEnv.ContainsKey("FRONTEND_EXPECTED_API_VERSION") -and (Test-PlaceholderValue -Value $composeEnv["FRONTEND_EXPECTED_API_VERSION"])) {
+    Add-Finding -Bucket $errors -Message "Compose FRONTEND_EXPECTED_API_VERSION still uses a placeholder value."
+}
+
+if ($backendEnv.ContainsKey("API_VERSION") -and (Test-PlaceholderValue -Value $backendEnv["API_VERSION"])) {
+    Add-Finding -Bucket $errors -Message "Backend API_VERSION still uses a placeholder value."
 }
 
 foreach ($field in @("OPS_SHARED_PASSWORD", "OPS_SESSION_SECRET")) {
