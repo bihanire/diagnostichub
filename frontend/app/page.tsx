@@ -1129,7 +1129,7 @@ export default function HomePage() {
     }
   }
 
-  function handleSelectFamilyFromMenu(familyId: string, trigger: HTMLButtonElement) {
+  function handleSelectFamilyFromMenu(familyId: string) {
     setError(null);
     const selected = families.find((family) => family.id === familyId);
     if (!selected) {
@@ -1138,7 +1138,9 @@ export default function HomePage() {
     if (quickDrillActive) {
       closeQuickDrillImmediately();
     }
-    void openQuickDrill(selected, trigger.getBoundingClientRect());
+    startTransition(() => {
+      router.push(`/families/${selected.id}`);
+    });
   }
 
   function requestCloseQuickDrill() {

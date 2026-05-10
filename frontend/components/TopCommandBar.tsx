@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, KeyboardEvent, MouseEvent, TouchEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RepairFamilySummary } from "@/lib/types";
 
@@ -8,8 +8,13 @@ type TopCommandBarProps = {
   selectedFamilyId: string | null;
   onFocusSearch: () => void;
   onOpenCommandPalette: () => void;
-  onSelectFamily: (familyId: string, trigger: HTMLButtonElement) => void;
+  onSelectFamily: (familyId: string) => void;
   onGoHome: () => void;
+};
+
+type FamilyMenuPosition = {
+  top: number;
+  right: number;
 };
 
 export function TopCommandBar({
@@ -20,10 +25,13 @@ export function TopCommandBar({
   onSelectFamily,
   onGoHome,
 }: TopCommandBarProps) {
-  const familyMenuRef = useRef<HTMLDetailsElement | null>(null);
+  const familyTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const familyPanelRef = useRef<HTMLDivElement | null>(null);
   const familyItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [familyFilter, setFamilyFilter] = useState("");
   const [activeFamilyIndex, setActiveFamilyIndex] = useState(0);
+  const [familyMenuOpen, setFamilyMenuOpen] = useState(false);
+  const [familyMenuPosition, setFamilyMenuPosition] = useState<FamilyMenuPosition>({ top: 64, right: 16 });
 
   const filteredFamilies = useMemo(() => {
     const clean = familyFilter.trim().toLowerCase();
@@ -31,7 +39,8 @@ export function TopCommandBar({
       return families;
     }
     return families.filter((family) => {
-      const searchable = `${family.title} ${family.hint} ${family.symptom_prompts.join(" ")}`.toLowerCase();
+      const prompts = Array.isArray(family.symptom_prompts) ? family.symptom_prompts : [];
+      const searchable = `${family.title} ${family.hint} ${prompts.join(" ")}`.toLowerCase();
       return searchable.includes(clean);
     });
   }, [families, familyFilter]);
@@ -40,9 +49,69 @@ export function TopCommandBar({
     setActiveFamilyIndex(0);
   }, [familyFilter]);
 
-  function handleSelect(familyId: string, trigger: HTMLButtonElement) {
-    onSelectFamily(familyId, trigger);
-    familyMenuRef.current?.removeAttribute("open");
+  useEffect(() => {
+    if (!familyMenuOpen) {
+      return;
+    }
+
+    function closeIfOutside(event: globalThis.MouseEvent | globalThis.TouchEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+      if (familyTriggerRef.current?.contains(target) || familyPanelRef.current?.contains(target)) {
+        return;
+      }
+      setFamilyMenuOpen(false);
+    }
+
+    document.addEventListener("mousedown", closeIfOutside);
+    document.addEventListener("touchstart", closeIfOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", closeIfOutside);
+      document.removeEventListener("touchstart", closeIfOutside);
+    };
+  }, [familyMenuOpen]);
+
+  useEffect(() => {
+    if (!familyMenuOpen) {
+      return;
+    }
+
+    function syncPosition() {
+      const trigger = familyTriggerRef.current;
+      if (!trigger) {
+        return;
+      }
+      const rect = trigger.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      setFamilyMenuPosition({
+        top: Math.round(rect.bottom + 8),
+        right: Math.max(12, Math.round(viewportWidth - rect.right))
+      });
+    }
+
+    syncPosition();
+    window.addEventListener("resize", syncPosition);
+    window.addEventListener("scroll", syncPosition, true);
+    return () => {
+      window.removeEventListener("resize", syncPosition);
+      window.removeEventListener("scroll", syncPosition, true);
+    };
+  }, [familyMenuOpen]);
+
+  function handleSelect(familyId: string) {
+    setFamilyMenuOpen(false);
+    onSelectFamily(familyId);
+  }
+
+  function toggleFamilyMenu(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setFamilyMenuPosition({
+      top: Math.round(rect.bottom + 8),
+      right: Math.max(12, Math.round(window.innerWidth - rect.right))
+    });
+    setFamilyMenuOpen((current) => !current);
   }
 
   function handleFamilyFilterKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -62,13 +131,22 @@ export function TopCommandBar({
     if (event.key === "Enter") {
       event.preventDefault();
       const selected = filteredFamilies[activeFamilyIndex] || filteredFamilies[0];
-      const selectedIndex = filteredFamilies.findIndex((family) => family.id === selected.id);
-      const trigger = familyItemRefs.current[selectedIndex];
-      if (selected && trigger) {
-        handleSelect(selected.id, trigger);
+      if (selected) {
+        handleSelect(selected.id);
       }
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setFamilyMenuOpen(false);
+      familyTriggerRef.current?.focus();
     }
   }
+
+  const familyMenuStyle: CSSProperties = {
+    top: familyMenuPosition.top,
+    right: familyMenuPosition.right
+  };
 
   return (
     <div className="lm-topbar">
@@ -99,9 +177,19 @@ export function TopCommandBar({
       />
 
       <nav className="lm-nav-tabs" aria-label="Primary navigation">
-        <details className="lm-family-menu" ref={familyMenuRef}>
-          <summary className={`lm-nav-tab ${selectedFamilyId ? "active" : ""}`}>Families</summary>
-          <div className="lm-family-menu-panel">
+        <div className="lm-family-menu">
+          <button
+            aria-expanded={familyMenuOpen}
+            aria-haspopup="listbox"
+            className={`lm-nav-tab ${selectedFamilyId || familyMenuOpen ? "active" : ""}`}
+            onClick={toggleFamilyMenu}
+            ref={familyTriggerRef}
+            type="button"
+          >
+            Families
+          </button>
+          {familyMenuOpen ? (
+          <div className="lm-family-menu-panel" ref={familyPanelRef} style={familyMenuStyle}>
             <label className="lm-family-filter-label" htmlFor="family-filter">
               Find family
             </label>
@@ -122,7 +210,7 @@ export function TopCommandBar({
                       activeFamilyIndex === index ? "is-highlighted" : ""
                     }`}
                     key={`family-menu-${family.id}`}
-                    onClick={(event) => handleSelect(family.id, event.currentTarget)}
+                    onClick={() => handleSelect(family.id)}
                     ref={(node) => {
                       familyItemRefs.current[index] = node;
                     }}
@@ -143,7 +231,8 @@ export function TopCommandBar({
               )}
             </div>
           </div>
-        </details>
+          ) : null}
+        </div>
 
         <button className="lm-nav-tab" onClick={onFocusSearch} type="button">
           System

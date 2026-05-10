@@ -32,6 +32,7 @@ export default function RootLayout({
   return (
     <html data-env={process.env.NODE_ENV} lang="en" suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable}`} suppressHydrationWarning>
+        <div className="app-atmosphere" aria-hidden="true" />
         <AppStatusShell />
         <div className="site-chrome">
           <StartupHandshakeGate>{children}</StartupHandshakeGate>

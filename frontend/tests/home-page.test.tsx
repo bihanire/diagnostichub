@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -413,43 +413,38 @@ describe("HomePage", () => {
     expect(sessionMocks.clearSession).toHaveBeenCalled();
   });
 
-  it("opens a family workspace with grouped diagnostic routes", async () => {
+  it("routes family selection through the top Families menu", async () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    await user.click(await screen.findByRole("button", { name: /display & vision/i }));
-    expect(await screen.findByRole("heading", { name: "Display & Vision" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /open full family workspace/i }));
-
-    await waitFor(() => {
-      expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalled();
-    });
-
-    expect(await screen.findByRole("heading", { name: "Display & Vision" })).toBeInTheDocument();
-    expect(screen.getByText("Cracks and visible panel damage")).toBeInTheDocument();
-    expect(screen.getByText(/What officers may search for/i)).toBeInTheDocument();
-    expect(screen.getByText(/Escalate faster when you see this/i)).toBeInTheDocument();
-  });
-
-  it("opens quick-drill from a visual family card and can start triage", async () => {
-    const user = userEvent.setup();
-    render(<HomePage />);
-
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
     await user.click(await screen.findByRole("button", { name: /open display & vision diagnosis family/i }));
 
-    const dialog = await screen.findByRole("dialog");
-    expect(dialog).toBeInTheDocument();
-    expect(screen.getByText(/micro symptoms/i)).toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: /^start triage/i }));
-
+    expect(navigationMocks.push).toHaveBeenCalledWith("/families/display");
     await waitFor(() => {
-      expect(apiMocks.startTriage).toHaveBeenCalledWith(2);
+      expect(screen.queryByLabelText(/find family/i)).not.toBeInTheDocument();
     });
   });
 
-  it("keeps quick-drill stable even when a family arrives without symptom prompts", async () => {
+  it("closes the family menu with one outside tap", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(await screen.findByLabelText(/find family/i)).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("heading", { name: /diag & troubleshooting hub/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/find family/i)).not.toBeInTheDocument();
+    });
+  });
+
+  it("keeps the family router stable even when a family arrives without symptom prompts", async () => {
     const user = userEvent.setup();
     apiMocks.getRepairFamilies.mockResolvedValueOnce([
       {
@@ -483,18 +478,20 @@ describe("HomePage", () => {
     });
     render(<HomePage />);
 
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
     await user.click(await screen.findByRole("button", { name: /open custom family diagnosis family/i }));
 
-    expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/No symptom shortcuts yet for this family/i)).toBeInTheDocument();
+    expect(navigationMocks.push).toHaveBeenCalledWith("/families/custom-family");
   });
 
   it("shows built-in family cards when the family endpoint fails", async () => {
     apiMocks.getRepairFamilies.mockRejectedValueOnce(new Error("Could not load family data."));
+    const user = userEvent.setup();
     render(<HomePage />);
 
-    expect(await screen.findByRole("button", { name: /display & vision/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /power & thermal/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(await screen.findByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open power & thermal diagnosis family/i })).toBeInTheDocument();
     expect(await screen.findByText(/showing backup family guide/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
@@ -505,7 +502,8 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
-    expect(screen.getByRole("button", { name: /display & vision/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(screen.getByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
     expect(screen.queryByLabelText(/loading visual families/i)).not.toBeInTheDocument();
 
     await act(async () => {
@@ -513,12 +511,13 @@ describe("HomePage", () => {
       vi.advanceTimersByTime(4600);
     });
 
-    expect(screen.getByRole("button", { name: /display & vision/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
     expect(screen.getByText(/showing backup family guide/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /retry/i })).toBeInTheDocument();
   });
 
   it("renders cached visual families immediately when the live endpoint is slow", async () => {
+    const user = userEvent.setup();
     apiMocks.getCachedRepairFamilies.mockReturnValue([
       {
         id: "display",
@@ -532,11 +531,13 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
-    expect(await screen.findByRole("button", { name: /display & vision/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(await screen.findByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
     expect(screen.queryByLabelText(/loading visual families/i)).not.toBeInTheDocument();
   });
 
   it("merges a partial live family response with the built-in family asset set", async () => {
+    const user = userEvent.setup();
     apiMocks.getRepairFamilies.mockResolvedValueOnce([
       {
         id: "display",
@@ -549,13 +550,14 @@ describe("HomePage", () => {
 
     render(<HomePage />);
 
-    expect(await screen.findByRole("button", { name: /display & vision/i })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(await screen.findByRole("button", { name: /open display & vision diagnosis family/i })).toBeInTheDocument();
 
     await waitFor(() => {
       expect(screen.getByText("7 flows")).toBeInTheDocument();
     });
-    expect(screen.getByRole("button", { name: /power & thermal/i })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /physical & liquid/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open power & thermal diagnosis family/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /open physical & liquid diagnosis family/i })).toBeInTheDocument();
   });
 
   it("shows categorized fuzzy suggestions and allows keyboard selection with Enter", async () => {
