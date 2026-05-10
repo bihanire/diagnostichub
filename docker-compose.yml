@@ -41,7 +41,7 @@ services:
       REQUEST_CORRELATION_ENABLED: ${REQUEST_CORRELATION_ENABLED:-true}
       STANDARDIZE_ERROR_RESPONSES: ${STANDARDIZE_ERROR_RESPONSES:-true}
     ports:
-      - "${BACKEND_PORT:-8001}:8001"
+      - "${BACKEND_PORT:-8000}:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
       interval: 10s
