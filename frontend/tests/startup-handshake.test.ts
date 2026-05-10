@@ -13,6 +13,7 @@ describe("startup handshake", () => {
     vi.stubEnv("NEXT_PUBLIC_ENFORCE_API_GATEWAY", "true");
     vi.stubEnv("NEXT_PUBLIC_API_VERSION_CHECK_ENABLED", "true");
     vi.stubEnv("NEXT_PUBLIC_EXPECTED_API_VERSION", "1.4.0");
+    vi.stubEnv("NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED", "true");
   });
 
   afterEach(() => {

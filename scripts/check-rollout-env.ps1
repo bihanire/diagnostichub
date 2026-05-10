@@ -71,7 +71,8 @@ foreach ($requiredKey in @(
     "OPS_SESSION_SECRET",
     "OPS_COOKIE_SECURE",
     "API_VERSION",
-    "SCHEMA_VERSION"
+    "SCHEMA_VERSION",
+    "REQUEST_CORRELATION_ENABLED"
 )) {
     if (-not $backendEnv.ContainsKey($requiredKey)) {
         Add-Finding -Bucket $errors -Message "Backend env is missing $requiredKey."
@@ -84,7 +85,8 @@ foreach ($requiredKey in @(
     "OPS_SESSION_SECRET",
     "OPS_COOKIE_SECURE",
     "FRONTEND_PUBLIC_API_BASE_URL",
-    "FRONTEND_EXPECTED_API_VERSION"
+    "FRONTEND_EXPECTED_API_VERSION",
+    "FRONTEND_CLIENT_REQUEST_ID_ENABLED"
 )) {
     if (-not $composeEnv.ContainsKey($requiredKey)) {
         Add-Finding -Bucket $errors -Message "Compose env is missing $requiredKey."

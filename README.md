@@ -268,6 +268,7 @@ Ops review now uses a separate sign-in route:
 - `API_VERSION`
 - `SCHEMA_VERSION`
 - `BUILD_SHA`
+- `REQUEST_CORRELATION_ENABLED`
 
 ### Frontend
 
@@ -277,6 +278,7 @@ Ops review now uses a separate sign-in route:
 - `NEXT_PUBLIC_BOOT_HANDSHAKE_TIMEOUT_MS`
 - `NEXT_PUBLIC_API_VERSION_CHECK_ENABLED`
 - `NEXT_PUBLIC_EXPECTED_API_VERSION`
+- `NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED`
 
 ## API summary
 

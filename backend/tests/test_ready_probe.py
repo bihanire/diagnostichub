@@ -59,7 +59,7 @@ class ReadyProbeRouteTests(unittest.TestCase):
     def test_ready_returns_200_when_all_checks_are_ok(self) -> None:
         with patch("app.api.routes.system.database_is_ready", return_value=True):
             with TestClient(self.app) as client:
-                response = client.get("/ready", headers={"X-Request-ID": "req-ready-200"})
+                response = client.get("/ready", headers={"X-Client-Request-ID": "req-ready-200"})
 
         payload = response.json()
         self.assertEqual(response.status_code, 200, payload)
@@ -83,7 +83,7 @@ class ReadyProbeRouteTests(unittest.TestCase):
 
     def test_meta_returns_contract_metadata(self) -> None:
         with TestClient(self.app) as client:
-            response = client.get("/meta", headers={"X-Request-ID": "req-meta-200"})
+            response = client.get("/meta", headers={"X-Client-Request-ID": "req-meta-200"})
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()

@@ -36,6 +36,12 @@ Frontend:
 - `NEXT_PUBLIC_API_VERSION_CHECK_ENABLED` toggles `/meta` verification.
 - `NEXT_PUBLIC_EXPECTED_API_VERSION` sets expected `api_version`.
 
+## Correlation IDs
+
+- Frontend sends `X-Client-Request-ID` for request tracing (toggle with `NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED`).
+- Backend returns `X-Request-ID` on every response and logs the `(client_request_id, request_id)` pair.
+- Backend correlation logic can be toggled with `REQUEST_CORRELATION_ENABLED`.
+
 ## Gateway boundary
 
 The frontend must use `NEXT_PUBLIC_API_BASE_URL=/api` in production.

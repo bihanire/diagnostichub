@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  ApiError,
   getRepairFamilies,
   getOpsFeedbackByBranch,
   getOpsFeedbackByTag,
@@ -40,6 +41,8 @@ describe("ops API helpers", () => {
     expect(fetchMock).toHaveBeenCalledTimes(8);
     for (const call of fetchMock.mock.calls) {
       expect(call[1]).toMatchObject({ credentials: "include" });
+      const headers = call[1]?.headers as Headers;
+      expect(headers.get("X-Client-Request-ID")).toBeTruthy();
     }
   });
 
@@ -92,5 +95,33 @@ describe("ops API helpers", () => {
         title: "Display & Vision"
       })
     ]);
+  });
+
+  it("includes request ID guidance for non-2xx responses", async () => {
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(global, "fetch").mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          code: "UPSTREAM_ERROR",
+          message: "Temporary upstream failure",
+          request_id: "req-ops-500"
+        }),
+        {
+          status: 503,
+          headers: {
+            "Content-Type": "application/json",
+            "X-Request-ID": "req-ops-500"
+          }
+        }
+      )
+    );
+
+    await expect(getOpsSession()).rejects.toMatchObject({
+      status: 503,
+      requestId: "req-ops-500",
+      code: "UPSTREAM_ERROR",
+      message: expect.stringContaining("Request ID: req-ops-500")
+    });
+    expect(consoleSpy).toHaveBeenCalledWith("Request ID: req-ops-500 — copy this for support.");
   });
 });

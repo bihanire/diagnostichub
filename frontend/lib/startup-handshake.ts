@@ -45,6 +45,8 @@ const enforceGatewayInProduction =
   process.env.NODE_ENV === "production"
     ? parseBooleanFlag(process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY, true)
     : parseBooleanFlag(process.env.NEXT_PUBLIC_ENFORCE_API_GATEWAY, false);
+const clientRequestCorrelationEnabled =
+  parseBooleanFlag(process.env.NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED, true);
 
 if (enforceGatewayInProduction && process.env.NODE_ENV === "production" && effectiveApiBaseUrl !== "/api") {
   throw new Error(
@@ -80,7 +82,10 @@ type ParsedSemVer = {
   patch: number;
 };
 
-function createClientRequestId(prefix: string): string {
+function createClientRequestId(prefix: string): string | null {
+  if (!clientRequestCorrelationEnabled) {
+    return null;
+  }
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
@@ -108,12 +113,16 @@ export async function probeStartupReadiness(timeoutMs: number): Promise<StartupH
   const readinessTimeout = window.setTimeout(() => readinessController.abort(), timeoutMs);
 
   try {
+    const readyHeaders = new Headers();
+    const readyClientRequestId = createClientRequestId("boot-ready");
+    if (readyClientRequestId) {
+      readyHeaders.set("X-Client-Request-ID", readyClientRequestId);
+    }
+
     const response = await fetch("/api/ready", {
       method: "GET",
       cache: "no-store",
-      headers: {
-        "X-Client-Request-ID": createClientRequestId("boot-ready"),
-      },
+      headers: readyHeaders,
       signal: readinessController.signal,
     });
     const requestId = response.headers.get("X-Request-ID");
@@ -154,12 +163,16 @@ export async function probeStartupReadiness(timeoutMs: number): Promise<StartupH
     const metaTimeout = window.setTimeout(() => metaController.abort(), timeoutMs);
     let metaResponse: Response;
     try {
+      const metaHeaders = new Headers();
+      const metaClientRequestId = createClientRequestId("boot-meta");
+      if (metaClientRequestId) {
+        metaHeaders.set("X-Client-Request-ID", metaClientRequestId);
+      }
+
       metaResponse = await fetch("/api/meta", {
         method: "GET",
         cache: "no-store",
-        headers: {
-          "X-Client-Request-ID": createClientRequestId("boot-meta"),
-        },
+        headers: metaHeaders,
         signal: metaController.signal,
       });
     } catch (error) {

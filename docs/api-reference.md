@@ -420,4 +420,8 @@ This route requires a valid ops session cookie.
 
 ## Request tracing
 
-Every API response now includes an `X-Request-ID` header. This makes it easier to match a branch-reported issue with the backend logs.
+Every API response includes an `X-Request-ID` header. Frontend requests include `X-Client-Request-ID`, and the backend maps or generates a request ID so operators can trace incidents quickly.
+
+On frontend failures, DiagnosticHub surfaces:
+
+`Request ID: <id> — copy this for support.`

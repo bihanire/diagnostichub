@@ -41,6 +41,8 @@ const API_TIMEOUT_MS = 15000;
 const FAMILY_CACHE_KEY = "diaghub-family-summaries";
 const FAMILY_DETAIL_CACHE_PREFIX = "diaghub-family-detail-";
 const FAMILY_MODULE_CACHE_PREFIX = "diaghub-family-module-";
+const clientRequestCorrelationEnabled =
+  process.env.NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED !== "false";
 
 export function getApiBaseUrl(): string {
   return API_BASE_URL;
@@ -48,16 +50,44 @@ export function getApiBaseUrl(): string {
 
 export class ApiError extends Error {
   status: number;
+  requestId: string | null;
+  code: string | null;
+  detail: string | null;
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    options?: { requestId?: string | null; code?: string | null; detail?: string | null }
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.requestId = options?.requestId || null;
+    this.code = options?.code || null;
+    this.detail = options?.detail || null;
   }
 }
 
 type ApiRequestOptions = RequestInit & {
   authenticated?: boolean;
+};
+
+function createClientRequestId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.round(Math.random() * 1000000)}`;
+}
+
+function formatSupportRequestIdHint(requestId: string | null): string {
+  return `Request ID: ${requestId || "Unavailable"} — copy this for support.`;
+}
+
+type ApiErrorEnvelope = {
+  code?: string;
+  message?: string;
+  detail?: string;
+  request_id?: string;
 };
 
 async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise<T> {
@@ -80,6 +110,10 @@ async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise
   };
   externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
   const headers = new Headers(options?.headers);
+  const clientRequestId = clientRequestCorrelationEnabled ? createClientRequestId() : null;
+  if (clientRequestId && !headers.has("X-Client-Request-ID")) {
+    headers.set("X-Client-Request-ID", clientRequestId);
+  }
   if (options?.body !== undefined && options.body !== null && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
@@ -134,15 +168,23 @@ async function apiRequest<T>(path: string, options?: ApiRequestOptions): Promise
   if (!response.ok) {
     const fallbackMessage = "Something went wrong. Please try again.";
     let detail = fallbackMessage;
+    let envelope: ApiErrorEnvelope | null = null;
+    const requestId = response.headers.get("X-Request-ID");
 
     try {
-      const payload = (await response.json()) as { detail?: string; message?: string };
-      detail = payload.detail || payload.message || fallbackMessage;
+      envelope = (await response.json()) as ApiErrorEnvelope;
+      detail = envelope.detail || envelope.message || fallbackMessage;
     } catch {
       detail = fallbackMessage;
     }
 
-    throw new ApiError(detail, response.status);
+    const supportHint = formatSupportRequestIdHint(requestId);
+    console.error(supportHint);
+    throw new ApiError(`${detail} ${supportHint}`, response.status, {
+      requestId: envelope?.request_id || requestId,
+      code: envelope?.code || null,
+      detail: envelope?.detail || null
+    });
   }
 
   return (await response.json()) as T;

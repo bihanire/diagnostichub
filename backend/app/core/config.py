@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     api_version: str = "1.0.0"
     schema_version: str = "1"
     build_sha: str = "dev"
+    request_correlation_enabled: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
