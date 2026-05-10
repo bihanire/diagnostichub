@@ -1,0 +1,140 @@
+**DiagHub Handoff (Current State + Next Actions)**
+
+Current status:
+- Codebase is up to date on `main` at commit `8b1578d` (Phase 3 learning-module tracks).
+- Autodeploy timer is running.
+- Deploy worker reaches fetch/checkout/deps install, then fails at frontend build step and rolls back.
+- Rollback health check reports `401` on `http://127.0.0.1:8000/health` (unexpected; should be `200`).
+
+What was already fixed:
+- `REPO_DIR` misconfiguration and “repo missing” errors were diagnosed.
+- Deploy worker now successfully fetches and checks out target commit.
+- Remaining blocker is runtime/build health, not git probe/timer.
+
+---
+
+**Immediate objective for collaborator**
+Restore successful autodeploy and confirm healthy runtime on Ubuntu host.
+
+---
+
+**Environment assumptions**
+- Host: `watumonitoringserver`
+- App root: `/opt/diaghub`
+- Repo path expected by deploy worker: `/opt/diaghub/repo`
+- Deploy env: `/etc/diaghub/deploy.env`
+- Services:
+  - `diaghub-backend.service`
+  - `diaghub-frontend.service`
+  - `diaghub-autodeploy.service`
+  - `diaghub-autodeploy.timer`
+
+---
+
+**Critical findings from logs**
+- Deploy fails at `deploy.sh` line 165 (frontend build stage).
+- Rollback then fails health with repeated:
+  - `curl: (22) ... 401`
+  - `[health] backend health failed after 30 attempts (http://127.0.0.1:8000/health)`
+
+Interpretation:
+- Either wrong process is bound on `127.0.0.1:8000`, or backend starts with unexpected auth/proxy behavior, or service isn’t starting correctly during rollback window.
+
+---
+
+**Step-by-step recovery plan**
+
+1. Verify deploy config paths
+```bash
+sudo -i
+cat /etc/diaghub/deploy.env
+```
+Confirm:
+- `APP_ROOT=/opt/diaghub`
+- `REPO_DIR=/opt/diaghub/repo`
+- `VENV_DIR=/opt/diaghub/venv`
+
+2. Inspect deploy failure root cause
+```bash
+tail -n 300 /var/log/diaghub-deploy.log
+```
+Goal: capture the exact frontend build error at line 165.
+
+3. Validate repo health (must be clean)
+```bash
+cd /opt/diaghub/repo
+git rev-parse --is-inside-work-tree
+git status --porcelain
+```
+If dirty:
+```bash
+git reset --hard
+git clean -fd
+```
+
+4. Check who owns port 8000
+```bash
+ss -ltnp | grep :8000 || true
+curl -i http://127.0.0.1:8000/health
+```
+Expected: `HTTP/1.1 200 OK` and `{"status":"ok"}`.
+
+5. Inspect backend service directly
+```bash
+systemctl status diaghub-backend.service --no-pager
+journalctl -u diaghub-backend.service -n 200 --no-pager
+systemctl cat diaghub-backend.service
+```
+
+6. Inspect frontend service/build runtime
+```bash
+systemctl status diaghub-frontend.service --no-pager
+journalctl -u diaghub-frontend.service -n 200 --no-pager
+node -v
+npm -v
+```
+
+7. Re-run deploy worker manually after fixes
+```bash
+systemctl daemon-reload
+systemctl restart diaghub-autodeploy.timer
+systemctl start diaghub-autodeploy.service
+journalctl -u diaghub-autodeploy.service -n 250 --no-pager
+```
+
+8. Final health confirmation
+```bash
+curl -fsS http://127.0.0.1:8000/health
+curl -fsS http://127.0.0.1:8000/ready
+curl -fsS http://127.0.0.1:3000 >/dev/null
+systemctl status diaghub-backend.service diaghub-frontend.service --no-pager
+```
+
+---
+
+**Likely fix targets**
+- Frontend build dependency/runtime mismatch on server (from deploy log).
+- Wrong process bound to `8000` causing health `401`.
+- Backend env/service drift during rollback path.
+
+---
+
+**Do-not-do**
+- Don’t run manual edits inside `/opt/diaghub/repo` and leave uncommitted changes (autodeploy refuses dirty repo).
+- Don’t point `REPO_DIR` to a URL or non-git directory.
+- Don’t bypass health checks in deploy script.
+
+---
+
+**Definition of done**
+- `diaghub-autodeploy.service` completes with success.
+- `current.sha` and `last-good.sha` under `/var/lib/diaghub` match latest target SHA.
+- `/health` and `/ready` return success locally.
+- Frontend loads on `127.0.0.1:3000` and via Apache FQDN.
+
+---
+
+If useful, collaborator can paste these three outputs first for rapid triage:
+1. `tail -n 200 /var/log/diaghub-deploy.log`
+2. `curl -i http://127.0.0.1:8000/health`
+3. `journalctl -u diaghub-backend.service -n 120 --no-pager`
