@@ -1,6 +1,8 @@
 from collections import deque
 from functools import lru_cache
 
+from typing import Literal
+
 from sqlalchemy.orm import Session
 
 from app.models.models import DecisionNode, Procedure
@@ -603,7 +605,7 @@ def start_triage(db: Session, procedure_id: int) -> TriageStartResponse | None:
     root = find_root_node(procedure)
     progress = make_progress(procedure, root.id if root else None)
     outcome = build_outcome(procedure, root.final_outcome) if root and root.final_outcome else None
-    status = "complete" if outcome else "question"
+    status: Literal["question", "complete"] = "complete" if outcome else "question"
 
     return TriageStartResponse(
         status=status,

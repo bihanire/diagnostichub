@@ -49,6 +49,7 @@ FRONTEND_HEALTH_URL="${FRONTEND_HEALTH_URL:-http://127.0.0.1:3000}"
 LOCK_FILE="${LOCK_FILE:-/var/lock/diaghub-deploy.lock}"
 STATE_DIR="${STATE_DIR:-/var/lib/diaghub}"
 DEPLOY_LOG="${DEPLOY_LOG:-/var/log/diaghub-deploy.log}"
+RUNTIME_ENV_FILE="${RUNTIME_ENV_FILE:-/etc/diaghub/runtime.env}"
 CURRENT_SHA_FILE="$STATE_DIR/current.sha"
 LAST_GOOD_SHA_FILE="$STATE_DIR/last-good.sha"
 
@@ -73,6 +74,12 @@ require_command() {
     log "[deploy] missing command: $1"
     exit 1
   fi
+}
+
+write_runtime_env() {
+  local sha="$1"
+  mkdir -p "$(dirname "$RUNTIME_ENV_FILE")"
+  printf 'BUILD_SHA=%s\n' "$sha" >"$RUNTIME_ENV_FILE"
 }
 
 for required_cmd in git python3 npm curl systemctl flock; do
@@ -113,6 +120,7 @@ rollback() {
   log "[deploy] rollback started -> $previous_sha"
   cd "$REPO_DIR"
   git checkout --force "$previous_sha"
+  write_runtime_env "$previous_sha"
   "$VENV_DIR/bin/pip" install -r "$BACKEND_DIR/requirements.txt" >>"$DEPLOY_LOG" 2>&1
   (cd "$FRONTEND_DIR" && npm ci --no-audit --no-fund >>"$DEPLOY_LOG" 2>&1)
   (cd "$FRONTEND_DIR" && npm run build >>"$DEPLOY_LOG" 2>&1)
@@ -148,6 +156,7 @@ fi
 log "[deploy] updating $previous_sha -> $target_sha"
 rollback_pending="true"
 git checkout --force "$target_sha"
+write_runtime_env "$target_sha"
 
 if [[ ! -d "$VENV_DIR" ]]; then
   log "[deploy] creating python virtualenv at $VENV_DIR"

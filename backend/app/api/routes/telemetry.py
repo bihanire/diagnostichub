@@ -25,7 +25,7 @@ def telemetry_interaction(payload: InteractionEventRequest) -> InteractionEventR
     telemetry.record_event(
         event=f"ux_{payload.event}",
         status=payload.status,
-        metadata=payload.metadata,
+        metadata=dict(payload.metadata),
     )
     logger.debug(
         "telemetry_interaction",

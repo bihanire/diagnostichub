@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from typing import NotRequired, TypedDict
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -21,7 +22,40 @@ from app.schemas.family import (
 from app.services.procedure_service import procedure_query_with, to_summary
 from app.services.triage_service import calculate_depths, find_root_node
 
-FAMILY_DEFINITIONS = {
+
+class _CommonCategoryDefinition(TypedDict):
+    title: str
+    description: str
+    search_examples: list[str]
+    primary_procedure: str
+    supporting_procedures: list[str]
+
+
+class _FocusCardDefinition(TypedDict):
+    title: str
+    description: str
+
+
+class _ProcedureGroupDefinition(TypedDict):
+    title: str
+    description: str
+    procedures: list[str]
+
+
+class _FamilyDefinition(TypedDict):
+    title: str
+    hint: str
+    diagnostic_goal: str
+    categories: set[str]
+    symptom_prompts: list[str]
+    common_categories: NotRequired[list[_CommonCategoryDefinition]]
+    focus_cards: NotRequired[list[_FocusCardDefinition]]
+    procedure_groups: NotRequired[list[_ProcedureGroupDefinition]]
+    branch_checks: list[str]
+    escalation_signals: list[str]
+
+
+FAMILY_DEFINITIONS: dict[str, _FamilyDefinition] = {
     "display": {
         "title": "Display & Vision",
         "hint": "Start here for cracked screens, black display, lines, blur, tint, or touch problems.",
@@ -660,13 +694,13 @@ class _RawFamilySignalEvent:
 
 
 def _load_procedures(db: Session) -> list[Procedure]:
-    return db.scalars(
+    return list(db.scalars(
         procedure_query_with(
             include_tags=False,
             include_decision_nodes=False,
             include_links=False,
         )
-    ).all()
+    ).all())
 
 
 def _group_procedures_by_category(

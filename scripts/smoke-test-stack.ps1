@@ -46,13 +46,35 @@ function New-LoggedProcess {
     $logPrefix = Join-Path ([System.IO.Path]::GetTempPath()) ("rel-encyclopedia-$Name-" + [guid]::NewGuid().ToString("N"))
     $stdoutPath = "$logPrefix.out.log"
     $stderrPath = "$logPrefix.err.log"
-    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
+    $process = Start-Process -FilePath $FilePath -ArgumentList $ArgumentList -WorkingDirectory $WorkingDirectory -PassThru -WindowStyle Hidden -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
 
     return @{
         Name = $Name
         Process = $process
         StdOut = $stdoutPath
         StdErr = $stderrPath
+    }
+}
+
+function Stop-LoggedProcess {
+    param(
+        [hashtable]$Runner
+    )
+
+    if (-not ($Runner -and $Runner.Process)) {
+        return
+    }
+
+    $Runner.Process.Refresh()
+    if ($Runner.Process.HasExited) {
+        return
+    }
+
+    if ($IsWindows -or $env:OS -eq "Windows_NT") {
+        & taskkill.exe /PID $Runner.Process.Id /T /F | Out-Null
+    }
+    else {
+        Stop-Process -Id $Runner.Process.Id -Force -ErrorAction SilentlyContinue
     }
 }
 
@@ -191,13 +213,13 @@ try {
     Write-Host "Frontend status:" $frontendResponse.StatusCode
 }
 finally {
-    if ($backend -and $backend.Process) {
-        Stop-Process -Id $backend.Process.Id -Force -ErrorAction SilentlyContinue
+    if ($backend) {
+        Stop-LoggedProcess -Runner $backend
         Remove-ProcessLogs -Runner $backend
     }
 
-    if ($frontend -and $frontend.Process) {
-        Stop-Process -Id $frontend.Process.Id -Force -ErrorAction SilentlyContinue
+    if ($frontend) {
+        Stop-LoggedProcess -Runner $frontend
         Remove-ProcessLogs -Runner $frontend
     }
 }
