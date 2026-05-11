@@ -10,3 +10,4 @@ backend/.env
 runtime-logs/*.log
 frontend/tsconfig.tsbuildinfo
 *.log
+/venv/
