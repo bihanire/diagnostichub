@@ -4,7 +4,7 @@
 
 - Procedures: 16
 - Tags: 244
-- Decision nodes: 114
+- Decision nodes: 117
 - Linked procedures: 56
 - Errors: 0
 - Warnings: 0
@@ -13,7 +13,7 @@
 
 | ID | Title | Tags | Final Outcomes | Branch-Resolvable Outcomes |
 | --- | --- | ---: | ---: | ---: |
-| 1 | Phone Not Powering On | 23 | 5 | 4 |
+| 1 | Phone Not Powering On | 23 | 6 | 4 |
 | 2 | Screen Issue | 23 | 4 | 3 |
 | 3 | Stolen Phone | 10 | 4 | 4 |
 | 4 | Charging Issue | 19 | 4 | 4 |

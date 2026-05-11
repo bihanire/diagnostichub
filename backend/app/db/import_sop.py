@@ -55,38 +55,38 @@ def validate_import_package(
         _require_text(errors, row.immediate_action, f"Procedure {row.id} immediate_action")
         _require_text(errors, row.explanation, f"Procedure {row.id} explanation")
 
-    for row in package.tags:
-        if row.procedure_id not in imported_procedure_ids:
-            errors.append(f"Tag references unknown procedure id: {row.procedure_id}")
-        _require_text(errors, row.keyword, f"Tag for procedure {row.procedure_id}")
-        tags_by_procedure[row.procedure_id] = tags_by_procedure.get(row.procedure_id, 0) + 1
+    for tag_row in package.tags:
+        if tag_row.procedure_id not in imported_procedure_ids:
+            errors.append(f"Tag references unknown procedure id: {tag_row.procedure_id}")
+        _require_text(errors, tag_row.keyword, f"Tag for procedure {tag_row.procedure_id}")
+        tags_by_procedure[tag_row.procedure_id] = tags_by_procedure.get(tag_row.procedure_id, 0) + 1
 
-    for row in package.decision_nodes:
-        if row.procedure_id not in imported_procedure_ids:
-            errors.append(f"Decision node {row.id} references unknown procedure id: {row.procedure_id}")
-        _require_text(errors, row.question, f"Decision node {row.id} question")
-        nodes_by_procedure.setdefault(row.procedure_id, set()).add(row.id)
+    for node_row in package.decision_nodes:
+        if node_row.procedure_id not in imported_procedure_ids:
+            errors.append(f"Decision node {node_row.id} references unknown procedure id: {node_row.procedure_id}")
+        _require_text(errors, node_row.question, f"Decision node {node_row.id} question")
+        nodes_by_procedure.setdefault(node_row.procedure_id, set()).add(node_row.id)
 
-        if row.is_final:
+        if node_row.is_final:
             for field_name, value in [
-                ("diagnosis", row.diagnosis),
-                ("recommended_action", row.recommended_action),
-                ("outcome_warranty_status", row.outcome_warranty_status),
-                ("follow_up_message", row.follow_up_message),
+                ("diagnosis", node_row.diagnosis),
+                ("recommended_action", node_row.recommended_action),
+                ("outcome_warranty_status", node_row.outcome_warranty_status),
+                ("follow_up_message", node_row.follow_up_message),
             ]:
-                _require_text(errors, value, f"Decision node {row.id} final {field_name}")
-            if row.yes_next is not None or row.no_next is not None:
-                errors.append(f"Final decision node {row.id} should not have yes_next or no_next")
-        elif row.yes_next is None and row.no_next is None:
-            errors.append(f"Decision node {row.id} needs a next node or final outcome")
+                _require_text(errors, value, f"Decision node {node_row.id} final {field_name}")
+            if node_row.yes_next is not None or node_row.no_next is not None:
+                errors.append(f"Final decision node {node_row.id} should not have yes_next or no_next")
+        elif node_row.yes_next is None and node_row.no_next is None:
+            errors.append(f"Decision node {node_row.id} needs a next node or final outcome")
 
-    for row in package.linked_procedures:
-        if row.procedure_id not in imported_procedure_ids:
-            errors.append(f"Linked procedure source is not in this import: {row.procedure_id}")
-        if row.linked_procedure_id not in valid_link_procedure_ids:
-            errors.append(f"Linked procedure target is unknown: {row.linked_procedure_id}")
-        if row.procedure_id == row.linked_procedure_id:
-            errors.append(f"Procedure {row.procedure_id} cannot link to itself")
+    for link_row in package.linked_procedures:
+        if link_row.procedure_id not in imported_procedure_ids:
+            errors.append(f"Linked procedure source is not in this import: {link_row.procedure_id}")
+        if link_row.linked_procedure_id not in valid_link_procedure_ids:
+            errors.append(f"Linked procedure target is unknown: {link_row.linked_procedure_id}")
+        if link_row.procedure_id == link_row.linked_procedure_id:
+            errors.append(f"Procedure {link_row.procedure_id} cannot link to itself")
 
     for procedure_id in imported_procedure_ids:
         if tags_by_procedure.get(procedure_id, 0) == 0:
@@ -95,15 +95,15 @@ def validate_import_package(
             errors.append(f"Procedure {procedure_id} must include at least one decision node")
 
     all_node_ids = {row.id for row in package.decision_nodes}
-    for row in package.decision_nodes:
-        procedure_node_ids = nodes_by_procedure.get(row.procedure_id, set())
-        for next_id, label in [(row.yes_next, "yes_next"), (row.no_next, "no_next")]:
+    for node_row in package.decision_nodes:
+        procedure_node_ids = nodes_by_procedure.get(node_row.procedure_id, set())
+        for next_id, label in [(node_row.yes_next, "yes_next"), (node_row.no_next, "no_next")]:
             if next_id is None:
                 continue
             if next_id not in all_node_ids:
-                errors.append(f"Decision node {row.id} has broken {label} link: {next_id}")
+                errors.append(f"Decision node {node_row.id} has broken {label} link: {next_id}")
             elif next_id not in procedure_node_ids:
-                errors.append(f"Decision node {row.id} {label} points outside its procedure: {next_id}")
+                errors.append(f"Decision node {node_row.id} {label} points outside its procedure: {next_id}")
 
     if errors:
         raise SopImportError("SOP import validation failed:\n- " + "\n- ".join(errors))
@@ -167,21 +167,21 @@ def import_sop_session(
         procedure.warranty_status = row.warranty_status
     db.flush()
 
-    for row in package.tags:
-        db.add(Tag(keyword=row.keyword, procedure_id=row.procedure_id))
+    for tag_row in package.tags:
+        db.add(Tag(keyword=tag_row.keyword, procedure_id=tag_row.procedure_id))
 
     node_relationships: list[tuple[DecisionNode, int | None, int | None]] = []
-    for row in package.decision_nodes:
+    for node_row in package.decision_nodes:
         node = DecisionNode(
-            id=row.id,
-            procedure_id=row.procedure_id,
-            question=row.question,
+            id=node_row.id,
+            procedure_id=node_row.procedure_id,
+            question=node_row.question,
             yes_next=None,
             no_next=None,
-            final_outcome=_build_final_outcome(row),
+            final_outcome=_build_final_outcome(node_row),
         )
         db.add(node)
-        node_relationships.append((node, row.yes_next, row.no_next))
+        node_relationships.append((node, node_row.yes_next, node_row.no_next))
 
     db.flush()
 
@@ -189,11 +189,11 @@ def import_sop_session(
         node.yes_next = yes_next
         node.no_next = no_next
 
-    for row in package.linked_procedures:
+    for link_row in package.linked_procedures:
         db.add(
             LinkedNode(
-                procedure_id=row.procedure_id,
-                linked_procedure_id=row.linked_procedure_id,
+                procedure_id=link_row.procedure_id,
+                linked_procedure_id=link_row.linked_procedure_id,
             )
         )
 
