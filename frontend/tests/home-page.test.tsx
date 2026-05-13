@@ -444,6 +444,26 @@ describe("HomePage", () => {
     });
   });
 
+  it("closes topbar dropdowns when switching menus or tapping the workspace", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    await user.click(screen.getByRole("button", { name: /^families$/i }));
+    expect(await screen.findByLabelText(/find family/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^utilities$/i }));
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/find family/i)).not.toBeInTheDocument();
+    });
+    expect(await screen.findByRole("menuitem", { name: /master queries/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("heading", { name: /diag & troubleshooting hub/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("menuitem", { name: /master queries/i })).not.toBeInTheDocument();
+    });
+  });
+
   it("keeps the family router stable even when a family arrives without symptom prompts", async () => {
     const user = userEvent.setup();
     apiMocks.getRepairFamilies.mockResolvedValueOnce([

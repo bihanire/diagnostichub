@@ -25,12 +25,16 @@ export function TopCommandBar({
   onSelectFamily,
   onGoHome,
 }: TopCommandBarProps) {
+  const familyMenuRef = useRef<HTMLDivElement | null>(null);
   const familyTriggerRef = useRef<HTMLButtonElement | null>(null);
   const familyPanelRef = useRef<HTMLDivElement | null>(null);
   const familyItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const utilityMenuRef = useRef<HTMLDivElement | null>(null);
+  const utilityTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [familyFilter, setFamilyFilter] = useState("");
   const [activeFamilyIndex, setActiveFamilyIndex] = useState(0);
   const [familyMenuOpen, setFamilyMenuOpen] = useState(false);
+  const [utilityMenuOpen, setUtilityMenuOpen] = useState(false);
   const [familyMenuPosition, setFamilyMenuPosition] = useState<FamilyMenuPosition>({ top: 64, right: 16 });
 
   const filteredFamilies = useMemo(() => {
@@ -50,7 +54,7 @@ export function TopCommandBar({
   }, [familyFilter]);
 
   useEffect(() => {
-    if (!familyMenuOpen) {
+    if (!familyMenuOpen && !utilityMenuOpen) {
       return;
     }
 
@@ -59,19 +63,35 @@ export function TopCommandBar({
       if (!(target instanceof Node)) {
         return;
       }
-      if (familyTriggerRef.current?.contains(target) || familyPanelRef.current?.contains(target)) {
+      if (familyMenuRef.current?.contains(target) || utilityMenuRef.current?.contains(target)) {
         return;
       }
-      setFamilyMenuOpen(false);
+      closeMenus();
+    }
+
+    function closeOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") {
+        return;
+      }
+      const shouldFocusFamily = familyMenuOpen;
+      const shouldFocusUtility = !familyMenuOpen && utilityMenuOpen;
+      closeMenus();
+      if (shouldFocusFamily) {
+        familyTriggerRef.current?.focus();
+      } else if (shouldFocusUtility) {
+        utilityTriggerRef.current?.focus();
+      }
     }
 
     document.addEventListener("mousedown", closeIfOutside);
     document.addEventListener("touchstart", closeIfOutside, { passive: true });
+    document.addEventListener("keydown", closeOnEscape);
     return () => {
       document.removeEventListener("mousedown", closeIfOutside);
       document.removeEventListener("touchstart", closeIfOutside);
+      document.removeEventListener("keydown", closeOnEscape);
     };
-  }, [familyMenuOpen]);
+  }, [familyMenuOpen, utilityMenuOpen]);
 
   useEffect(() => {
     if (!familyMenuOpen) {
@@ -100,8 +120,13 @@ export function TopCommandBar({
     };
   }, [familyMenuOpen]);
 
-  function handleSelect(familyId: string) {
+  function closeMenus() {
     setFamilyMenuOpen(false);
+    setUtilityMenuOpen(false);
+  }
+
+  function handleSelect(familyId: string) {
+    closeMenus();
     onSelectFamily(familyId);
   }
 
@@ -111,7 +136,28 @@ export function TopCommandBar({
       top: Math.round(rect.bottom + 8),
       right: Math.max(12, Math.round(window.innerWidth - rect.right))
     });
+    setUtilityMenuOpen(false);
     setFamilyMenuOpen((current) => !current);
+  }
+
+  function toggleUtilityMenu() {
+    setFamilyMenuOpen(false);
+    setUtilityMenuOpen((current) => !current);
+  }
+
+  function handleOpenCommandPalette() {
+    closeMenus();
+    onOpenCommandPalette();
+  }
+
+  function handleFocusSearch() {
+    closeMenus();
+    onFocusSearch();
+  }
+
+  function handleGoHome() {
+    closeMenus();
+    onGoHome();
   }
 
   function handleFamilyFilterKeyDown(event: KeyboardEvent<HTMLInputElement>) {
@@ -152,7 +198,7 @@ export function TopCommandBar({
     <div className="lm-topbar">
       <span className="lm-topbar-status-dot" aria-hidden="true" />
 
-      <button className="lm-brand" onClick={onGoHome} type="button">
+      <button className="lm-brand" onClick={handleGoHome} type="button">
         <span>watu</span>
       </button>
 
@@ -163,12 +209,12 @@ export function TopCommandBar({
       <input
         aria-label="Global search"
         className="lm-topbar-search"
-        onClick={onOpenCommandPalette}
-        onFocus={onOpenCommandPalette}
+        onClick={handleOpenCommandPalette}
+        onFocus={handleOpenCommandPalette}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();
-            onOpenCommandPalette();
+            handleOpenCommandPalette();
           }
         }}
         placeholder="Ask anything — problem, procedure, or family"
@@ -177,7 +223,7 @@ export function TopCommandBar({
       />
 
       <nav className="lm-nav-tabs" aria-label="Primary navigation">
-        <div className="lm-family-menu">
+        <div className="lm-family-menu" ref={familyMenuRef}>
           <button
             aria-expanded={familyMenuOpen}
             aria-haspopup="listbox"
@@ -234,34 +280,49 @@ export function TopCommandBar({
           ) : null}
         </div>
 
-        <button className="lm-nav-tab" onClick={onFocusSearch} type="button">
+        <button className="lm-nav-tab" onClick={handleFocusSearch} type="button">
           System
         </button>
 
-        <details className="lm-utility-menu">
-          <summary className="lm-nav-tab">Utilities</summary>
-          <div className="lm-utility-panel">
+        <div className="lm-utility-menu" ref={utilityMenuRef}>
+          <button
+            aria-expanded={utilityMenuOpen}
+            aria-haspopup="menu"
+            className={`lm-nav-tab ${utilityMenuOpen ? "active" : ""}`}
+            onClick={toggleUtilityMenu}
+            ref={utilityTriggerRef}
+            type="button"
+          >
+            Utilities
+          </button>
+          {utilityMenuOpen ? (
+          <div className="lm-utility-panel" role="menu">
             <a
               href="https://docs.google.com/spreadsheets/d/1jlpD74o0F88-wxq8p0x_nCptMLSjMuv6u2WuAcaa9Cs/edit?gid=655564610#gid=655564610"
+              onClick={closeMenus}
               rel="noreferrer"
+              role="menuitem"
               target="_blank"
             >
               Master queries
             </a>
             <a
               href="https://docs.google.com/document/d/13k8YVkqgaSG7Nck_0KTLh-emb9BhacJziuxxyxARXZ8/edit?tab=t.0"
+              onClick={closeMenus}
               rel="noreferrer"
+              role="menuitem"
               target="_blank"
             >
               SOP guide
             </a>
-            <button onClick={onOpenCommandPalette} type="button">
+            <button onClick={handleOpenCommandPalette} role="menuitem" type="button">
               Open command palette
             </button>
           </div>
-        </details>
+          ) : null}
+        </div>
 
-        <Link className="lm-nav-tab lm-nav-tab-ops" href="/ops/login">
+        <Link className="lm-nav-tab lm-nav-tab-ops" href="/ops/login" onClick={closeMenus}>
           Ops
         </Link>
       </nav>

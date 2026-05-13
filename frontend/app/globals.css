@@ -7771,3 +7771,44 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Overlay layering contract: keep menus above the diagnostic workspace. */
+.lm-topbar-wrap {
+  z-index: 1200;
+  isolation: isolate;
+}
+
+.lm-main-grid,
+.lm-status-wrap {
+  z-index: 1;
+}
+
+.lm-family-menu-panel,
+.lm-utility-panel {
+  z-index: 1300;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(128, 238, 196, 0.12);
+}
+
+.lm-diagnosis-form.diag-panel {
+  overflow: visible;
+  z-index: 20;
+}
+
+.lm-utility-menu > .lm-nav-tab {
+  min-height: 36px;
+}
+
+.lm-diagnosis-input-wrap {
+  z-index: 2;
+}
+
+.lm-assist-popover {
+  z-index: 1300;
+}
+
+.search-assist-panel {
+  position: relative;
+  z-index: inherit;
+}
