@@ -2,8 +2,8 @@
 
 ## Summary
 
-- Total cases: 82
-- Passed: 82
+- Total cases: 88
+- Passed: 88
 - Failed: 0
 
 ## Results
@@ -16,17 +16,22 @@
 | yellow light on screen | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.93 | 0.55 | Pass |
 | lines in screen and touch not working | 2 Screen Issue | 2 Screen Issue | 1 Phone Not Powering On | Display & Vision | 0.95 | 0.54 | Pass |
 | the screen is yellow and touch is not working | 2 Screen Issue | 2 Screen Issue | 9 SIM or Network Issue | Display & Vision | 0.76 | 0.26 | Pass |
+| green line on samsung screen after update | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.98 | 0.58 | Pass |
+| screen protector lifting and touch pressing itself | 2 Screen Issue | 2 Screen Issue | 8 Random Restart or Safe Mode Issue | Display & Vision | 0.81 | 0.58 | Pass |
 | my phone was snatched | 3 Stolen Phone | 3 Stolen Phone | 12 Liquid or Physical Damage | Security & Access | 0.72 | 0.29 | Pass |
 | need track stolen device | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.73 | 0.31 | Pass |
+| samsung find lock a lost phone | 3 Stolen Phone | 3 Stolen Phone | 11 FRP, Password, or Locked Device | Security & Access | 0.76 | 0.22 | Pass |
 | charger connected but battery stays same | 4 Charging Issue | 4 Charging Issue | 1 Phone Not Powering On | Power & Thermal | 0.74 | 0.20 | Pass |
 | phone charges only when cable bent | 4 Charging Issue | 4 Charging Issue | 5 Overheating or Swollen Battery | Power & Thermal | 0.92 | 0.41 | Pass |
 | the phone is not charging when i insert a charger | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.94 | 0.38 | Pass |
 | phone too hot and back cover lifting | 5 Overheating or Swollen Battery | 5 Overheating or Swollen Battery | 6 Battery Draining Fast | Power & Thermal | 0.99 | 0.31 | Pass |
 | battery swollen and smells burnt | 5 Overheating or Swollen Battery | 5 Overheating or Swollen Battery | 12 Liquid or Physical Damage | Power & Thermal | 0.97 | 0.42 | Pass |
 | the phone gets too hot when charging and the back cover is lifting | 5 Overheating or Swollen Battery | 5 Overheating or Swollen Battery | 6 Battery Draining Fast | Power & Thermal | 0.89 | 0.30 | Pass |
+| device care shows phone overheating | 5 Overheating or Swollen Battery | 5 Overheating or Swollen Battery | 4 Charging Issue | Power & Thermal | 0.87 | 0.19 | Pass |
 | battery drains fast even when idle | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.79 | 0.09 | Pass |
 | full charge finishes quickly | 6 Battery Draining Fast | 6 Battery Draining Fast | 4 Charging Issue | Power & Thermal | 0.82 | 0.29 | Pass |
 | the battery drains very fast even when the phone is idle | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.76 | 0.16 | Pass |
+| samsung members says battery weak | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.81 | 0.26 | Pass |
 | phone freezing and apps hanging | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 8 Random Restart or Safe Mode Issue | Logic & Software | 0.91 | 0.57 | Pass |
 | one app keeps crashing and phone hangs | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 4 Charging Issue | Logic & Software | 0.78 | 0.41 | Pass |
 | the phone keeps freezing whenever i open apps | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 1 Phone Not Powering On | Logic & Software | 0.63 | 0.38 | Pass |
@@ -48,6 +53,7 @@
 | self repairs ls for repair ticket | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 16 Return, Refund, or Recovered Device Handling | Operations & Compliance | 0.82 | 0.35 | Pass |
 | which legal status and dispatch path should i use | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 16 Return, Refund, or Recovered Device Handling | Operations & Compliance | 0.86 | 0.45 | Pass |
 | which repair ticket and legal status should i use for dispatch | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 16 Return, Refund, or Recovered Device Handling | Operations & Compliance | 0.93 | 0.39 | Pass |
+| maintenance mode before service handover | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 15 Asset Transfer or Loan Reschedule | Operations & Compliance | 0.77 | 0.54 | Pass |
 | replacement device after theft | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.99 | 0.38 | Pass |
 | customer wants new phone after ber | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 16 Return, Refund, or Recovered Device Handling | Replacements & Transfers | 0.69 | 0.31 | Pass |
 | the customer wants a replacement because the device was stolen | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.81 | 0.16 | Pass |
@@ -73,8 +79,8 @@
 | the battery is draining after full charge and the phone gets warm | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.77 | 0.05 | Pass |
 | screen is black but the phone is ringing | 2 Screen Issue | 2 Screen Issue | 1 Phone Not Powering On | Display & Vision | 0.81 | 0.20 | Pass |
 | touch is pressing things by itself on the screen | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.59 | 0.20 | Pass |
-| the display is yellowish and blurry after restart | 2 Screen Issue | 2 Screen Issue | 8 Random Restart or Safe Mode Issue | Display & Vision | 0.77 | 0.43 | Pass |
-| the phone has vertical lines and half display | 2 Screen Issue | 2 Screen Issue | 1 Phone Not Powering On | Display & Vision | 0.86 | 0.61 | Pass |
+| the display is yellowish and blurry after restart | 2 Screen Issue | 2 Screen Issue | 8 Random Restart or Safe Mode Issue | Display & Vision | 0.76 | 0.43 | Pass |
+| the phone has vertical lines and half display | 2 Screen Issue | 2 Screen Issue | 1 Phone Not Powering On | Display & Vision | 0.91 | 0.54 | Pass |
 | phone is very slow after update and keeps hanging | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 8 Random Restart or Safe Mode Issue | Logic & Software | 0.96 | 0.52 | Pass |
 | only one app freezes and the rest of the phone is fine | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 8 Random Restart or Safe Mode Issue | Logic & Software | 0.59 | 0.19 | Pass |
 | safe mode keeps coming back every time i restart the phone | 8 Random Restart or Safe Mode Issue | 8 Random Restart or Safe Mode Issue | 7 Freezing, Hanging, or App Issue | Logic & Software | 0.54 | 0.19 | Pass |

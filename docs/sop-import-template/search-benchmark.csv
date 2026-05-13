@@ -5,17 +5,22 @@ the phone is not powering on and it only vibrates,1,Phone Not Powering On,Power 
 yellow light on screen,2,Screen Issue,Display & Vision,0.45,0.20
 lines in screen and touch not working,2,Screen Issue,Display & Vision,0.50,0.20
 the screen is yellow and touch is not working,2,Screen Issue,Display & Vision,0.50,0.20
+green line on samsung screen after update,2,Screen Issue,Display & Vision,0.45,0.15
+screen protector lifting and touch pressing itself,2,Screen Issue,Display & Vision,0.45,0.15
 my phone was snatched,3,Stolen Phone,Security & Access,0.40,0.15
 need track stolen device,3,Stolen Phone,Security & Access,0.35,0.15
+samsung find lock a lost phone,3,Stolen Phone,Security & Access,0.40,0.15
 charger connected but battery stays same,4,Charging Issue,Power & Thermal,0.38,0.10
 phone charges only when cable bent,4,Charging Issue,Power & Thermal,0.40,0.15
 the phone is not charging when i insert a charger,4,Charging Issue,Power & Thermal,0.50,0.15
 phone too hot and back cover lifting,5,Overheating or Swollen Battery,Power & Thermal,0.42,0.20
 battery swollen and smells burnt,5,Overheating or Swollen Battery,Power & Thermal,0.45,0.20
 the phone gets too hot when charging and the back cover is lifting,5,Overheating or Swollen Battery,Power & Thermal,0.50,0.20
+device care shows phone overheating,5,Overheating or Swollen Battery,Power & Thermal,0.42,0.12
 battery drains fast even when idle,6,Battery Draining Fast,Power & Thermal,0.42,0.05
 full charge finishes quickly,6,Battery Draining Fast,Power & Thermal,0.35,0.15
 the battery drains very fast even when the phone is idle,6,Battery Draining Fast,Power & Thermal,0.45,0.05
+samsung members says battery weak,6,Battery Draining Fast,Power & Thermal,0.40,0.05
 phone freezing and apps hanging,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
 one app keeps crashing and phone hangs,7,"Freezing, Hanging, or App Issue",Logic & Software,0.40,0.15
 the phone keeps freezing whenever i open apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
@@ -37,6 +42,7 @@ the phone fell in water and now the frame is bent,12,Liquid or Physical Damage,P
 self repairs ls for repair ticket,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.45,0.20
 which legal status and dispatch path should i use,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.35,0.20
 which repair ticket and legal status should i use for dispatch,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.45,0.20
+maintenance mode before service handover,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.40,0.15
 replacement device after theft,14,Replacement Request Eligibility,Replacements & Transfers,0.45,0.20
 customer wants new phone after ber,14,Replacement Request Eligibility,Replacements & Transfers,0.38,0.15
 the customer wants a replacement because the device was stolen,14,Replacement Request Eligibility,Replacements & Transfers,0.45,0.15

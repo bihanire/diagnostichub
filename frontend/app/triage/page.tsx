@@ -4,8 +4,11 @@ import { startTransition, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CareGuide } from "@/components/CareGuide";
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
+import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { ProgressBar } from "@/components/ProgressBar";
+import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import { nextTriage } from "@/lib/api";
 import { uiCopy } from "@/lib/copy";
 import { loadSession, saveSession } from "@/lib/session";
@@ -235,7 +238,15 @@ export default function TriagePage() {
 
   if (!session) {
     return (
-      <main className="app-shell" id="main-content">
+      <ProductRouteShell
+        className="triage-route"
+        status={{
+          phase: "Guided triage",
+          procedure: "No active case",
+          confidence: "Not started",
+          readiness: "Attention needed",
+        }}
+      >
         <section className="hero">
           <span className="eyebrow">{uiCopy.triage.fallback.eyebrow}</span>
           <h2>{uiCopy.triage.fallback.missingSessionTitle}</h2>
@@ -245,13 +256,23 @@ export default function TriagePage() {
         <button className="primary-button" onClick={() => router.push("/")} type="button">
           {uiCopy.global.backToSearch}
         </button>
-      </main>
+      </ProductRouteShell>
     );
   }
 
   if (!isDecisionNode(session.currentNode)) {
     return (
-      <main className="app-shell" id="main-content">
+      <ProductRouteShell
+        className="triage-route"
+        selectedFamilyId={session.learningFamilyId || null}
+        status={{
+          phase: "Guided triage",
+          family: session.learningFamilyTitle || "Not selected",
+          procedure: session.procedure.title,
+          confidence: session.searchConfidenceState || "Review needed",
+          readiness: "Attention needed",
+        }}
+      >
         <section className="hero">
           <span className="eyebrow">{uiCopy.triage.fallback.eyebrow}</span>
           <h2>{uiCopy.triage.fallback.missingNodeTitle}</h2>
@@ -260,14 +281,24 @@ export default function TriagePage() {
         <button className="primary-button" onClick={() => router.push("/")} type="button">
           {uiCopy.global.backToSearch}
         </button>
-      </main>
+      </ProductRouteShell>
     );
   }
 
   const currentNode = session.currentNode;
 
   return (
-    <main className="app-shell" id="main-content">
+    <ProductRouteShell
+      className="triage-route"
+      selectedFamilyId={session.learningFamilyId || null}
+      status={{
+        phase: `Step ${session.progress.step} of ${session.progress.total}`,
+        family: session.learningFamilyTitle || "Not selected",
+        procedure: session.procedure.title,
+        confidence: session.searchConfidenceState || "Guided",
+        readiness: error ? "Attention needed" : "Operational",
+      }}
+    >
       <section className="hero hero-compact">
         <div className="hero-inline-meta">
           <span className="eyebrow">{session.procedure.category}</span>
@@ -302,6 +333,14 @@ export default function TriagePage() {
           </p>
         </section>
       </div>
+
+      <TeachingSourcePanel
+        compact
+        familyId={session.learningFamilyId}
+        procedure={session.procedure}
+        query={session.query}
+        title="Teaching guardrails for this step"
+      />
 
       <div className={`triage-stage-grid ${questionSwitching ? "triage-stage-grid-syncing" : ""}`}>
         <section className={`panel question-panel motion-surface ${questionSwitching ? "question-panel-syncing" : ""}`}>
@@ -359,21 +398,18 @@ export default function TriagePage() {
         </p>
       ) : null}
 
-      <details className="panel panel-compact detail-toggle triage-secondary-panel">
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.triage.flowPurpose.eyebrow}</span>
-            <h3>{uiCopy.triage.flowPurpose.title}</h3>
-          </div>
-          <span className="detail-toggle-action">Open</span>
-        </summary>
+      <ControlledDisclosure
+        className="panel panel-compact triage-secondary-panel"
+        eyebrow={uiCopy.triage.flowPurpose.eyebrow}
+        title={uiCopy.triage.flowPurpose.title}
+      >
         <div className="stack-block">
           <p className="body-copy">
             {session.procedure.description || uiCopy.triage.flowPurpose.fallback}
           </p>
           <p className="muted-copy">{uiCopy.triage.reminder.description}</p>
         </div>
-      </details>
+      </ControlledDisclosure>
 
       <CareGuide compact collapsible customerCare={session.customerCare} />
 
@@ -384,6 +420,6 @@ export default function TriagePage() {
           {uiCopy.triage.pauseLabel}
         </button>
       </div>
-    </main>
+    </ProductRouteShell>
   );
 }

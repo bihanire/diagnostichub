@@ -4,11 +4,20 @@ import { FormEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CareGuide } from "@/components/CareGuide";
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
+import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { SuggestionList } from "@/components/SuggestionList";
-import { getRelated, startTriage, submitFeedback } from "@/lib/api";
+import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
+import { startTriage, submitFeedback } from "@/lib/api";
 import { feedbackTagOptions, getFeedbackTagLabel, uiCopy } from "@/lib/copy";
 import { clearSession, loadSession, saveSession } from "@/lib/session";
+import {
+  buildCasePacketFromSession,
+  buildTriageSessionFromStart,
+  getTriageRoute,
+  persistTriageSessionWithRelatedHydration,
+} from "@/lib/triage-session";
 import { ProcedureSummary, TriageSession } from "@/lib/types";
 
 export default function ResultPage() {
@@ -56,44 +65,13 @@ export default function ResultPage() {
 
     try {
       const response = await startTriage(procedure.id);
+      const nextSession = buildTriageSessionFromStart(response, { query: procedure.title });
 
-      const nextSession: TriageSession = {
-        query: procedure.title,
-        learningFamilyId: null,
-        learningFamilyTitle: null,
-        learningTrackTitle: null,
-        procedure: response.procedure,
-        currentNode: response.current_node || null,
-        progress: response.progress,
-        customerCare: response.customer_care,
-        sop: response.sop,
-        outcome: response.outcome || null,
-        related: [],
-        history: [],
-        dispatchGateConfirmed: [],
-        updatedAt: new Date().toISOString()
-      };
-
-      saveSession(nextSession);
-      startTransition(() => {
-        setSession(nextSession);
-      });
-      void getRelated(procedure.id)
-        .then((relatedResponse) => {
-          const latest = loadSession();
-          if (
-            !latest ||
-            latest.updatedAt !== nextSession.updatedAt ||
-            latest.procedure.id !== nextSession.procedure.id
-          ) {
-            return;
-          }
-          const hydratedSession: TriageSession = {
-            ...latest,
-            related: relatedResponse.items,
-            updatedAt: new Date().toISOString()
-          };
-          saveSession(hydratedSession);
+      persistTriageSessionWithRelatedHydration(nextSession, {
+        onSaved: (savedSession) => {
+          startTransition(() => setSession(savedSession));
+        },
+        onHydrated: (hydratedSession) => {
           startTransition(() => {
             setSession((current) => {
               if (
@@ -106,20 +84,11 @@ export default function ResultPage() {
               return hydratedSession;
             });
           });
-        })
-        .catch(() => {
-          // Keep flow startup fast even if related suggestions fail.
-        });
-
-      if (response.status === "complete") {
-        startTransition(() => {
-          router.push("/result");
-        });
-        return;
-      }
+        },
+      });
 
       startTransition(() => {
-        router.push("/triage");
+        router.push(getTriageRoute(response));
       });
     } catch (requestError) {
       setError(
@@ -194,7 +163,15 @@ export default function ResultPage() {
 
   if (!session?.outcome) {
     return (
-      <main className="app-shell" id="main-content">
+      <ProductRouteShell
+        className="result-route"
+        status={{
+          phase: "Outcome",
+          procedure: "No active result",
+          confidence: "Not ready",
+          readiness: "Attention needed",
+        }}
+      >
         <section className="hero">
           <span className="eyebrow">{uiCopy.result.fallback.eyebrow}</span>
           <h2>{uiCopy.result.fallback.title}</h2>
@@ -204,7 +181,7 @@ export default function ResultPage() {
         <button className="primary-button" onClick={() => router.push("/")} type="button">
           {uiCopy.global.backToSearch}
         </button>
-      </main>
+      </ProductRouteShell>
     );
   }
 
@@ -213,6 +190,7 @@ export default function ResultPage() {
     outcome.decision_type === "repair_intake" || outcome.decision_type === "service_centre";
   const gateTotal = outcome.evidence_checklist.length;
   const gateComplete = gateTotal > 0 && dispatchGateConfirmed.length === gateTotal;
+  const casePacket = buildCasePacketFromSession(session);
 
   function persistSession(nextSession: TriageSession) {
     saveSession(nextSession);
@@ -242,7 +220,17 @@ export default function ResultPage() {
   }
 
   return (
-    <main className="app-shell" id="main-content">
+    <ProductRouteShell
+      className="result-route"
+      selectedFamilyId={session.learningFamilyId || null}
+      status={{
+        phase: "Outcome ready",
+        family: session.learningFamilyTitle || "Not selected",
+        procedure: session.procedure.title,
+        confidence: session.searchConfidenceState || "Guided",
+        readiness: error ? "Attention needed" : "Operational",
+      }}
+    >
       <section className="hero hero-compact result-hero motion-surface">
         <div className="result-hero-grid">
           <div className="result-hero-main">
@@ -377,14 +365,12 @@ export default function ResultPage() {
         </section>
       ) : null}
 
-      <details className="panel panel-compact detail-toggle" open>
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.result.summary.eyebrow}</span>
-            <h3>{uiCopy.result.summary.title}</h3>
-          </div>
-          <span className="detail-toggle-action">Open</span>
-        </summary>
+      <ControlledDisclosure
+        className="panel panel-compact"
+        defaultOpen
+        eyebrow={uiCopy.result.summary.eyebrow}
+        title={uiCopy.result.summary.title}
+      >
         <div className="chip-row">
           <span className="chip">Category: {session.procedure.category}</span>
           <span className="chip chip-muted">{uiCopy.result.summary.flowComplete}</span>
@@ -392,33 +378,36 @@ export default function ResultPage() {
         <p className="body-copy result-summary-copy">
           {session.query || uiCopy.result.summary.directProcedureFallback}
         </p>
-      </details>
+      </ControlledDisclosure>
 
       <CareGuide collapsible customerCare={outcome.customer_care} />
 
-      <details className="panel panel-compact detail-toggle">
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.result.operational.eyebrow}</span>
-            <h3>{uiCopy.result.relatedActions.title}</h3>
-          </div>
-          <span className="detail-toggle-action">Open</span>
-        </summary>
+      <TeachingSourcePanel
+        compact
+        defaultOpen
+        familyId={session.learningFamilyId}
+        procedure={session.procedure}
+        query={session.query}
+        title="Source-backed teaching used for this case"
+      />
+
+      <ControlledDisclosure
+        className="panel panel-compact"
+        eyebrow={uiCopy.result.operational.eyebrow}
+        title={uiCopy.result.relatedActions.title}
+      >
         <ul className="bullet-list">
           {outcome.related_actions.map((action) => (
             <li key={action}>{action}</li>
           ))}
         </ul>
-      </details>
+      </ControlledDisclosure>
 
-      <details className="panel panel-compact detail-toggle">
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.result.relatedFlows.eyebrow}</span>
-            <h3>{uiCopy.result.suggestions.title}</h3>
-          </div>
-          <span className="detail-toggle-action">Open</span>
-        </summary>
+      <ControlledDisclosure
+        className="panel panel-compact"
+        eyebrow={uiCopy.result.relatedFlows.eyebrow}
+        title={uiCopy.result.suggestions.title}
+      >
         <SuggestionList
           title={uiCopy.result.suggestions.title}
           items={session.related}
@@ -426,16 +415,14 @@ export default function ResultPage() {
           onSelect={openRelatedFlow}
           embedded
         />
-      </details>
+      </ControlledDisclosure>
 
-      <details className="panel detail-toggle">
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.result.feedback.eyebrow}</span>
-            <h3>{uiCopy.result.feedback.title}</h3>
-          </div>
-          <span className="detail-toggle-action">{session.feedback ? "Open" : "Review"}</span>
-        </summary>
+      <ControlledDisclosure
+        actionLabel={session.feedback ? undefined : "Review"}
+        className="panel"
+        eyebrow={uiCopy.result.feedback.eyebrow}
+        title={uiCopy.result.feedback.title}
+      >
 
         {session.feedback ? (
           <div className="stack-block">
@@ -531,7 +518,43 @@ export default function ResultPage() {
         )}
 
         {feedbackMessage ? <p className="success-banner" role="status">{feedbackMessage}</p> : null}
-      </details>
+      </ControlledDisclosure>
+
+      <ControlledDisclosure
+        className="panel panel-compact ticket-readiness-panel"
+        eyebrow="Ticket runway"
+        title="Case packet for future ticketing"
+      >
+        <div className="case-packet-grid">
+          <span>
+            <strong>Packet</strong>
+            {casePacket.id}
+          </span>
+          <span>
+            <strong>Ticket state</strong>
+            {casePacket.ticketReadiness}
+          </span>
+          <span>
+            <strong>Answers</strong>
+            {casePacket.answers.length}
+          </span>
+          <span>
+            <strong>Evidence</strong>
+            {casePacket.dispatchGateConfirmed.length} / {casePacket.evidenceChecklist.length}
+          </span>
+          <span>
+            <strong>Feedback</strong>
+            {casePacket.feedbackStatus}
+          </span>
+          <span>
+            <strong>Sources</strong>
+            {casePacket.knowledgeSourceIds.length}
+          </span>
+        </div>
+        <p className="muted-copy">
+          This is the internal case shape the app can later send into ticket creation without changing the diagnostic flow.
+        </p>
+      </ControlledDisclosure>
 
       {error ? <p className="error-banner" role="alert">{error}</p> : null}
 
@@ -549,6 +572,6 @@ export default function ResultPage() {
           {uiCopy.global.startNewCase}
         </button>
       </div>
-    </main>
+    </ProductRouteShell>
   );
 }

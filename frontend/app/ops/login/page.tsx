@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { getOpsSession, loginOps } from "@/lib/api";
 import { uiCopy } from "@/lib/copy";
 
@@ -70,7 +71,16 @@ export default function OpsLoginPage() {
   }
 
   return (
-    <main className="app-shell" id="main-content">
+    <ProductRouteShell
+      className="ops-login-route"
+      status={{
+        phase: "Ops access",
+        family: "Feedback loop",
+        procedure: checkingSession ? "Checking session" : "Sign in required",
+        confidence: "Protected",
+        readiness: error ? "Attention needed" : "Operational",
+      }}
+    >
       <section className="hero hero-split">
         <div className="hero-copy">
           <span className="eyebrow">{uiCopy.opsLogin.hero.eyebrow}</span>
@@ -129,6 +139,6 @@ export default function OpsLoginPage() {
           </Link>
         </div>
       </section>
-    </main>
+    </ProductRouteShell>
   );
 }

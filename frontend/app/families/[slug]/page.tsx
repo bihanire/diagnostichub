@@ -5,21 +5,25 @@ import Link from "next/link";
 import { CSSProperties, startTransition, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import { ProductRouteShell } from "@/components/ProductRouteShell";
+import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import {
   ApiError,
-  getRelated,
   getRepairFamilyDetail,
   getRepairFamilyLearningModule,
   startTriage
 } from "@/lib/api";
 import { getIssueVisualGuide, getRepairFamilyShortcut } from "@/lib/issue-visuals";
 import { BUILT_IN_REPAIR_FAMILIES } from "@/lib/repair-families";
-import { saveSession } from "@/lib/session";
+import {
+  buildTriageSessionFromStart,
+  getTriageRoute,
+  persistTriageSessionWithRelatedHydration,
+} from "@/lib/triage-session";
 import {
   ProcedureSummary,
   RepairFamilyDetail,
   RepairFamilyLearningModule,
-  TriageSession
 } from "@/lib/types";
 
 type FlowEntry = {
@@ -190,42 +194,18 @@ export default function FamilyLandingPage() {
 
     try {
       const response = await startTriage(flow.procedure.id);
-      const session: TriageSession = {
+      const session = buildTriageSessionFromStart(response, {
         query: flow.title,
-        learningFamilyId: family?.id || slug,
-        learningFamilyTitle: family?.title || fallbackFamily?.title || null,
-        learningTrackTitle: flow.title,
-        searchConfidence: null,
-        searchConfidenceState: null,
-        searchConfidenceMargin: null,
-        searchNeedsReview: false,
-        procedure: response.procedure,
-        currentNode: response.current_node || null,
-        progress: response.progress,
-        customerCare: response.customer_care,
-        sop: response.sop,
-        outcome: response.outcome || null,
-        related: [],
-        history: [],
-        dispatchGateConfirmed: [],
-        updatedAt: new Date().toISOString()
-      };
+        learningContext: {
+          familyId: family?.id || slug,
+          familyTitle: family?.title || fallbackFamily?.title || null,
+          trackTitle: flow.title,
+        },
+      });
 
-      saveSession(session);
-      void getRelated(response.procedure.id)
-        .then((relatedResponse) => {
-          saveSession({
-            ...session,
-            related: relatedResponse.items,
-            updatedAt: new Date().toISOString()
-          });
-        })
-        .catch(() => {
-          // Related suggestions should never block triage entry.
-        });
-
+      persistTriageSessionWithRelatedHydration(session);
       startTransition(() => {
-        router.push(response.status === "complete" ? "/result" : "/triage");
+        router.push(getTriageRoute(response));
       });
     } catch (requestError) {
       setError(
@@ -238,18 +218,37 @@ export default function FamilyLandingPage() {
 
   if (loading) {
     return (
-      <main className="family-landing-page">
+      <ProductRouteShell
+        className="family-landing-page family-route"
+        selectedFamilyId={slug}
+        status={{
+          phase: "Family workspace",
+          family: fallbackFamily?.title || slug,
+          procedure: "Loading routes",
+          confidence: "Loading",
+        }}
+      >
         <section className="family-landing-loading" aria-live="polite">
           <span className="family-landing-loader" />
           Loading family workspace
         </section>
-      </main>
+      </ProductRouteShell>
     );
   }
 
   if (!family) {
     return (
-      <main className="family-landing-page">
+      <ProductRouteShell
+        className="family-landing-page family-route"
+        selectedFamilyId={slug}
+        status={{
+          phase: "Family workspace",
+          family: fallbackFamily?.title || slug,
+          procedure: "Unavailable",
+          confidence: "Not ready",
+          readiness: "Attention needed",
+        }}
+      >
         <section className="family-landing-empty">
           <Link className="family-landing-back" href="/">
             Back to hub
@@ -257,12 +256,22 @@ export default function FamilyLandingPage() {
           <h1>{fallbackFamily?.title || "Family not found"}</h1>
           <p>{error || "This family route is not available yet."}</p>
         </section>
-      </main>
+      </ProductRouteShell>
     );
   }
 
   return (
-    <main className="family-landing-page">
+    <ProductRouteShell
+      className="family-landing-page family-route"
+      selectedFamilyId={family.id}
+      status={{
+        phase: "Family learning",
+        family: family.title,
+        procedure: `${flowCatalogue.length} routes`,
+        confidence: "Samsung guide",
+        readiness: error ? "Attention needed" : "Operational",
+      }}
+    >
       <section className="family-landing-hero">
         <div className="family-landing-copy">
           <Link className="family-landing-back" href="/">
@@ -288,6 +297,12 @@ export default function FamilyLandingPage() {
           )}
         </div>
       </section>
+
+      <TeachingSourcePanel
+        defaultOpen
+        familyId={family.id}
+        title={`${family.title} teaching references`}
+      />
 
       <section className="family-landing-flows" aria-labelledby="family-flows-title">
         <div className="family-landing-section-head">
@@ -344,6 +359,6 @@ export default function FamilyLandingPage() {
           )}
         </div>
       </section>
-    </main>
+    </ProductRouteShell>
   );
 }

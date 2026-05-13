@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { ProcedureSummary, RepairFamilyDetail } from "@/lib/types";
 import { getRepairFamilyShortcut } from "@/lib/issue-visuals";
 
@@ -188,14 +189,11 @@ export function FamilyExplorer({
         </div>
 
         {niceToKnowEntries.length ? (
-          <details className="panel panel-compact detail-toggle detail-toggle-inline family-stream-toggle">
-            <summary className="detail-toggle-summary">
-              <div className="panel-header">
-                <span className="eyebrow">Expanded logs</span>
-                <h3>Nice-to-know technical context</h3>
-              </div>
-              <span className="detail-toggle-action">Open</span>
-            </summary>
+          <ControlledDisclosure
+            className="panel panel-compact detail-toggle-inline family-stream-toggle"
+            eyebrow="Expanded logs"
+            title="Nice-to-know technical context"
+          >
             <div className="family-stream-list motion-stage">
               {niceToKnowEntries.map((entry, index) => (
                 <article
@@ -214,18 +212,15 @@ export function FamilyExplorer({
                 </article>
               ))}
             </div>
-          </details>
+          </ControlledDisclosure>
         ) : null}
 
         {signatureClusters.length ? (
-          <details className="panel panel-compact detail-toggle detail-toggle-inline family-stream-toggle">
-            <summary className="detail-toggle-summary">
-              <div className="panel-header">
-                <span className="eyebrow">In-family groups</span>
-                <h3>Related signatures</h3>
-              </div>
-              <span className="detail-toggle-action">Open</span>
-            </summary>
+          <ControlledDisclosure
+            className="panel panel-compact detail-toggle-inline family-stream-toggle"
+            eyebrow="In-family groups"
+            title="Related signatures"
+          >
             <div className="family-signature-grid motion-stage">
               {signatureClusters.map((cluster, index) => (
                 <section
@@ -249,7 +244,7 @@ export function FamilyExplorer({
                 </section>
               ))}
             </div>
-          </details>
+          </ControlledDisclosure>
         ) : null}
       </section>
 
@@ -330,14 +325,11 @@ export function FamilyExplorer({
       ) : null}
 
       {procedureGroups.length ? (
-        <details className="panel panel-compact detail-toggle family-routes-toggle">
-          <summary className="detail-toggle-summary">
-            <div className="panel-header">
-              <span className="eyebrow">More guided routes</span>
-              <h3>See the full family route list</h3>
-            </div>
-            <span className="detail-toggle-action">Open</span>
-          </summary>
+        <ControlledDisclosure
+          className="panel panel-compact family-routes-toggle"
+          eyebrow="More guided routes"
+          title="See the full family route list"
+        >
           <div className="family-workspace-sections">
           {procedureGroups.map((group) => (
             <section className="family-workspace-section" key={group.title}>
@@ -374,7 +366,7 @@ export function FamilyExplorer({
             </section>
           ))}
           </div>
-        </details>
+        </ControlledDisclosure>
       ) : (
         <div className="family-procedure-grid motion-stage">
           {family.procedures.map((procedure, index) => (

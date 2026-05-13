@@ -2,6 +2,49 @@ import { TriageSession } from "@/lib/types";
 
 const STORAGE_KEY = "relational-encyclopedia-session";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function hasText(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function normalizeTriageSession(value: unknown): TriageSession | null {
+  if (!isRecord(value) || !isRecord(value.procedure) || !isRecord(value.progress)) {
+    return null;
+  }
+
+  if (
+    !isFiniteNumber(value.procedure.id) ||
+    !hasText(value.procedure.title) ||
+    !hasText(value.procedure.category) ||
+    !hasText(value.procedure.description) ||
+    !isFiniteNumber(value.progress.step) ||
+    !isFiniteNumber(value.progress.total)
+  ) {
+    return null;
+  }
+
+  const session = value as Partial<TriageSession>;
+  return {
+    ...session,
+    query: hasText(session.query) ? session.query : session.procedure?.title,
+    currentNode: session.currentNode || null,
+    outcome: session.outcome || null,
+    related: Array.isArray(session.related) ? session.related : [],
+    history: Array.isArray(session.history) ? session.history : [],
+    dispatchGateConfirmed: Array.isArray(session.dispatchGateConfirmed)
+      ? session.dispatchGateConfirmed
+      : [],
+    updatedAt: hasText(session.updatedAt) ? session.updatedAt : new Date().toISOString(),
+  } as TriageSession;
+}
+
 export function loadSession(): TriageSession | null {
   if (typeof window === "undefined") {
     return null;
@@ -13,12 +56,13 @@ export function loadSession(): TriageSession | null {
   }
 
   try {
-    const parsed = JSON.parse(raw) as Partial<TriageSession>;
-    return {
-      ...parsed,
-      history: parsed.history || [],
-      dispatchGateConfirmed: parsed.dispatchGateConfirmed || []
-    } as TriageSession;
+    const parsed = JSON.parse(raw) as unknown;
+    const session = normalizeTriageSession(parsed);
+    if (!session) {
+      window.localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+    return session;
   } catch {
     window.localStorage.removeItem(STORAGE_KEY);
     return null;

@@ -360,3 +360,55 @@ export type TriageSession = {
   dispatchGateConfirmed?: string[];
   updatedAt: string;
 };
+
+export type CasePacket = {
+  id: string;
+  source: "diagnostic_hub";
+  createdAt: string;
+  query: string;
+  family: {
+    id?: string | null;
+    title?: string | null;
+    trackTitle?: string | null;
+  };
+  procedure: ProcedureSummary;
+  answers: TriageAnswerRecord[];
+  diagnosis?: string | null;
+  recommendation?: string | null;
+  decisionLabel?: string | null;
+  warrantyDirection?: string | null;
+  evidenceChecklist: string[];
+  dispatchGateConfirmed: string[];
+  feedbackStatus: "saved" | "not_saved";
+  ticketReadiness: "needs_triage_completion" | "ready_for_ticket_draft";
+  knowledgeSourceIds: string[];
+};
+
+export type KnowledgeSource = {
+  id: string;
+  vendor: "Samsung" | "Samsung Knox" | "Microsoft" | "Zapier" | "Make" | "GitHub" | "Watu";
+  sourceType:
+    | "official_documentation"
+    | "integration_documentation"
+    | "integration_best_practice"
+    | "internal_policy";
+  topic: string;
+  url?: string;
+  reviewedAt: string;
+  allowedUsage: "paraphrase_and_link" | "internal_policy_only";
+  copyrightStatus: "link_only_no_copying" | "watu_owned";
+  teachingSummary: string;
+};
+
+export type TeachingGuidance = {
+  id: string;
+  title: string;
+  families: string[];
+  procedureCategories: string[];
+  searchSignals: string[];
+  priority: "foundational" | "case_specific" | "integration";
+  teach: string;
+  branchSafeChecks: string[];
+  doNotPromise: string[];
+  sourceIds: string[];
+};

@@ -1,6 +1,7 @@
 import { CustomerCare, ProcedureSummary } from "@/lib/types";
 import { uiCopy } from "@/lib/copy";
 import { formatRatioPercent } from "@/lib/format";
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
 
 type ProcedureMatchCardProps = {
@@ -71,11 +72,11 @@ export function ProcedureMatchCard({
       <p className="callout">{nextStep}</p>
 
       {customerCare ? (
-        <details className="detail-toggle detail-toggle-inline">
-          <summary className="detail-toggle-summary">
-            <strong>{uiCopy.matchCard.secondaryGuideTitle}</strong>
-            <span className="detail-toggle-action">Show</span>
-          </summary>
+        <ControlledDisclosure
+          className="detail-toggle-inline"
+          openLabel="Show"
+          title={uiCopy.matchCard.secondaryGuideTitle}
+        >
           <div className="detail-grid">
             <div className="stack-block muted-card">
               <strong>{uiCopy.matchCard.firstLineLabel}</strong>
@@ -86,7 +87,7 @@ export function ProcedureMatchCard({
               <p>{customerCare.listening}</p>
             </div>
           </div>
-        </details>
+        </ControlledDisclosure>
       ) : null}
 
       <button className="primary-button" onClick={onStart} disabled={busy}>

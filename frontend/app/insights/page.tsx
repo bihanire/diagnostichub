@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { ProductRouteShell } from "@/components/ProductRouteShell";
+import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import {
   ApiError,
   getOpsFeedbackByBranch,
@@ -218,7 +220,14 @@ export default function InsightsPage() {
 
   if (checkingAccess) {
     return (
-      <main className="app-shell" id="main-content">
+      <ProductRouteShell
+        className="insights-route"
+        status={{
+          phase: "Ops insights",
+          procedure: "Checking access",
+          confidence: "Protected",
+        }}
+      >
         <section className="panel">
           <div className="panel-header">
             <span className="eyebrow">{uiCopy.insights.checking.eyebrow}</span>
@@ -226,12 +235,21 @@ export default function InsightsPage() {
           </div>
           <p className="muted-copy">{uiCopy.insights.checking.description}</p>
         </section>
-      </main>
+      </ProductRouteShell>
     );
   }
 
   return (
-    <main className="app-shell" id="main-content">
+    <ProductRouteShell
+      className="insights-route"
+      status={{
+        phase: "Ops review",
+        family: "Feedback loop",
+        procedure: topProcedure?.procedure_title || "No leading flow yet",
+        confidence: helpfulRate,
+        readiness: error ? "Attention needed" : "Operational",
+      }}
+    >
       <section className="hero hero-split">
         <div className="hero-copy">
           <span className="eyebrow">{uiCopy.insights.hero.eyebrow}</span>
@@ -309,6 +327,13 @@ export default function InsightsPage() {
           </p>
         </article>
       </section>
+
+      <TeachingSourcePanel
+        compact
+        defaultOpen
+        limit={2}
+        title="Teaching and iPaaS readiness"
+      />
 
       <section className="panel">
         <div className="panel-header">
@@ -612,6 +637,6 @@ export default function InsightsPage() {
           <p className="muted-copy">{uiCopy.insights.notes.empty}</p>
         )}
       </section>
-    </main>
+    </ProductRouteShell>
   );
 }

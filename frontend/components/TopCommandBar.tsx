@@ -217,7 +217,7 @@ export function TopCommandBar({
             handleOpenCommandPalette();
           }
         }}
-        placeholder="Ask anything — problem, procedure, or family"
+        placeholder="Ask anything - problem, procedure, or family"
         readOnly
         value=""
       />

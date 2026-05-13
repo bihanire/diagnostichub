@@ -27,9 +27,9 @@ class SearchBenchmarkTests(unittest.TestCase):
     def test_run_search_benchmark_passes_for_canonical_pack(self) -> None:
         report = run_search_benchmark(BENCHMARK_PATH)
 
-        self.assertEqual(report.total_cases, 82)
+        self.assertEqual(report.total_cases, 88)
         self.assertEqual(report.failed_cases, 0)
-        self.assertEqual(report.passed_cases, 82)
+        self.assertEqual(report.passed_cases, 88)
         self.assertGreater(min(result.margin for result in report.results), 0.04)
 
     def test_render_markdown_report_includes_case_table(self) -> None:

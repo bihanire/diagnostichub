@@ -1,5 +1,6 @@
 import { CustomerCare } from "@/lib/types";
 import { uiCopy } from "@/lib/copy";
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 
 type CareGuideProps = {
   customerCare: CustomerCare;
@@ -35,16 +36,14 @@ export function CareGuide({
 }: CareGuideProps) {
   if (collapsible) {
     return (
-      <details className={`panel ${compact ? "panel-compact" : ""} detail-toggle motion-surface`} open={defaultOpen}>
-        <summary className="detail-toggle-summary">
-          <div className="panel-header">
-            <span className="eyebrow">{uiCopy.careGuide.secondaryEyebrow}</span>
-            <h3>{uiCopy.careGuide.title}</h3>
-          </div>
-          <span className="detail-toggle-action">Open</span>
-        </summary>
+      <ControlledDisclosure
+        className={`panel ${compact ? "panel-compact" : ""} motion-surface`}
+        defaultOpen={defaultOpen}
+        eyebrow={uiCopy.careGuide.secondaryEyebrow}
+        title={uiCopy.careGuide.title}
+      >
         <CareGuideBody customerCare={customerCare} />
-      </details>
+      </ControlledDisclosure>
     );
   }
 

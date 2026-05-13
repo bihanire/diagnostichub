@@ -6,16 +6,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AIDiagnosticWorkspace } from "@/components/AIDiagnosticWorkspace";
 import { AppShell } from "@/components/AppShell";
 import { ContextIntelligencePanel } from "@/components/ContextIntelligencePanel";
+import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { FamilyExplorer } from "@/components/FamilyExplorer";
 import { FamilyFlowSelector } from "@/components/FamilyFlowSelector";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
 import { StatusStrip } from "@/components/StatusStrip";
+import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import { TopCommandBar } from "@/components/TopCommandBar";
 import {
   ApiError,
   clearCachedRepairFamilies,
   getCachedRepairFamilies,
-  getRelated,
   getRepairFamilies,
   getRepairFamilyDetail,
   getRepairFamilyLearningModule,
@@ -31,7 +32,12 @@ import {
   resolveRepairFamilies
 } from "@/lib/repair-families";
 import { getSearchAssistSuggestions, SearchAssistSuggestion } from "@/lib/search-assist";
-import { clearSession, loadSession, saveSession } from "@/lib/session";
+import { clearSession, loadSession } from "@/lib/session";
+import {
+  buildTriageSessionFromStart,
+  getTriageRoute,
+  persistTriageSessionWithRelatedHydration,
+} from "@/lib/triage-session";
 import {
   InteractionTelemetryEvent,
   ProcedureSummary,
@@ -909,42 +915,6 @@ export default function HomePage() {
     return true;
   }
 
-  function hydrateRelatedForSession(expectedSession: TriageSession) {
-    void getRelated(expectedSession.procedure.id)
-      .then((response) => {
-        const latest = loadSession();
-        if (
-          !latest ||
-          latest.updatedAt !== expectedSession.updatedAt ||
-          latest.procedure.id !== expectedSession.procedure.id
-        ) {
-          return;
-        }
-
-        const nextSession: TriageSession = {
-          ...latest,
-          related: response.items,
-          updatedAt: new Date().toISOString()
-        };
-        saveSession(nextSession);
-        startTransition(() => {
-          setResumeSession((current) => {
-            if (
-              !current ||
-              current.procedure.id !== expectedSession.procedure.id ||
-              current.updatedAt !== expectedSession.updatedAt
-            ) {
-              return current;
-            }
-            return nextSession;
-          });
-        });
-      })
-      .catch(() => {
-        // Keep triage startup non-blocking even when related suggestions fail.
-      });
-  }
-
   async function openFlow(
     procedure: ProcedureSummary,
     searchQuery?: string,
@@ -962,42 +932,40 @@ export default function HomePage() {
       const seededRelated =
         searchResult?.best_match?.id === procedure.id ? searchResult.related : [];
 
-      const session: TriageSession = {
+      const session = buildTriageSessionFromStart(response, {
         query: searchQuery || query,
-        learningFamilyId: learningContext?.familyId || null,
-        learningFamilyTitle: learningContext?.familyTitle || null,
-        learningTrackTitle: learningContext?.trackTitle || null,
-        searchConfidence: searchResult?.confidence ?? null,
-        searchConfidenceState: searchResult?.confidence_state ?? null,
-        searchConfidenceMargin: searchResult?.confidence_margin ?? null,
-        searchNeedsReview: searchResult?.needs_review ?? false,
-        procedure: response.procedure,
-        currentNode: response.current_node || null,
-        progress: response.progress,
-        customerCare: response.customer_care,
-        sop: response.sop,
-        outcome: response.outcome || null,
+        learningContext,
         related: seededRelated,
-        history: [],
-        dispatchGateConfirmed: [],
-        updatedAt: new Date().toISOString()
-      };
-
-      saveSession(session);
-      startTransition(() => {
-        setResumeSession(session);
+        searchContext: {
+          confidence: searchResult?.confidence ?? null,
+          confidenceState: searchResult?.confidence_state ?? null,
+          confidenceMargin: searchResult?.confidence_margin ?? null,
+          needsReview: searchResult?.needs_review ?? false,
+        },
       });
-      hydrateRelatedForSession(session);
 
-      if (response.status === "complete") {
-        startTransition(() => {
-          router.push("/result");
-        });
-        return;
-      }
+      persistTriageSessionWithRelatedHydration(session, {
+        onSaved: (savedSession) => {
+          startTransition(() => setResumeSession(savedSession));
+        },
+        onHydrated: (hydratedSession) => {
+          startTransition(() => {
+            setResumeSession((current) => {
+              if (
+                !current ||
+                current.procedure.id !== session.procedure.id ||
+                current.updatedAt !== session.updatedAt
+              ) {
+                return current;
+              }
+              return hydratedSession;
+            });
+          });
+        },
+      });
 
       startTransition(() => {
-        router.push("/triage");
+        router.push(getTriageRoute(response));
       });
     } catch (requestError) {
       setError(
@@ -1650,7 +1618,7 @@ export default function HomePage() {
               ) : (
                 <section className="panel panel-compact">
                   <p className="body-copy">
-                    Customer issue → interpretation → diagnostic path → SOP action → related procedures.
+                    Customer issue - interpretation - diagnostic path - SOP action - related procedures.
                   </p>
                 </section>
               )}
@@ -1669,7 +1637,7 @@ export default function HomePage() {
                   <div className="lm-guided-step">
                     <span className="lm-step-dot">1</span>
                     <p>
-                      Say what the <strong>customer told you</strong> — exact words work best.
+                      Say what the <strong>customer told you</strong> - exact words work best.
                     </p>
                   </div>
                   <div className="lm-guided-step">
@@ -1709,6 +1677,13 @@ export default function HomePage() {
                   </span>
                 </div>
               </section>
+              <TeachingSourcePanel
+                className="lm-context-card"
+                compact
+                familyId={selectedFamily?.id || null}
+                limit={2}
+                title="How this assistant teaches"
+              />
             </div>
           ) : (
             <ContextIntelligencePanel
@@ -1736,21 +1711,18 @@ export default function HomePage() {
 
       {activeFamily ? (
         <div className="family-explorer-anchor" ref={familyExplorerRef}>
-          <details className="panel panel-compact detail-toggle lm-deep-guide">
-            <summary className="detail-toggle-summary">
-              <div className="panel-header">
-                <span className="eyebrow">Deep learning guide</span>
-                <h3>Open full family workspace</h3>
-              </div>
-              <span className="detail-toggle-action">Open</span>
-            </summary>
+          <ControlledDisclosure
+            className="panel panel-compact lm-deep-guide"
+            eyebrow="Deep learning guide"
+            title="Open full family workspace"
+          >
             <FamilyExplorer
               family={activeFamily}
               onRunPrompt={runSearch}
               onSelectProcedure={(procedure) => openFlow(procedure, procedure.title)}
               openingProcedureId={startingId}
             />
-          </details>
+          </ControlledDisclosure>
         </div>
       ) : null}
 
