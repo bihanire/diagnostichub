@@ -59,6 +59,8 @@ Implemented slice:
 
 ## Phase 3 - Case Packet And iPaaS Readiness
 
+Status: implemented in the third pass as preview/readiness infrastructure. No live ticket creation was added.
+
 Goal: make completed diagnoses automation-ready while still not creating tickets yet.
 
 - Freeze a versioned case-packet schema.
@@ -66,6 +68,14 @@ Goal: make completed diagnoses automation-ready while still not creating tickets
 - Add idempotency key, source IDs, privacy classification, evidence checklist state, feedback state, and Watu decision metadata.
 - Define outbound webhook requirements: signed delivery, retry policy, dead-letter review, payload versioning, and delivery audit logs.
 - Validate candidate iPaaS targets: Power Automate, Zapier, Make, or a direct backend webhook consumer.
+
+Implemented slice:
+
+- Added `diagnostichub.case_packet.v1` as the internal case-packet schema version.
+- Added idempotency key, event name, privacy classification, evidence state, delivery readiness, and Watu decision metadata to the frontend case packet.
+- Added reusable webhook requirements and iPaaS candidate profiles for Power Automate, Zapier, Make, and direct webhook integration.
+- Added a current-case automation preview on the result route and an ops-only schema preview on insights.
+- Kept ticket sending disabled; all delivery states remain preview/operator-review only.
 
 ## Phase 4 - Ticketing Pilot
 

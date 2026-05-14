@@ -1,4 +1,9 @@
 import { getRelated } from "@/lib/api";
+import {
+  CASE_PACKET_SCHEMA_VERSION,
+  getDeliveryReadiness,
+  getEvidenceState,
+} from "@/lib/case-packet-schema";
 import { getKnowledgeSourceIdsForCase } from "@/lib/knowledge-sources";
 import { loadSession, saveSession } from "@/lib/session";
 import {
@@ -96,10 +101,24 @@ export function getTriageRoute(response: TriageStartResponse): "/result" | "/tri
 
 export function buildCasePacketFromSession(session: TriageSession): CasePacket {
   const outcome = session.outcome || null;
+  const updatedAtMs = Date.parse(session.updatedAt) || Date.now();
+  const ticketReadiness = outcome ? "ready_for_ticket_draft" : "needs_triage_completion";
+  const evidenceChecklist = outcome?.evidence_checklist || [];
+  const dispatchGateConfirmed = session.dispatchGateConfirmed || [];
+  const evidenceState = getEvidenceState({ dispatchGateConfirmed, evidenceChecklist });
+  const deliveryReadiness = getDeliveryReadiness({ evidenceState, ticketReadiness });
+  const warrantyDirection = outcome?.warranty_assessment.label || outcome?.warranty_status || null;
+
   return {
-    id: `case-${session.procedure.id}-${Date.parse(session.updatedAt) || Date.now()}`,
+    id: `case-${session.procedure.id}-${updatedAtMs}`,
+    schemaVersion: CASE_PACKET_SCHEMA_VERSION,
     source: "diagnostic_hub",
+    eventName: outcome ? "diagnostic.case.completed" : "diagnostic.case.in_progress",
     createdAt: session.updatedAt,
+    idempotencyKey: `diagnostichub:${session.procedure.id}:${updatedAtMs}`,
+    privacyClassification: session.query?.trim()
+      ? "contains_customer_free_text"
+      : "internal_operational",
     query: session.query || session.procedure.title,
     family: {
       id: session.learningFamilyId || null,
@@ -111,11 +130,18 @@ export function buildCasePacketFromSession(session: TriageSession): CasePacket {
     diagnosis: outcome?.diagnosis || null,
     recommendation: outcome?.recommended_action || null,
     decisionLabel: outcome?.decision_label || null,
-    warrantyDirection: outcome?.warranty_assessment.label || outcome?.warranty_status || null,
-    evidenceChecklist: outcome?.evidence_checklist || [],
-    dispatchGateConfirmed: session.dispatchGateConfirmed || [],
+    warrantyDirection,
+    evidenceChecklist,
+    dispatchGateConfirmed,
     feedbackStatus: session.feedback ? "saved" : "not_saved",
-    ticketReadiness: outcome ? "ready_for_ticket_draft" : "needs_triage_completion",
+    ticketReadiness,
+    evidenceState,
+    deliveryReadiness,
+    watuDecision: {
+      decisionLabel: outcome?.decision_label || null,
+      warrantyDirection,
+      ticketReadiness,
+    },
     knowledgeSourceIds: getKnowledgeSourceIdsForCase(
       session.procedure,
       session.learningFamilyId,

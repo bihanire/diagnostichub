@@ -106,6 +106,13 @@ describe("knowledge source registry", () => {
     const casePacket = buildCasePacketFromSession(buildSession());
 
     expect(casePacket.ticketReadiness).toBe("ready_for_ticket_draft");
+    expect(casePacket.schemaVersion).toBe("diagnostichub.case_packet.v1");
+    expect(casePacket.eventName).toBe("diagnostic.case.completed");
+    expect(casePacket.idempotencyKey).toBe("diagnostichub:101:1778666400000");
+    expect(casePacket.privacyClassification).toBe("contains_customer_free_text");
+    expect(casePacket.evidenceState).toBe("pending");
+    expect(casePacket.deliveryReadiness).toBe("blocked_missing_evidence");
+    expect(casePacket.watuDecision.decisionLabel).toBe("Book repair intake");
     expect(casePacket.knowledgeSourceIds).toContain("samsung-moisture-port");
     expect(casePacket.knowledgeSourceIds).toContain("watu-sop-pack");
   });

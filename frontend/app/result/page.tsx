@@ -4,6 +4,7 @@ import { FormEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CareGuide } from "@/components/CareGuide";
+import { CasePacketReadinessPanel } from "@/components/CasePacketReadinessPanel";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
 import { LearningQualityPanel } from "@/components/LearningQualityPanel";
@@ -559,11 +560,24 @@ export default function ResultPage() {
             <strong>Sources</strong>
             {casePacket.knowledgeSourceIds.length}
           </span>
+          <span>
+            <strong>Delivery</strong>
+            {casePacket.deliveryReadiness}
+          </span>
+          <span>
+            <strong>Evidence state</strong>
+            {casePacket.evidenceState}
+          </span>
         </div>
         <p className="muted-copy">
           This is the internal case shape the app can later send into ticket creation without changing the diagnostic flow.
         </p>
       </ControlledDisclosure>
+
+      <CasePacketReadinessPanel
+        casePacket={casePacket}
+        title="Automation preview for this case"
+      />
 
       {error ? <p className="error-banner" role="alert">{error}</p> : null}
 

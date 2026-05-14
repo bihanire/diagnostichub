@@ -8176,7 +8176,7 @@ body::after,
 
 .case-packet-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 10px;
 }
 
@@ -8430,6 +8430,94 @@ body::after,
 .learning-quality-panel-compact .decision-note-grid,
 .learning-quality-panel-compact .content-health-grid {
   grid-template-columns: 1fr;
+}
+
+.case-packet-readiness-panel {
+  border-color: rgba(65, 118, 203, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(241, 247, 250, 0.92));
+}
+
+.case-readiness-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.case-readiness-summary span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(65, 118, 203, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #345b55;
+  overflow-wrap: anywhere;
+}
+
+.case-readiness-summary strong {
+  color: #244f95;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.case-readiness-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.case-readiness-block,
+.case-json-preview {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.case-requirement-list,
+.ipaas-profile-list {
+  display: grid;
+  gap: 10px;
+}
+
+.case-requirement-card,
+.ipaas-profile-card {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(31, 86, 119, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.case-requirement-card strong,
+.ipaas-profile-card strong,
+.case-json-preview h4 {
+  color: #153f3b;
+}
+
+.case-json-preview {
+  padding: 12px;
+  border: 1px solid rgba(31, 86, 119, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.case-json-preview pre {
+  max-height: 360px;
+  margin: 0;
+  padding: 12px;
+  overflow: auto;
+  border-radius: 10px;
+  background: #102825;
+  color: #d7f8ef;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 @media (max-width: 900px) {

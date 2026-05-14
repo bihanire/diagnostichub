@@ -363,8 +363,12 @@ export type TriageSession = {
 
 export type CasePacket = {
   id: string;
+  schemaVersion: "diagnostichub.case_packet.v1";
   source: "diagnostic_hub";
+  eventName: "diagnostic.case.completed" | "diagnostic.case.in_progress";
   createdAt: string;
+  idempotencyKey: string;
+  privacyClassification: "internal_operational" | "contains_customer_free_text";
   query: string;
   family: {
     id?: string | null;
@@ -381,6 +385,16 @@ export type CasePacket = {
   dispatchGateConfirmed: string[];
   feedbackStatus: "saved" | "not_saved";
   ticketReadiness: "needs_triage_completion" | "ready_for_ticket_draft";
+  evidenceState: "not_required" | "pending" | "complete";
+  deliveryReadiness:
+    | "blocked_incomplete_triage"
+    | "blocked_missing_evidence"
+    | "ready_for_operator_review";
+  watuDecision: {
+    decisionLabel?: string | null;
+    warrantyDirection?: string | null;
+    ticketReadiness: "needs_triage_completion" | "ready_for_ticket_draft";
+  };
   knowledgeSourceIds: string[];
 };
 
@@ -442,4 +456,19 @@ export type ContentHealthSignal = {
   level: "healthy" | "watch" | "risk";
   teachingImpact: string;
   recommendedAction: string;
+};
+
+export type CasePacketWebhookRequirement = {
+  id: string;
+  label: string;
+  reason: string;
+  sourceIds: string[];
+};
+
+export type IpaasCandidateProfile = {
+  id: "power_automate" | "zapier" | "make" | "direct_webhook";
+  label: string;
+  bestFor: string;
+  cautions: string[];
+  sourceIds: string[];
 };

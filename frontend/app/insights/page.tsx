@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { CasePacketReadinessPanel } from "@/components/CasePacketReadinessPanel";
 import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
@@ -340,6 +341,11 @@ export default function InsightsPage() {
         defaultOpen
         healthContext={{ procedureBreakdown, summary, telemetrySummary }}
         title="Content health watchlist"
+      />
+
+      <CasePacketReadinessPanel
+        defaultOpen
+        title="Ops case-packet schema preview"
       />
 
       <section className="panel">
