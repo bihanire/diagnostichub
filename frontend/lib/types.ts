@@ -412,3 +412,34 @@ export type TeachingGuidance = {
   doNotPromise: string[];
   sourceIds: string[];
 };
+
+export type FamilyLessonCard = {
+  id: string;
+  familyId: string;
+  title: string;
+  teachingGoal: string;
+  firstLook: string[];
+  modelCaveats: string[];
+  localPhrases: string[];
+  sourceIds: string[];
+};
+
+export type DecisionTeachingNote = {
+  id: string;
+  title: string;
+  procedureCategories: string[];
+  searchSignals: string[];
+  whyItMatters: string;
+  officerPrompt: string;
+  escalationRisk: string;
+  sourceIds: string[];
+};
+
+export type ContentHealthSignal = {
+  id: string;
+  label: string;
+  value: string;
+  level: "healthy" | "watch" | "risk";
+  teachingImpact: string;
+  recommendedAction: string;
+};

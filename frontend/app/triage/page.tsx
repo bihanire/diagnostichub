@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CareGuide } from "@/components/CareGuide";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
+import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { ProgressBar } from "@/components/ProgressBar";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
@@ -340,6 +341,14 @@ export default function TriagePage() {
         procedure={session.procedure}
         query={session.query}
         title="Teaching guardrails for this step"
+      />
+
+      <LearningQualityPanel
+        compact
+        familyId={session.learningFamilyId}
+        procedure={session.procedure}
+        query={session.query}
+        title="Decision teaching for this path"
       />
 
       <div className={`triage-stage-grid ${questionSwitching ? "triage-stage-grid-syncing" : ""}`}>

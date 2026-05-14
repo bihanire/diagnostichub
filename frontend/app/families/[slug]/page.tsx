@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CSSProperties, startTransition, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import {
@@ -302,6 +303,12 @@ export default function FamilyLandingPage() {
         defaultOpen
         familyId={family.id}
         title={`${family.title} teaching references`}
+      />
+
+      <LearningQualityPanel
+        defaultOpen
+        familyId={family.id}
+        title={`${family.title} lesson cards`}
       />
 
       <section className="family-landing-flows" aria-labelledby="family-flows-title">

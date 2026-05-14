@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CareGuide } from "@/components/CareGuide";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
+import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { SuggestionList } from "@/components/SuggestionList";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
@@ -389,6 +390,14 @@ export default function ResultPage() {
         procedure={session.procedure}
         query={session.query}
         title="Source-backed teaching used for this case"
+      />
+
+      <LearningQualityPanel
+        compact
+        familyId={session.learningFamilyId}
+        procedure={session.procedure}
+        query={session.query}
+        title="Why this decision matters"
       />
 
       <ControlledDisclosure

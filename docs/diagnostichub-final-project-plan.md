@@ -40,6 +40,8 @@ Status: implemented in this pass.
 
 ## Phase 2 - Learning Quality Expansion
 
+Status: implemented in the second pass.
+
 Goal: make teaching richer without turning the app into ungoverned advice.
 
 - Build family-specific lesson cards for display, power, logic/software, security/access, connectivity, and physical/liquid.
@@ -47,6 +49,13 @@ Goal: make teaching richer without turning the app into ungoverned advice.
 - Add model-aware caveats where Samsung behavior differs by device, carrier, Android version, One UI version, or Knox state.
 - Add multilingual and local phrasing improvements from feedback data.
 - Add content-health scoring in ops insights: low helpfulness, repeated wording confusion, high no-match recoveries, and high escalation reversals.
+
+Implemented slice:
+
+- Added typed family lesson cards with first-look checks, model caveats, local phrase examples, and source IDs.
+- Added decision teaching notes for visible damage, battery safety, reset risk, managed-device policy, and ticket readiness.
+- Added ops content-health signals for helpful rate, top wording watch, no-match recovery rate, and confidence-gate confirmation.
+- Surfaced the learning-quality panel on family pages, triage, result, and insights without changing backend response contracts.
 
 ## Phase 3 - Case Packet And iPaaS Readiness
 

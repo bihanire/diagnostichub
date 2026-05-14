@@ -173,7 +173,8 @@ describe("InsightsPage", () => {
     expect(screen.getAllByText("Confusing question").length).toBeGreaterThan(0);
     expect(screen.getByText("the phone is not charging when i insert a charger")).toBeInTheDocument();
     expect(screen.getByText("Search-to-triage quality signals")).toBeInTheDocument();
-    expect(screen.getByText("80%")).toBeInTheDocument();
+    expect(screen.getAllByText("80%").length).toBeGreaterThan(0);
+    expect(screen.getByText("Content health watchlist")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /export csv/i })).toHaveAttribute(
       "href",
       "http://localhost:8000/feedback/export.csv?days=30"

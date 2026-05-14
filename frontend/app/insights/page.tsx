@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import {
@@ -333,6 +334,12 @@ export default function InsightsPage() {
         defaultOpen
         limit={2}
         title="Teaching and iPaaS readiness"
+      />
+
+      <LearningQualityPanel
+        defaultOpen
+        healthContext={{ procedureBreakdown, summary, telemetrySummary }}
+        title="Content health watchlist"
       />
 
       <section className="panel">

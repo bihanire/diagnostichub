@@ -8308,6 +8308,130 @@ body::after,
   grid-template-columns: 1fr;
 }
 
+.learning-quality-panel {
+  border-color: rgba(54, 100, 171, 0.13);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(241, 247, 250, 0.92));
+}
+
+.learning-quality-section {
+  display: grid;
+  gap: 12px;
+}
+
+.learning-quality-section + .learning-quality-section {
+  padding-top: 4px;
+}
+
+.learning-quality-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.learning-card-grid,
+.decision-note-grid,
+.content-health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.learning-card,
+.decision-note-card,
+.content-health-card {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(31, 86, 119, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+}
+
+.learning-card h4,
+.decision-note-card h4 {
+  margin: 0;
+  color: #153f3b;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.learning-card-block,
+.decision-note-prompt {
+  display: grid;
+  gap: 6px;
+}
+
+.learning-card-block strong,
+.decision-note-prompt strong,
+.content-health-label {
+  color: #214944;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.learning-card-block .bullet-list {
+  margin: 0;
+  color: #45615d;
+  font-size: 0.9rem;
+}
+
+.decision-note-prompt {
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(239, 249, 245, 0.88);
+  color: #254f49;
+}
+
+.local-phrase-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.local-phrase-chip {
+  max-width: 100%;
+  padding: 6px 8px;
+  border: 1px solid rgba(65, 118, 203, 0.14);
+  border-radius: 999px;
+  background: rgba(241, 247, 250, 0.9);
+  color: #244f95;
+  font-size: 0.76rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.content-health-card strong {
+  color: #123f3a;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.content-health-healthy {
+  border-color: rgba(31, 150, 106, 0.18);
+  background: rgba(239, 249, 245, 0.88);
+}
+
+.content-health-watch {
+  border-color: rgba(240, 175, 57, 0.24);
+  background: rgba(255, 248, 230, 0.9);
+}
+
+.content-health-risk {
+  border-color: rgba(199, 80, 80, 0.2);
+  background: rgba(255, 241, 240, 0.9);
+}
+
+.learning-quality-panel-compact .learning-card-grid,
+.learning-quality-panel-compact .decision-note-grid,
+.learning-quality-panel-compact .content-health-grid {
+  grid-template-columns: 1fr;
+}
+
 @media (max-width: 900px) {
   .route-shell {
     min-height: auto;
