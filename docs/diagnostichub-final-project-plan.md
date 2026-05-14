@@ -99,6 +99,8 @@ Implemented slice:
 
 ## Phase 5 - Production Hardening
 
+Status: implemented in the fifth pass as validation automation and deployment/cache guardrails.
+
 Goal: keep the system demo-ready and operations-ready.
 
 - Add browser route smoke tests for homepage, family page, triage, result, ops login, and insights.
@@ -106,6 +108,13 @@ Goal: keep the system demo-ready and operations-ready.
 - Add backend contract tests for search, triage, feedback, telemetry, ops auth, and SOP validation.
 - Monitor search confidence drift and branch feedback after every content update.
 - Document deployment cache behavior so local changes reliably appear after deployment.
+
+Implemented slice:
+
+- Added a standalone frontend route smoke script for the main deployed routes.
+- Added dropdown behavior and CSS layering tests for the top command bar.
+- Added a deployment/cache checklist for stale live assets, service workers, route smoke, and gateway configuration.
+- Kept backend/SOP validation in the release checklist and extended backend tests in the ticket dry-run pass.
 
 ## Acceptance Criteria
 
