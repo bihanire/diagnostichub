@@ -56,7 +56,14 @@ jobs:
       - name: Run frontend production build
         working-directory: frontend
         env:
-          NEXT_PUBLIC_API_BASE_URL: /api
+          NEXT_PUBLIC_API_BASE_URL: "/api"
+          NEXT_PUBLIC_ENABLE_SERVICE_WORKER: "false"
+          NEXT_PUBLIC_BOOT_HANDSHAKE_ENABLED: "true"
+          NEXT_PUBLIC_BOOT_HANDSHAKE_TIMEOUT_MS: "5000"
+          NEXT_PUBLIC_ENFORCE_API_GATEWAY: "true"
+          NEXT_PUBLIC_API_VERSION_CHECK_ENABLED: "true"
+          NEXT_PUBLIC_EXPECTED_API_VERSION: "1.0.0"
+          NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED: "true"
         run: npm run build
 
   docker:
@@ -73,7 +80,17 @@ jobs:
         run: docker build -t relational-encyclopedia-backend ./backend
 
       - name: Build frontend image
-        run: docker build --build-arg NEXT_PUBLIC_API_BASE_URL=/api -t relational-encyclopedia-frontend ./frontend
+        run: >
+          docker build
+          --build-arg NEXT_PUBLIC_API_BASE_URL=/api
+          --build-arg NEXT_PUBLIC_ENABLE_SERVICE_WORKER=false
+          --build-arg NEXT_PUBLIC_BOOT_HANDSHAKE_ENABLED=true
+          --build-arg NEXT_PUBLIC_BOOT_HANDSHAKE_TIMEOUT_MS=5000
+          --build-arg NEXT_PUBLIC_ENFORCE_API_GATEWAY=true
+          --build-arg NEXT_PUBLIC_API_VERSION_CHECK_ENABLED=true
+          --build-arg NEXT_PUBLIC_EXPECTED_API_VERSION=1.0.0
+          --build-arg NEXT_PUBLIC_CLIENT_REQUEST_ID_ENABLED=true
+          -t relational-encyclopedia-frontend ./frontend
 
       - name: Validate docker compose configuration
         run: docker compose --env-file .env.compose.example config
