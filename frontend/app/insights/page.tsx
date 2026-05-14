@@ -8,6 +8,7 @@ import { CasePacketReadinessPanel } from "@/components/CasePacketReadinessPanel"
 import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
+import { TicketDraftPilotPanel } from "@/components/TicketDraftPilotPanel";
 import {
   ApiError,
   getOpsFeedbackByBranch,
@@ -347,6 +348,8 @@ export default function InsightsPage() {
         defaultOpen
         title="Ops case-packet schema preview"
       />
+
+      <TicketDraftPilotPanel />
 
       <section className="panel">
         <div className="panel-header">

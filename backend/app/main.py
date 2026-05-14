@@ -10,6 +10,7 @@ from app.api.routes.related import router as related_router
 from app.api.routes.search import router as search_router
 from app.api.routes.system import router as system_router
 from app.api.routes.telemetry import router as telemetry_router
+from app.api.routes.ticket_draft import router as ticket_draft_router
 from app.api.routes.triage import router as triage_router
 from app.core.config import get_settings
 from app.core.database import SessionLocal
@@ -124,3 +125,4 @@ app.include_router(related_router)
 app.include_router(feedback_router)
 app.include_router(ops_router)
 app.include_router(telemetry_router)
+app.include_router(ticket_draft_router)

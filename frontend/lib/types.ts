@@ -472,3 +472,19 @@ export type IpaasCandidateProfile = {
   cautions: string[];
   sourceIds: string[];
 };
+
+export type TicketDraftPreviewResponse = {
+  dry_run: boolean;
+  delivery_enabled: boolean;
+  draft_status: "blocked" | "ready_for_operator_review";
+  external_ticket_id?: string | null;
+  blockers: string[];
+  ticket_fields: Record<string, string | string[]>;
+  webhook_requirements: Array<{
+    id: string;
+    label: string;
+    ready: boolean;
+    note: string;
+  }>;
+  message: string;
+};

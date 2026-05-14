@@ -146,6 +146,49 @@ export function getCasePacketSchemaPreview(): Record<string, unknown> {
   };
 }
 
+export function getSampleCasePacketForDraft(): CasePacket {
+  return {
+    id: "case-4-1778666400000",
+    schemaVersion: CASE_PACKET_SCHEMA_VERSION,
+    source: "diagnostic_hub",
+    eventName: "diagnostic.case.completed",
+    createdAt: "2026-05-13T10:00:00.000Z",
+    idempotencyKey: "diagnostichub:4:1778666400000",
+    privacyClassification: "contains_customer_free_text",
+    query: "moisture warning when charging",
+    family: {
+      id: "power",
+      title: "Power & Thermal",
+      trackTitle: "Charging safety",
+    },
+    procedure: {
+      id: 4,
+      title: "Charging Issue",
+      category: "Power & Thermal",
+      description: "Use this for charging issues.",
+      outcome: "Charging path complete.",
+      warranty_status: "Inspection required.",
+    },
+    answers: [],
+    diagnosis: "Charging path needs review.",
+    recommendation: "Do not keep charging at the branch.",
+    decisionLabel: "Book repair intake",
+    warrantyDirection: "Needs inspection",
+    evidenceChecklist: ["Record moisture warning."],
+    dispatchGateConfirmed: ["Record moisture warning."],
+    feedbackStatus: "not_saved",
+    ticketReadiness: "ready_for_ticket_draft",
+    evidenceState: "complete",
+    deliveryReadiness: "ready_for_operator_review",
+    watuDecision: {
+      decisionLabel: "Book repair intake",
+      warrantyDirection: "Needs inspection",
+      ticketReadiness: "ready_for_ticket_draft",
+    },
+    knowledgeSourceIds: ["samsung-moisture-port", "watu-sop-pack"],
+  };
+}
+
 export function getCasePacketExportPreview(packet: CasePacket): Record<string, unknown> {
   return {
     schemaVersion: packet.schemaVersion,

@@ -79,6 +79,8 @@ Implemented slice:
 
 ## Phase 4 - Ticketing Pilot
 
+Status: implemented as dry-run pilot scaffolding only. No ticket persistence, assignment, SLA, external delivery, or status workflow was added.
+
 Goal: introduce ticket creation only after the packet and governance are stable.
 
 - Create a ticket draft endpoint behind ops/admin controls.
@@ -86,6 +88,14 @@ Goal: introduce ticket creation only after the packet and governance are stable.
 - Require branch confirmation before sending.
 - Store delivery result, external ticket ID, payload version, and retry state.
 - Add operator-facing rollback and manual export path.
+
+Implemented slice:
+
+- Added an ops-protected `/ops/ticket-draft/preview` endpoint that validates a case packet and returns dry-run draft fields.
+- The endpoint always returns `delivery_enabled=false` and `external_ticket_id=null`.
+- Added blockers for incomplete triage, missing evidence, and non-review-ready delivery state.
+- Added an ops UI dry-run button using a sample packet so operators can test the contract without customer data movement.
+- Left persistence, assignment, SLA, external delivery, and rollback for a future live-ticketing pass.
 
 ## Phase 5 - Production Hardening
 

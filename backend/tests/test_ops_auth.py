@@ -9,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.routes.feedback import router as feedback_router
 from app.api.routes.ops import router as ops_router
+from app.api.routes.ticket_draft import router as ticket_draft_router
 from app.core.config import get_settings
 from app.core.database import Base, get_db
 from app.db.seed import seed_session
@@ -17,6 +18,51 @@ from app.services.ops_auth_service import (
     read_ops_session_token,
     validate_ops_auth_settings,
 )
+
+
+def _build_ticket_preview_payload(**overrides):
+    payload = {
+        "id": "case-4-1778666400000",
+        "schemaVersion": "diagnostichub.case_packet.v1",
+        "source": "diagnostic_hub",
+        "eventName": "diagnostic.case.completed",
+        "createdAt": "2026-05-13T10:00:00.000Z",
+        "idempotencyKey": "diagnostichub:4:1778666400000",
+        "privacyClassification": "contains_customer_free_text",
+        "query": "moisture warning when charging",
+        "family": {
+            "id": "power",
+            "title": "Power & Thermal",
+            "trackTitle": "Charging safety",
+        },
+        "procedure": {
+            "id": 4,
+            "title": "Charging Issue",
+            "category": "Power & Thermal",
+            "description": "Use this for charging issues.",
+            "outcome": "Charging path complete.",
+            "warranty_status": "Inspection required.",
+        },
+        "answers": [],
+        "diagnosis": "Charging path needs review.",
+        "recommendation": "Do not keep charging at the branch.",
+        "decisionLabel": "Book repair intake",
+        "warrantyDirection": "Needs inspection",
+        "evidenceChecklist": ["Record moisture warning."],
+        "dispatchGateConfirmed": [],
+        "feedbackStatus": "not_saved",
+        "ticketReadiness": "ready_for_ticket_draft",
+        "evidenceState": "pending",
+        "deliveryReadiness": "blocked_missing_evidence",
+        "watuDecision": {
+            "decisionLabel": "Book repair intake",
+            "warrantyDirection": "Needs inspection",
+            "ticketReadiness": "ready_for_ticket_draft",
+        },
+        "knowledgeSourceIds": ["samsung-moisture-port", "watu-sop-pack"],
+    }
+    payload.update(overrides)
+    return payload
 
 
 class OpsAuthRouteTests(unittest.TestCase):
@@ -66,6 +112,7 @@ class OpsAuthRouteTests(unittest.TestCase):
         cls.app = FastAPI()
         cls.app.include_router(ops_router)
         cls.app.include_router(feedback_router)
+        cls.app.include_router(ticket_draft_router)
 
         def override_get_db():
             db = cls.SessionLocal()
@@ -139,6 +186,42 @@ class OpsAuthRouteTests(unittest.TestCase):
             for path in protected_paths:
                 response = client.get(path)
                 self.assertEqual(response.status_code, 401, path)
+
+            ticket_response = client.post(
+                "/ops/ticket-draft/preview",
+                json=_build_ticket_preview_payload(),
+            )
+            self.assertEqual(ticket_response.status_code, 401)
+
+    def test_ticket_draft_preview_is_dry_run_and_requires_operator_ready_packet(self) -> None:
+        with TestClient(self.app) as client:
+            client.post("/ops/login", json={"password": "ops-password"})
+            blocked_response = client.post(
+                "/ops/ticket-draft/preview",
+                json=_build_ticket_preview_payload(),
+            )
+            ready_payload = _build_ticket_preview_payload(
+                evidenceState="complete",
+                deliveryReadiness="ready_for_operator_review",
+                dispatchGateConfirmed=["Record moisture warning."],
+            )
+            ready_response = client.post("/ops/ticket-draft/preview", json=ready_payload)
+
+        self.assertEqual(blocked_response.status_code, 200)
+        blocked_payload = blocked_response.json()
+        self.assertTrue(blocked_payload["dry_run"])
+        self.assertFalse(blocked_payload["delivery_enabled"])
+        self.assertEqual(blocked_payload["draft_status"], "blocked")
+        self.assertIsNone(blocked_payload["external_ticket_id"])
+        self.assertIn("Evidence checklist is not complete.", blocked_payload["blockers"])
+
+        self.assertEqual(ready_response.status_code, 200)
+        ready_preview = ready_response.json()
+        self.assertTrue(ready_preview["dry_run"])
+        self.assertFalse(ready_preview["delivery_enabled"])
+        self.assertEqual(ready_preview["draft_status"], "ready_for_operator_review")
+        self.assertEqual(ready_preview["ticket_fields"]["external_reference"], "diagnostichub:4:1778666400000")
+        self.assertIsNone(ready_preview["external_ticket_id"])
 
     def test_feedback_submission_stays_open_without_ops_login(self) -> None:
         with TestClient(self.app) as client:

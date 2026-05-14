@@ -1,5 +1,6 @@
 import {
   BranchFeedbackBreakdownResponse,
+  CasePacket,
   FeedbackCreateRequest,
   FeedbackCreateResponse,
   FeedbackLanguageCandidateResponse,
@@ -15,6 +16,7 @@ import {
   RepairFamilySummary,
   RelatedResponse,
   SearchResponse,
+  TicketDraftPreviewResponse,
   TriageNextResponse,
   TriageStartResponse
 } from "@/lib/types";
@@ -440,6 +442,16 @@ export function getOpsFeedbackLanguageExportUrl(days: number, limit = 50): strin
 export function getOpsTelemetrySummary(): Promise<OpsTelemetrySummaryResponse> {
   return apiRequest<OpsTelemetrySummaryResponse>("/ops/telemetry/summary", {
     authenticated: true,
+  });
+}
+
+export function previewOpsTicketDraft(
+  casePacket: CasePacket
+): Promise<TicketDraftPreviewResponse> {
+  return apiRequest<TicketDraftPreviewResponse>("/ops/ticket-draft/preview", {
+    method: "POST",
+    authenticated: true,
+    body: JSON.stringify(casePacket),
   });
 }
 

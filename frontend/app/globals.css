@@ -8520,6 +8520,24 @@ body::after,
   word-break: break-word;
 }
 
+.ticket-draft-pilot-panel {
+  border-color: rgba(15, 113, 104, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(239, 249, 245, 0.9));
+}
+
+.ticket-draft-pilot-copy,
+.ticket-draft-preview-result {
+  display: grid;
+  gap: 12px;
+}
+
+.ticket-draft-requirements {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
 @media (max-width: 900px) {
   .route-shell {
     min-height: auto;
