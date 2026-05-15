@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CSSProperties, KeyboardEvent, MouseEvent, TouchEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RepairFamilySummary } from "@/lib/types";
 
@@ -58,12 +58,16 @@ export function TopCommandBar({
       return;
     }
 
-    function closeIfOutside(event: globalThis.MouseEvent | globalThis.TouchEvent) {
+    function closeIfOutside(event: PointerEvent | FocusEvent) {
       const target = event.target;
       if (!(target instanceof Node)) {
         return;
       }
-      if (familyMenuRef.current?.contains(target) || utilityMenuRef.current?.contains(target)) {
+      if (
+        familyMenuRef.current?.contains(target) ||
+        familyPanelRef.current?.contains(target) ||
+        utilityMenuRef.current?.contains(target)
+      ) {
         return;
       }
       closeMenus();
@@ -83,12 +87,12 @@ export function TopCommandBar({
       }
     }
 
-    document.addEventListener("mousedown", closeIfOutside);
-    document.addEventListener("touchstart", closeIfOutside, { passive: true });
+    document.addEventListener("pointerdown", closeIfOutside, true);
+    document.addEventListener("focusin", closeIfOutside);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
-      document.removeEventListener("mousedown", closeIfOutside);
-      document.removeEventListener("touchstart", closeIfOutside);
+      document.removeEventListener("pointerdown", closeIfOutside, true);
+      document.removeEventListener("focusin", closeIfOutside);
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [familyMenuOpen, utilityMenuOpen]);
@@ -123,6 +127,8 @@ export function TopCommandBar({
   function closeMenus() {
     setFamilyMenuOpen(false);
     setUtilityMenuOpen(false);
+    setFamilyFilter("");
+    setActiveFamilyIndex(0);
   }
 
   function handleSelect(familyId: string) {
@@ -130,7 +136,7 @@ export function TopCommandBar({
     onSelectFamily(familyId);
   }
 
-  function toggleFamilyMenu(event: MouseEvent<HTMLButtonElement> | TouchEvent<HTMLButtonElement>) {
+  function toggleFamilyMenu(event: MouseEvent<HTMLButtonElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     setFamilyMenuPosition({
       top: Math.round(rect.bottom + 8),

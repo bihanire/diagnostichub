@@ -4,7 +4,6 @@ import { FormEvent, startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CareGuide } from "@/components/CareGuide";
-import { CasePacketReadinessPanel } from "@/components/CasePacketReadinessPanel";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
 import { LearningQualityPanel } from "@/components/LearningQualityPanel";
@@ -531,9 +530,9 @@ export default function ResultPage() {
       </ControlledDisclosure>
 
       <ControlledDisclosure
-        className="panel panel-compact ticket-readiness-panel"
-        eyebrow="Ticket runway"
-        title="Case packet for future ticketing"
+        className="panel panel-compact handover-record-panel"
+        eyebrow="Case evidence"
+        title="Diagnostic record for review"
       >
         <div className="case-packet-grid">
           <span>
@@ -541,8 +540,8 @@ export default function ResultPage() {
             {casePacket.id}
           </span>
           <span>
-            <strong>Ticket state</strong>
-            {casePacket.ticketReadiness}
+            <strong>Flow state</strong>
+            {casePacket.eventName === "diagnostic.case.completed" ? "complete" : "in progress"}
           </span>
           <span>
             <strong>Answers</strong>
@@ -561,23 +560,14 @@ export default function ResultPage() {
             {casePacket.knowledgeSourceIds.length}
           </span>
           <span>
-            <strong>Delivery</strong>
-            {casePacket.deliveryReadiness}
-          </span>
-          <span>
-            <strong>Evidence state</strong>
+            <strong>Evidence</strong>
             {casePacket.evidenceState}
           </span>
         </div>
         <p className="muted-copy">
-          This is the internal case shape the app can later send into ticket creation without changing the diagnostic flow.
+          Use this compact record to keep the next officer or reviewer aligned with the visible evidence, answer trail, Watu decision, and source-backed guidance.
         </p>
       </ControlledDisclosure>
-
-      <CasePacketReadinessPanel
-        casePacket={casePacket}
-        title="Automation preview for this case"
-      />
 
       {error ? <p className="error-banner" role="alert">{error}</p> : null}
 

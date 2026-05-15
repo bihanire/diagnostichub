@@ -177,8 +177,8 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
     sourceIds: ["knox-android-enterprise", "knox-guard-lock-unlock", "knox-configure-enrollment", "watu-sop-pack"],
   },
   {
-    id: "decision-ticket-readiness",
-    title: "A strong diagnosis should already read like a ticket draft",
+    id: "decision-handover-readiness",
+    title: "A strong diagnosis should stand on its evidence",
     procedureCategories: [
       "Display & Vision",
       "Power & Thermal",
@@ -190,12 +190,12 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
       "Replacements & Transfers",
       "Returns & Recovery",
     ],
-    searchSignals: ["ticket", "dispatch", "case", "handover", "feedback", "repair"],
+    searchSignals: ["dispatch", "case", "handover", "feedback", "repair", "evidence"],
     whyItMatters:
-      "The app does not create tickets yet, but the finished diagnosis should preserve enough structured evidence for future iPaaS delivery.",
+      "The finished diagnosis should preserve enough structured evidence for another officer, reviewer, or future automation path to understand the case without replaying the whole conversation.",
     officerPrompt: "Would another team understand the case from the query, answer trail, decision, evidence, and source IDs?",
-    escalationRisk: "Weak case structure creates rework when ticketing or external automation begins.",
-    sourceIds: ["power-automate-http-trigger", "zapier-webhooks", "make-webhooks", "webhook-best-practices", "watu-sop-pack"],
+    escalationRisk: "Weak case structure creates rework when another team reviews or receives the case.",
+    sourceIds: ["samsung-service-readiness", "watu-sop-pack"],
   },
 ];
 
@@ -228,11 +228,11 @@ export function getDecisionTeachingNotesForProcedure(
     .sort((left, right) => right.score - left.score)
     .map((item) => item.note);
 
-  const ticketReadiness = DECISION_TEACHING_NOTES.find((note) => note.id === "decision-ticket-readiness");
+  const handoverReadiness = DECISION_TEACHING_NOTES.find((note) => note.id === "decision-handover-readiness");
   const selected = ranked.slice(0, limit);
 
-  if (ticketReadiness && !selected.some((note) => note.id === ticketReadiness.id)) {
-    return [...selected.slice(0, Math.max(limit - 1, 0)), ticketReadiness];
+  if (handoverReadiness && !selected.some((note) => note.id === handoverReadiness.id)) {
+    return [...selected.slice(0, Math.max(limit - 1, 0)), handoverReadiness];
   }
   return selected;
 }
@@ -336,7 +336,7 @@ function decisionNoteScore(note: DecisionTeachingNote, category: string, text: s
     score += 3;
   }
   score += note.searchSignals.filter((signal) => text.includes(signal)).length;
-  if (note.id === "decision-ticket-readiness") {
+  if (note.id === "decision-handover-readiness") {
     score += 0.2;
   }
   return score;

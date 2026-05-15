@@ -84,7 +84,7 @@ describe("knowledge source registry", () => {
     }
   });
 
-  it("returns Samsung and iPaaS teaching guidance for a case", () => {
+  it("returns Samsung/Watu teaching guidance for an ordinary diagnostic case", () => {
     const guidance = getTeachingGuidanceForProcedure(
       powerProcedure,
       "power",
@@ -97,12 +97,24 @@ describe("knowledge source registry", () => {
     );
 
     expect(guidance.map((item) => item.id)).toContain("teach-battery-and-charging-safety");
+    expect(guidance.map((item) => item.id)).not.toContain("teach-case-automation-runway");
     expect(sourceIds).toContain("samsung-battery-care");
-    expect(sourceIds).toContain("make-webhooks");
-    expect(sourceIds).toContain("webhook-best-practices");
+    expect(sourceIds).toContain("watu-sop-pack");
+    expect(sourceIds).not.toContain("make-webhooks");
+    expect(sourceIds).not.toContain("webhook-best-practices");
   });
 
-  it("adds source IDs to future ticket case packets", () => {
+  it("returns iPaaS guidance only when automation is explicitly in scope", () => {
+    const guidance = getTeachingGuidanceForProcedure(
+      powerProcedure,
+      "power",
+      "how should an iPaaS webhook receive the case packet later"
+    );
+
+    expect(guidance.map((item) => item.id)).toContain("teach-case-automation-runway");
+  });
+
+  it("adds source IDs to case handover packets without claiming delivery", () => {
     const casePacket = buildCasePacketFromSession(buildSession());
 
     expect(casePacket.ticketReadiness).toBe("ready_for_ticket_draft");

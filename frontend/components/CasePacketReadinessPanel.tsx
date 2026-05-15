@@ -22,7 +22,7 @@ export function CasePacketReadinessPanel({
   casePacket = null,
   className = "",
   defaultOpen = false,
-  title = "Case packet and iPaaS readiness",
+  title = "Long-term case automation readiness",
 }: CasePacketReadinessPanelProps) {
   const preview = casePacket ? getCasePacketExportPreview(casePacket) : getCasePacketSchemaPreview();
   const readiness = casePacket?.deliveryReadiness || "preview_only_not_sent";
@@ -31,7 +31,7 @@ export function CasePacketReadinessPanel({
     <ControlledDisclosure
       className={`panel case-packet-readiness-panel ${className}`.trim()}
       defaultOpen={defaultOpen}
-      eyebrow="Ticket runway"
+      eyebrow="Long-term automation"
       title={title}
     >
       <div className="case-readiness-summary">
@@ -57,7 +57,7 @@ export function CasePacketReadinessPanel({
         <section className="case-readiness-block">
           <div className="panel-header">
             <span className="eyebrow">Webhook requirements</span>
-            <h4>Required before live ticket creation</h4>
+            <h4>Required before any outbound automation</h4>
           </div>
           <div className="case-requirement-list">
             {CASE_PACKET_WEBHOOK_REQUIREMENTS.map((requirement) => (
@@ -72,7 +72,7 @@ export function CasePacketReadinessPanel({
 
         <section className="case-readiness-block">
           <div className="panel-header">
-            <span className="eyebrow">Candidate iPaaS targets</span>
+            <span className="eyebrow">Long-term iPaaS options</span>
             <h4>Compare without sending data</h4>
           </div>
           <div className="ipaas-profile-list">

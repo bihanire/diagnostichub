@@ -60,7 +60,7 @@ describe("learning quality guidance", () => {
 
     expect(ids).toContain("decision-reset-risk");
     expect(ids).toContain("decision-managed-device");
-    expect(ids).toContain("decision-ticket-readiness");
+    expect(ids).toContain("decision-handover-readiness");
   });
 
   it("flags low-helpfulness and search recovery content health risks", () => {

@@ -181,7 +181,7 @@ export const KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     allowedUsage: "paraphrase_and_link",
     copyrightStatus: "link_only_no_copying",
     teachingSummary:
-      "Fleet telemetry ideas can inform future ticket enrichment, but branch recommendations must remain based on the current case evidence available to the officer.",
+      "Fleet telemetry ideas can inform future case enrichment, but branch recommendations must remain based on the current case evidence available to the officer.",
   },
   {
     id: "power-automate-http-trigger",
@@ -371,31 +371,30 @@ export const TEACHING_GUIDANCE: TeachingGuidance[] = [
     ],
   },
   {
-    id: "teach-ticketing-through-ipaas",
-    title: "Shape every diagnosis so it can become an automation-ready case",
-    families: ["display", "power", "logic", "security", "connectivity", "physical"],
-    procedureCategories: [
-      "Display & Vision",
-      "Power & Thermal",
-      "Logic & Software",
-      "Security & Access",
-      "Connectivity & I/O",
-      "Physical & Liquid",
-      "Operations & Compliance",
-      "Replacements & Transfers",
-      "Returns & Recovery",
+    id: "teach-case-automation-runway",
+    title: "Shape every diagnosis so future automation can read it",
+    families: [],
+    procedureCategories: [],
+    searchSignals: [
+      "ipaas",
+      "automation",
+      "webhook",
+      "case packet",
+      "power automate",
+      "zapier",
+      "make webhook",
+      "make scenario",
     ],
-    searchSignals: ["ticket", "case", "dispatch", "feedback", "handover", "webhook", "automation"],
     priority: "integration",
     teach:
-      "The app is not creating tickets yet, but every completed diagnostic flow should produce a clean case packet that an iPaaS workflow can receive later.",
+      "The app is not sending outbound cases yet, but completed diagnostic flows should stay structured enough for a reviewed iPaaS workflow later.",
     branchSafeChecks: [
       "Keep case fields stable and readable for humans and automation.",
-      "Use signed webhooks, idempotency, retry logging, and dead-letter review when outbound integration starts.",
+      "Use signed webhooks, idempotency, retry logging, and dead-letter review only when outbound integration starts.",
       "Send source IDs and Watu decision outputs, not copied vendor documentation.",
     ],
     doNotPromise: [
-      "Do not claim a ticket was created until a real integration confirms delivery.",
+      "Do not claim any external case was created until a real integration confirms delivery.",
       "Do not send customer-sensitive notes to automation targets without an approved privacy path.",
     ],
     sourceIds: [
@@ -449,12 +448,23 @@ export function getTeachingGuidanceForProcedure(
   });
 
   const selected = ranked.slice(0, 3);
-  if (selected.some((item) => item.id === "teach-ticketing-through-ipaas")) {
+  if (selected.some((item) => item.id === "teach-case-automation-runway")) {
     return selected;
   }
 
-  const integration = TEACHING_GUIDANCE.find((item) => item.id === "teach-ticketing-through-ipaas");
-  return integration ? [...selected.slice(0, 2), integration] : selected;
+  const wantsIntegrationContext = [
+    "ipaas",
+    "automation",
+    "webhook",
+    "case packet",
+    "power automate",
+    "zapier",
+    "make webhook",
+    "make scenario",
+  ].some((signal) => text.includes(signal));
+  const integration = TEACHING_GUIDANCE.find((item) => item.id === "teach-case-automation-runway");
+
+  return wantsIntegrationContext && integration ? [...selected.slice(0, 2), integration] : selected;
 }
 
 export function getKnowledgeSourceIdsForCase(

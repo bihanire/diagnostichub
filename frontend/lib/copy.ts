@@ -37,7 +37,8 @@ export const uiCopy = {
     hero: {
       eyebrow: "Watu Simu",
       title: "Diag & Troubleshooting Hub",
-      description: "Describe the problem or start from the visible issue."
+      description:
+        "Teach the branch-safe Samsung/Watu diagnostic path before deciding warranty, repair, or customer guidance."
     },
     savedProgress: {
       eyebrow: "Saved progress",
@@ -251,9 +252,9 @@ export const uiCopy = {
   insights: {
     hero: {
       eyebrow: "Ops insights",
-      title: "Review branch feedback and spot weak procedures fast.",
+      title: "Review branch learning signals and spot weak procedures fast.",
       description:
-        "Use this internal view to see what branch teams find helpful, where guidance is struggling, and which procedures need sharper wording or cleaner routing next.",
+        "Use this internal view to see what branch teams find helpful, where guidance is struggling, and which procedures need sharper teaching language or cleaner routing next.",
       chips: ["Protected review area", "Feedback-led updates", "Export-ready"],
       sideEyebrow: "At a glance",
       sideDescription:

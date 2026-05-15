@@ -16,7 +16,7 @@ export const CASE_PACKET_WEBHOOK_REQUIREMENTS: CasePacketWebhookRequirement[] = 
   {
     id: "idempotency_key",
     label: "Idempotency key",
-    reason: "Retries must not create duplicate tickets or duplicate branch tasks.",
+    reason: "Retries must not create duplicate case records or duplicate branch tasks.",
     sourceIds: ["webhook-best-practices", "watu-sop-pack"],
   },
   {
@@ -56,7 +56,7 @@ export const IPAAS_CANDIDATE_PROFILES: IpaasCandidateProfile[] = [
     bestFor: "Fast pilot automations that need simple webhook triggers and predictable case fields.",
     cautions: [
       "Avoid sending sensitive notes until privacy routing is approved.",
-      "Use versioned events so future ticket fields do not break existing Zaps.",
+      "Use versioned events so future case fields do not break existing Zaps.",
     ],
     sourceIds: ["zapier-webhooks", "zapier-rest-hooks", "webhook-best-practices"],
   },
