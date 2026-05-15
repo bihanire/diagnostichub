@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { CSSProperties, startTransition, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -51,10 +50,10 @@ const familyNarratives: Record<string, string> = {
 };
 
 function uniqueFlows(flows: FlowEntry[]): FlowEntry[] {
-  const seen = new Set<string>();
+  const seen = new Set<number>();
   const ordered: FlowEntry[] = [];
   for (const flow of flows) {
-    const key = `${flow.procedure.id}-${flow.title.toLowerCase()}`;
+    const key = flow.procedure.id;
     if (seen.has(key)) {
       continue;
     }
@@ -108,22 +107,6 @@ function buildFlowCatalogue(
   return uniqueFlows([...categoryFlows, ...trackFlows, ...procedureFlows]);
 }
 
-function getFamilyImageAlt(family: RepairFamilyDetail): string {
-  return `${family.title} device fault reference image`;
-}
-
-function FamilyImageFallback({ familyId }: { familyId: string }) {
-  const shortcut = getRepairFamilyShortcut(familyId);
-
-  return (
-    <div className="family-landing-image-fallback" aria-hidden="true">
-      <div className="family-landing-fallback-art">
-        {shortcut?.art || getIssueVisualGuide(familyId, familyId).items[0]?.art}
-      </div>
-    </div>
-  );
-}
-
 export default function FamilyLandingPage() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
@@ -131,7 +114,6 @@ export default function FamilyLandingPage() {
   const [family, setFamily] = useState<RepairFamilyDetail | null>(null);
   const [module, setModule] = useState<RepairFamilyLearningModule | null>(null);
   const [loading, setLoading] = useState(true);
-  const [imageFailed, setImageFailed] = useState(false);
   const [query, setQuery] = useState("");
   const [startingId, setStartingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +122,6 @@ export default function FamilyLandingPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    setImageFailed(false);
 
     Promise.all([
       getRepairFamilyDetail(slug),
@@ -178,7 +159,7 @@ export default function FamilyLandingPage() {
 
   const fallbackFamily = BUILT_IN_REPAIR_FAMILIES.find((item) => item.id === slug) || null;
   const flowCatalogue = useMemo(() => (family ? buildFlowCatalogue(family, module) : []), [family, module]);
-  const featuredFlows = flowCatalogue.slice(0, 6);
+  const featuredFlows = flowCatalogue.slice(0, 5);
   const filteredFlows = useMemo(() => {
     const clean = query.trim().toLowerCase();
     if (!clean) {
@@ -188,6 +169,8 @@ export default function FamilyLandingPage() {
       flow.keywords.some((keyword) => keyword.toLowerCase().includes(clean))
     );
   }, [flowCatalogue, query]);
+  const familyArt = getRepairFamilyShortcut(family?.id || slug)?.art || getIssueVisualGuide(slug, slug).items[0]?.art;
+  const routeCountLabel = `${flowCatalogue.length} guided ${flowCatalogue.length === 1 ? "route" : "routes"}`;
 
   async function openFlow(flow: FlowEntry) {
     setStartingId(flow.procedure.id);
@@ -268,7 +251,7 @@ export default function FamilyLandingPage() {
       status={{
         phase: "Family learning",
         family: family.title,
-        procedure: `${flowCatalogue.length} routes`,
+        procedure: routeCountLabel,
         confidence: "Samsung guide",
         readiness: error ? "Attention needed" : "Operational",
       }}
@@ -278,94 +261,117 @@ export default function FamilyLandingPage() {
           <Link className="family-landing-back" href="/">
             Back to hub
           </Link>
-          <span className="family-landing-eyebrow">Device family</span>
+          <span className="family-landing-eyebrow">Family workspace</span>
           <h1>{family.title}</h1>
           <p>{familyNarratives[family.id] || family.diagnostic_goal || family.hint}</p>
         </div>
-        <div className="family-landing-image-shell">
-          {imageFailed ? (
-            <FamilyImageFallback familyId={family.id} />
-          ) : (
-            <Image
-              alt={getFamilyImageAlt(family)}
-              className="family-landing-image"
-              fill
-              onError={() => setImageFailed(true)}
-              priority
-              sizes="(max-width: 900px) 100vw, 42vw"
-              src={`/families/${family.id}.webp`}
-            />
-          )}
+
+        <section className="family-flow-router-panel" aria-labelledby="family-flow-router-title">
+          <div className="family-router-topline">
+            <span className="eyebrow">Step 2</span>
+            <span>{routeCountLabel}</span>
+          </div>
+          <div className="family-router-title-row">
+            <div>
+              <h2 id="family-flow-router-title">Choose the flow</h2>
+              <p>Select the closest route. The next screen opens the guided workspace.</p>
+            </div>
+            <span className="family-router-visual" aria-hidden="true">
+              {familyArt}
+            </span>
+          </div>
+
+          <label className="field-label" htmlFor="family-flow-filter">
+            Filter flows
+          </label>
+          <input
+            id="family-flow-filter"
+            aria-label={`Search flows in ${family.title}`}
+            className="family-flow-router-input"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={`Type symptom or route in ${family.title}`}
+            type="search"
+            value={query}
+          />
+
+          <div className="family-flow-router-list" aria-live="polite">
+            {(query.trim() ? filteredFlows : featuredFlows).length ? (
+              (query.trim() ? filteredFlows : featuredFlows).map((flow, index) => (
+                <button
+                  aria-label={`Start ${flow.title} guided workspace`}
+                  aria-busy={startingId === flow.procedure.id}
+                  className="family-flow-router-item"
+                  disabled={startingId !== null}
+                  key={flow.key}
+                  onClick={() => void openFlow(flow)}
+                  style={{ "--stagger": `${index * 40}ms` } as CSSProperties}
+                  type="button"
+                >
+                  <span className="family-flow-router-number">{index + 1}</span>
+                  <span className="family-flow-router-copy">
+                    <strong>{flow.title}</strong>
+                    <small>{flow.description}</small>
+                  </span>
+                  <span className="family-flow-router-action">
+                    {startingId === flow.procedure.id ? "Opening..." : "Start"}
+                  </span>
+                </button>
+              ))
+            ) : (
+              <div className="family-flow-empty" role="status">
+                No guided flow matches that wording yet. Clear the filter or try another symptom.
+              </div>
+            )}
+          </div>
+        </section>
+      </section>
+
+      {error ? <p className="error-banner" role="alert">{error}</p> : null}
+
+      <section className="family-landing-flows" aria-labelledby="family-flows-title">
+        <div className="family-landing-section-head">
+          <span>All family routes</span>
+          <h2 id="family-flows-title">Review the available guided flows</h2>
         </div>
+        {flowCatalogue.length ? (
+          <div className="family-flow-card-grid">
+            {flowCatalogue.slice(0, 6).map((flow, index) => (
+              <button
+                aria-label={`Open ${flow.title} guided workspace from all routes`}
+                aria-busy={startingId === flow.procedure.id}
+                className="family-flow-card"
+                disabled={startingId !== null}
+                key={flow.key}
+                onClick={() => void openFlow(flow)}
+                style={{ "--stagger": `${index * 60}ms` } as CSSProperties}
+                type="button"
+              >
+                <span className="family-flow-art" aria-hidden="true">
+                  {getIssueVisualGuide(flow.procedure.title, flow.procedure.category).items[0]?.art}
+                </span>
+                <strong>{flow.title}</strong>
+                <span>{flow.description}</span>
+                <em>{startingId === flow.procedure.id ? "Opening..." : "Open guided workspace"}</em>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="family-landing-empty family-landing-empty-inline" role="status">
+            <h3>No guided flows are available for this family yet.</h3>
+            <p>Return to the hub and search by symptom while this family is reviewed.</p>
+          </div>
+        )}
       </section>
 
       <TeachingSourcePanel
-        defaultOpen
         familyId={family.id}
         title={`${family.title} teaching references`}
       />
 
       <LearningQualityPanel
-        defaultOpen
         familyId={family.id}
         title={`${family.title} lesson cards`}
       />
-
-      <section className="family-landing-flows" aria-labelledby="family-flows-title">
-        <div className="family-landing-section-head">
-          <span>Repair categories</span>
-          <h2 id="family-flows-title">Start with the closest flow</h2>
-        </div>
-        <div className="family-flow-card-grid">
-          {featuredFlows.map((flow, index) => (
-            <button
-              className="family-flow-card"
-              key={flow.key}
-              onClick={() => void openFlow(flow)}
-              style={{ "--stagger": `${index * 60}ms` } as CSSProperties}
-              type="button"
-            >
-              <span className="family-flow-art" aria-hidden="true">
-                {getIssueVisualGuide(flow.procedure.title, flow.procedure.category).items[0]?.art}
-              </span>
-              <strong>{flow.title}</strong>
-              <span>{flow.description}</span>
-              <em>{startingId === flow.procedure.id ? "Starting..." : "Start triage"}</em>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="family-flow-search" aria-labelledby="family-search-title">
-        <div className="family-landing-section-head">
-          <span>Family search</span>
-          <h2 id="family-search-title">Find any route in this family</h2>
-        </div>
-        <input
-          aria-label={`Search flows in ${family.title}`}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={`Search flows in ${family.title}...`}
-          type="search"
-          value={query}
-        />
-        <div className="family-flow-results" aria-live="polite">
-          {filteredFlows.length ? (
-            filteredFlows.map((flow) => (
-              <button
-                className="family-flow-result"
-                key={`result-${flow.key}`}
-                onClick={() => void openFlow(flow)}
-                type="button"
-              >
-                <strong>{flow.title}</strong>
-                <span>{flow.description}</span>
-              </button>
-            ))
-          ) : (
-            <p>No family routes match that wording yet.</p>
-          )}
-        </div>
-      </section>
     </ProductRouteShell>
   );
 }

@@ -60,6 +60,20 @@ describe("TopCommandBar dropdown behavior", () => {
     });
   });
 
+  it("frames families as an operational router before flow selection", async () => {
+    const user = userEvent.setup();
+    renderTopbar();
+
+    await user.click(screen.getByRole("button", { name: "Families" }));
+
+    expect(screen.getByLabelText(/family operational router/i)).toBeInTheDocument();
+    expect(screen.getByText(/choose family, then flow/i)).toBeInTheDocument();
+    expect(screen.getByText("1 Family")).toBeInTheDocument();
+    expect(screen.getByText("2 Flow")).toBeInTheDocument();
+    expect(screen.getByText("3 Guided workspace")).toBeInTheDocument();
+    expect(screen.getByText("4 flows")).toBeInTheDocument();
+  });
+
   it("closes open menus on outside click and Escape", async () => {
     const user = userEvent.setup();
     renderTopbar();

@@ -36,6 +36,7 @@ export function TopCommandBar({
   const [familyMenuOpen, setFamilyMenuOpen] = useState(false);
   const [utilityMenuOpen, setUtilityMenuOpen] = useState(false);
   const [familyMenuPosition, setFamilyMenuPosition] = useState<FamilyMenuPosition>({ top: 64, right: 16 });
+  const activeFamily = families.find((family) => family.id === selectedFamilyId) || null;
 
   const filteredFamilies = useMemo(() => {
     const clean = familyFilter.trim().toLowerCase();
@@ -241,48 +242,68 @@ export function TopCommandBar({
             Families
           </button>
           {familyMenuOpen ? (
-          <div className="lm-family-menu-panel" ref={familyPanelRef} style={familyMenuStyle}>
-            <label className="lm-family-filter-label" htmlFor="family-filter">
-              Find family
-            </label>
-            <input
-              className="lm-family-filter-input"
-              id="family-filter"
-              onChange={(event) => setFamilyFilter(event.target.value)}
-              onKeyDown={handleFamilyFilterKeyDown}
-              placeholder="Type display, power, frp, sim..."
-              value={familyFilter}
-            />
-            <div className="lm-family-menu-list" role="listbox">
-              {filteredFamilies.length ? (
-                filteredFamilies.map((family, index) => (
-                  <button
-                    aria-label={`Open ${family.title} diagnosis family`}
-                    className={`lm-family-menu-item ${selectedFamilyId === family.id ? "is-active" : ""} ${
-                      activeFamilyIndex === index ? "is-highlighted" : ""
-                    }`}
-                    key={`family-menu-${family.id}`}
-                    onClick={() => handleSelect(family.id)}
-                    ref={(node) => {
-                      familyItemRefs.current[index] = node;
-                    }}
-                    type="button"
-                  >
-                    <span className="lm-family-menu-glyph" aria-hidden="true">
-                      {family.title.charAt(0)}
-                    </span>
-                    <span className="lm-family-menu-copy">
-                      <strong>{family.title}</strong>
-                      <small>{family.procedure_count} flows</small>
-                      <span>{family.hint}</span>
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div className="lm-family-empty">No families match that filter yet.</div>
-              )}
+            <div
+              aria-label="Family operational router"
+              className="lm-family-menu-panel"
+              ref={familyPanelRef}
+              style={familyMenuStyle}
+            >
+              <div className="lm-family-router-head">
+                <span className="eyebrow">Operational router</span>
+                <strong>Choose family, then flow</strong>
+                <p>Open the right workspace first, then select the exact guided route.</p>
+              </div>
+              <div className="lm-family-router-steps" aria-label="Router steps">
+                <span className="is-current">1 Family</span>
+                <span>2 Flow</span>
+                <span>3 Guided workspace</span>
+              </div>
+              <label className="lm-family-filter-label" htmlFor="family-filter">
+                Find family
+              </label>
+              <input
+                className="lm-family-filter-input"
+                id="family-filter"
+                onChange={(event) => setFamilyFilter(event.target.value)}
+                onKeyDown={handleFamilyFilterKeyDown}
+                placeholder="Display, power, security, SIM..."
+                value={familyFilter}
+              />
+              {activeFamily ? (
+                <p className="lm-family-active-note">
+                  Current family: <strong>{activeFamily.title}</strong>
+                </p>
+              ) : null}
+              <div className="lm-family-menu-list" role="listbox">
+                {filteredFamilies.length ? (
+                  filteredFamilies.map((family, index) => (
+                    <button
+                      aria-label={`Open ${family.title} diagnosis family`}
+                      className={`lm-family-menu-item ${selectedFamilyId === family.id ? "is-active" : ""} ${
+                        activeFamilyIndex === index ? "is-highlighted" : ""
+                      }`}
+                      key={`family-menu-${family.id}`}
+                      onClick={() => handleSelect(family.id)}
+                      ref={(node) => {
+                        familyItemRefs.current[index] = node;
+                      }}
+                      type="button"
+                    >
+                      <span className="lm-family-menu-glyph" aria-hidden="true">
+                        {family.title.charAt(0)}
+                      </span>
+                      <span className="lm-family-menu-copy">
+                        <strong>{family.title}</strong>
+                        <span>{family.hint}</span>
+                      </span>
+                      <span className="lm-family-menu-count">{family.procedure_count} flows</span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="lm-family-empty">No family matches that wording. Try power, display, security, SIM, or liquid.</div>
+                )}
+              </div>
             </div>
-          </div>
           ) : null}
         </div>
 
