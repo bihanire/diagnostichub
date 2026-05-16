@@ -9127,3 +9127,161 @@ body {
     max-width: 8ch;
   }
 }
+
+/* Full-route screenshot audit fixes */
+.hero .eyebrow,
+.hero-status-pill,
+.triage-learning-breadcrumb,
+.triage-hero-note-kicker,
+.triage-hero-note strong,
+.result-hero-brand,
+.result-hero-subbrand,
+.result-learning-breadcrumb,
+.result-hero p,
+.result-hero-footer-item,
+.result-hero-command-label,
+.result-hero-command-title,
+.result-hero-command-item span,
+.result-hero-command-item p,
+.hero-metric strong,
+.hero-metric span {
+  color: #123f3a;
+}
+
+.hero-status-pill,
+.triage-hero-note,
+.result-hero-mark,
+.result-hero-footer-item,
+.result-hero-command-label,
+.hero-metric {
+  border: 1px solid rgba(15, 113, 104, 0.12);
+  background: rgba(239, 249, 245, 0.82);
+}
+
+.result-hero-divider {
+  background: rgba(15, 113, 104, 0.26);
+}
+
+.result-hero-command {
+  border-color: rgba(15, 113, 104, 0.14);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 12px 28px rgba(31, 90, 79, 0.1);
+}
+
+.result-hero-command-item {
+  border-top-color: rgba(15, 113, 104, 0.14);
+}
+
+.stat-card {
+  color: #123f3a;
+}
+
+.stat-card .muted-copy,
+.hero-metric span {
+  color: #536b67;
+}
+
+.focus-bar {
+  border-color: rgba(15, 113, 104, 0.14);
+  background: rgba(239, 249, 245, 0.72);
+}
+
+.focus-eyebrow,
+.lm-context-summary-grid strong {
+  color: #0d8177;
+}
+
+.focus-text,
+.lm-kbd-hints,
+.lm-context-summary-grid span,
+.hero-card .body-copy,
+.hero-card .muted-copy {
+  color: #536b67;
+}
+
+.lm-context-summary-grid span,
+.hero-card {
+  border-color: rgba(15, 113, 104, 0.12);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.lm-active-focus.focus-bar {
+  border-color: rgba(15, 113, 104, 0.14);
+  background: rgba(239, 249, 245, 0.76);
+}
+
+.lm-active-focus .focus-eyebrow {
+  color: #0d8177;
+}
+
+.lm-active-focus .focus-text {
+  color: #536b67;
+}
+
+.section-split,
+.stats-grid,
+.table-wrap,
+.data-table {
+  min-width: 0;
+}
+
+.section-split > *,
+.stats-grid > *,
+.route-shell-page > * {
+  min-width: 0;
+}
+
+@media (max-width: 720px) {
+  .hero .eyebrow,
+  .panel .eyebrow,
+  .result-hero-brand,
+  .result-hero-subbrand,
+  .result-learning-breadcrumb,
+  .triage-learning-breadcrumb,
+  .triage-hero-note-kicker {
+    color: #0d8177;
+    opacity: 1;
+  }
+
+  .hero-split,
+  .section-split,
+  .stats-grid,
+  .result-grid,
+  .result-secondary-grid,
+  .case-packet-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .section-split > .panel,
+  .stats-grid > .stat-card,
+  .panel,
+  .hero {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .hero-metrics {
+    gap: 10px;
+  }
+
+  .hero-metric,
+  .stat-card {
+    min-height: auto;
+  }
+
+  .table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .data-table {
+    min-width: 560px;
+  }
+
+  .result-hero h2,
+  .triage-route .hero h2 {
+    max-width: none;
+  }
+}

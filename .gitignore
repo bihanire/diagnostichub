@@ -11,3 +11,4 @@ runtime-logs/*.log
 frontend/tsconfig.tsbuildinfo
 *.log
 /venv/
+/tmp/
