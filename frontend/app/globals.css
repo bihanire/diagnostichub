@@ -8547,9 +8547,10 @@ body::after,
   overflow: auto;
   border: 1px solid rgba(15, 113, 104, 0.18);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.98);
+  background: linear-gradient(180deg, #ffffff, #f6fffb);
   color: var(--text);
-  box-shadow: 0 26px 64px rgba(21, 69, 61, 0.2);
+  box-shadow: 0 30px 70px rgba(21, 69, 61, 0.24);
+  backdrop-filter: none;
 }
 
 .lm-family-router-head {
@@ -9231,6 +9232,49 @@ body {
   min-width: 0;
 }
 
+.route-shell {
+  position: relative;
+  isolation: isolate;
+  color: #123f3a;
+}
+
+.route-shell::before {
+  content: "";
+  position: absolute;
+  inset: 78px 0 18px;
+  z-index: -1;
+  border: 1px solid rgba(15, 113, 104, 0.08);
+  border-radius: 28px;
+  background:
+    linear-gradient(rgba(15, 156, 143, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 156, 143, 0.025) 1px, transparent 1px),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.42), rgba(228, 246, 240, 0.22));
+  background-size: 38px 38px, 38px 38px, auto;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.64);
+  pointer-events: none;
+}
+
+.route-shell-page {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+}
+
+.route-shell-page > .hero:first-child,
+.route-shell-page > .panel:first-child {
+  margin-top: 0;
+}
+
+.route-shell-page .hero,
+.route-shell-page .panel,
+.route-shell-page .family-flow-router-panel,
+.route-shell-page .result-copy,
+.route-shell-page .stat-card,
+.route-shell-page .muted-card,
+.route-shell-page .visual-guide-panel {
+  backdrop-filter: blur(18px);
+}
+
 @media (max-width: 720px) {
   .hero .eyebrow,
   .panel .eyebrow,
@@ -9278,6 +9322,79 @@ body {
 
   .data-table {
     min-width: 560px;
+  }
+
+  .insights-route .table-wrap {
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .insights-route .data-table,
+  .insights-route .data-table thead,
+  .insights-route .data-table tbody,
+  .insights-route .data-table tr,
+  .insights-route .data-table th,
+  .insights-route .data-table td {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .insights-route .data-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .insights-route .data-table thead {
+    display: none;
+  }
+
+  .insights-route .data-table tbody {
+    display: grid;
+    gap: 10px;
+  }
+
+  .insights-route .data-table tr {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid rgba(15, 113, 104, 0.13);
+    border-radius: 16px;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(242, 251, 248, 0.84));
+    box-shadow: 0 8px 22px rgba(31, 90, 79, 0.08);
+  }
+
+  .insights-route .data-table td {
+    display: grid;
+    grid-template-columns: minmax(94px, 38%) minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 0;
+    border: 0;
+    color: #123f3a;
+    line-height: 1.42;
+    overflow-wrap: anywhere;
+  }
+
+  .insights-route .data-table td::before {
+    content: attr(data-label);
+    color: #0d8177;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .insights-route .data-table td:first-child {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(15, 113, 104, 0.1);
+    font-size: 1rem;
+    font-weight: 820;
   }
 
   .result-hero h2,

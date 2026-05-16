@@ -471,10 +471,10 @@ export default function InsightsPage() {
                 <tbody>
                   {procedureBreakdown.items.map((item) => (
                     <tr key={`${item.procedure_id ?? "unknown"}-${item.procedure_title}`}>
-                      <td>{item.procedure_title}</td>
-                      <td>{item.total_submissions}</td>
-                      <td>{item.helpful_count}</td>
-                      <td>{item.not_helpful_count}</td>
+                      <td data-label="Procedure">{item.procedure_title}</td>
+                      <td data-label="Total">{item.total_submissions}</td>
+                      <td data-label="Helpful">{item.helpful_count}</td>
+                      <td data-label="Needs work">{item.not_helpful_count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -504,10 +504,10 @@ export default function InsightsPage() {
                 <tbody>
                   {branchBreakdown.items.map((item) => (
                     <tr key={item.branch_label}>
-                      <td>{item.branch_label}</td>
-                      <td>{item.total_submissions}</td>
-                      <td>{item.helpful_count}</td>
-                      <td>{item.not_helpful_count}</td>
+                      <td data-label="Branch">{item.branch_label}</td>
+                      <td data-label="Total">{item.total_submissions}</td>
+                      <td data-label="Helpful">{item.helpful_count}</td>
+                      <td data-label="Needs work">{item.not_helpful_count}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -538,10 +538,10 @@ export default function InsightsPage() {
               <tbody>
                 {tagBreakdown.items.map((item) => (
                   <tr key={item.tag}>
-                    <td>{getFeedbackTagLabel(item.tag)}</td>
-                    <td>{item.total_submissions}</td>
-                    <td>{item.helpful_count}</td>
-                    <td>{item.not_helpful_count}</td>
+                    <td data-label="Tag">{getFeedbackTagLabel(item.tag)}</td>
+                    <td data-label="Total">{item.total_submissions}</td>
+                    <td data-label="Helpful">{item.helpful_count}</td>
+                    <td data-label="Needs work">{item.not_helpful_count}</td>
                   </tr>
                 ))}
               </tbody>
@@ -574,12 +574,12 @@ export default function InsightsPage() {
               <tbody>
                 {languageCandidates.items.map((item) => (
                   <tr key={item.normalized_query}>
-                    <td>{item.sample_query}</td>
-                    <td>{item.total_mentions}</td>
-                    <td>{item.helpful_count}</td>
-                    <td>{item.not_helpful_count}</td>
-                    <td>{item.latest_procedure_title || "-"}</td>
-                    <td>
+                    <td data-label={uiCopy.insights.languageSignals.sampleQueryColumn}>{item.sample_query}</td>
+                    <td data-label={uiCopy.insights.languageSignals.mentionsColumn}>{item.total_mentions}</td>
+                    <td data-label={uiCopy.insights.languageSignals.helpfulColumn}>{item.helpful_count}</td>
+                    <td data-label={uiCopy.insights.languageSignals.needsWorkColumn}>{item.not_helpful_count}</td>
+                    <td data-label={uiCopy.insights.languageSignals.latestFlowColumn}>{item.latest_procedure_title || "-"}</td>
+                    <td data-label={uiCopy.insights.languageSignals.latestBranchColumn}>
                       {item.latest_branch_label || uiCopy.insights.languageSignals.unspecifiedBranch}
                     </td>
                   </tr>
