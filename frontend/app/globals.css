@@ -9922,3 +9922,225 @@ body {
     font-size: 32px;
   }
 }
+
+/* Global contrast guardrails. Keep this block last. */
+:root {
+  --text-on-light: #0f172a;
+  --text-on-light-muted: #334155;
+  --text-on-light-subtle: #475569;
+  --accent-on-light: #0f766e;
+  --accent-on-light-strong: #064e3b;
+  --link-on-light: #075985;
+  --border-on-light: rgba(15, 23, 42, 0.16);
+}
+
+.lm-topbar {
+  border-color: var(--border-on-light);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 248, 246, 0.94));
+  color: var(--text-on-light);
+}
+
+.lm-topbar :where(.lm-brand, .lm-command-kbd, .lm-command-kbd-static, .lm-topbar-search, .lm-nav-tab, .lm-ops-link) {
+  border-color: var(--border-on-light);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text-on-light);
+}
+
+.lm-topbar .lm-brand,
+.lm-topbar .lm-brand > span {
+  color: var(--text-on-light) !important;
+}
+
+.lm-topbar :where(.lm-nav-tab:hover, .lm-nav-tab.active, .lm-nav-tab-ops) {
+  border-color: rgba(15, 118, 110, 0.3);
+  background: rgba(15, 118, 110, 0.1);
+  color: var(--accent-on-light-strong);
+}
+
+.lm-topbar :where(svg, path, circle) {
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.lm-topbar-search::placeholder {
+  color: var(--text-on-light-subtle);
+  opacity: 1;
+}
+
+:where(
+  .panel,
+  .hero,
+  .hero-search-shell,
+  .result-hero-command,
+  .family-flow-card,
+  .family-flow-result,
+  .stat-card,
+  .info-card,
+  .visual-card,
+  .muted-card,
+  .result-copy,
+  .family-flow-router-panel,
+  .family-landing-hero,
+  .family-landing-empty,
+  .family-landing-loading,
+  .table-wrap,
+  .data-table,
+  .data-table tr,
+  .data-table th,
+  .data-table td,
+  .teaching-source-panel,
+  .teaching-source-card,
+  .learning-quality-panel,
+  .learning-card,
+  .decision-note-card,
+  .content-health-card,
+  .case-packet-readiness-panel,
+  .case-readiness-summary span,
+  .case-requirement-card,
+  .ipaas-profile-card,
+  .case-json-preview,
+  .diagnostics-kv-grid > div,
+  .diagnostics-config-row,
+  .lm-family-menu-panel,
+  .lm-utility-panel,
+  .route-command-panel,
+  .lm-family-menu-item,
+  .lm-palette-item,
+  .lm-palette-suggestion,
+  .ops-note-card
+) {
+  color: var(--text-on-light);
+}
+
+:where(
+  .panel,
+  .hero,
+  .family-flow-card,
+  .family-flow-result,
+  .stat-card,
+  .info-card,
+  .visual-card,
+  .muted-card,
+  .result-copy,
+  .family-flow-router-panel,
+  .family-landing-hero,
+  .table-wrap,
+  .teaching-source-panel,
+  .teaching-source-card,
+  .learning-quality-panel,
+  .learning-card,
+  .decision-note-card,
+  .content-health-card,
+  .case-packet-readiness-panel,
+  .case-readiness-summary span,
+  .case-requirement-card,
+  .ipaas-profile-card,
+  .diagnostics-kv-grid > div,
+  .diagnostics-config-row,
+  .lm-family-menu-panel,
+  .lm-utility-panel,
+  .route-command-panel,
+  .lm-family-menu-item,
+  .lm-palette-item,
+  .lm-palette-suggestion
+) :where(h1, h2, h3, h4, h5, h6, strong, b, th, dt, legend, .panel-header h3, .family-router-title-row h2) {
+  color: var(--text-on-light);
+}
+
+:where(
+  .panel,
+  .hero,
+  .family-flow-card,
+  .family-flow-result,
+  .stat-card,
+  .info-card,
+  .visual-card,
+  .muted-card,
+  .result-copy,
+  .family-flow-router-panel,
+  .family-landing-hero,
+  .table-wrap,
+  .teaching-source-panel,
+  .teaching-source-card,
+  .learning-quality-panel,
+  .learning-card,
+  .decision-note-card,
+  .content-health-card,
+  .case-packet-readiness-panel,
+  .case-readiness-summary span,
+  .case-requirement-card,
+  .ipaas-profile-card,
+  .diagnostics-kv-grid > div,
+  .diagnostics-config-row,
+  .lm-family-menu-panel,
+  .lm-utility-panel,
+  .route-command-panel,
+  .lm-family-menu-item,
+  .lm-palette-item,
+  .lm-palette-suggestion
+) :where(p, span, small, li, dd, label, td, caption, .body-copy, .muted-copy) {
+  color: var(--text-on-light-muted);
+}
+
+:where(
+  .panel,
+  .hero,
+  .family-flow-card,
+  .family-flow-result,
+  .stat-card,
+  .info-card,
+  .visual-card,
+  .muted-card,
+  .result-copy,
+  .family-flow-router-panel,
+  .family-landing-hero,
+  .teaching-source-panel,
+  .teaching-source-card,
+  .learning-quality-panel,
+  .learning-card,
+  .decision-note-card,
+  .content-health-card,
+  .case-packet-readiness-panel,
+  .case-requirement-card,
+  .ipaas-profile-card,
+  .diagnostics-kv-grid > div,
+  .diagnostics-config-row,
+  .lm-family-menu-panel,
+  .lm-utility-panel,
+  .route-command-panel
+) :where(.eyebrow, .chip, .quick-pill, .badge, .status-badge, .source-chip, a:not(.primary-button)) {
+  color: var(--accent-on-light);
+}
+
+:where(.primary-button, .primary-button *, .run-btn, .run-btn *) {
+  color: var(--bg);
+}
+
+:where(.secondary-button, .secondary-button *, .inline-action, .inline-action *) {
+  color: var(--text-on-light);
+}
+
+:where(.case-json-preview pre, .startup-gate, .startup-gate *) {
+  color: var(--text-primary);
+}
+
+:where(.case-json-preview pre) {
+  background: #0f172a;
+}
+
+.lm-shell-gateway :where(.lm-workspace-head h1, .diag-panel, .diag-panel span, .diag-textarea, .run-btn-tooltip) {
+  color: var(--text-primary);
+}
+
+.lm-shell-gateway :where(.lm-workspace-head p, .diag-idle-zone p) {
+  color: var(--text-muted);
+}
+
+.lm-shell-gateway :where(.lm-topbar, .lm-topbar *, .lm-family-menu-panel, .lm-family-menu-panel *, .lm-utility-panel, .lm-utility-panel *) {
+  color: var(--text-on-light);
+}
+
+.lm-shell-gateway :where(.run-btn, .run-btn *) {
+  color: var(--bg);
+}
