@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePathname } from "next/navigation";
 
 import {
   HandshakeFailureReason,
@@ -33,7 +34,9 @@ function reasonLabel(reason: HandshakeFailureReason): string {
 }
 
 export function StartupHandshakeGate({ children }: { children: React.ReactNode }) {
-  const enabled = isBootHandshakeEnabled();
+  const pathname = usePathname();
+  const diagnosticsRoute = pathname === "/ops/diagnostics";
+  const enabled = isBootHandshakeEnabled() && !diagnosticsRoute;
   const timeoutMs = getBootHandshakeTimeoutMs();
   const [state, setState] = useState<GateState>(() =>
     enabled ? { phase: "loading", startedAt: Date.now() } : { phase: "ready" }
@@ -99,7 +102,7 @@ export function StartupHandshakeGate({ children }: { children: React.ReactNode }
     return "Checking backend readiness before loading the workspace.";
   }, [state, takingLong]);
 
-  if (state.phase === "ready") {
+  if (diagnosticsRoute || state.phase === "ready") {
     return <>{children}</>;
   }
 

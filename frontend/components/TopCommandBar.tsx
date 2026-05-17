@@ -376,6 +376,9 @@ export function TopCommandBar({
             <button onClick={handleOpenCommandPalette} role="menuitem" type="button">
               Open command palette
             </button>
+            <Link href="/ops/diagnostics" onClick={closeMenus} role="menuitem">
+              Deployment diagnostics
+            </Link>
           </div>
           ) : null}
         </div>

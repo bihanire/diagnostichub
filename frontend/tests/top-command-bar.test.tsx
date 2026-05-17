@@ -87,6 +87,10 @@ describe("TopCommandBar dropdown behavior", () => {
 
     await user.click(screen.getByRole("button", { name: "Utilities" }));
     expect(screen.getByRole("menu")).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /deployment diagnostics/i })).toHaveAttribute(
+      "href",
+      "/ops/diagnostics"
+    );
     await user.keyboard("{Escape}");
     await waitFor(() => {
       expect(screen.queryByRole("menu")).not.toBeInTheDocument();
