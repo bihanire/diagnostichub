@@ -3,7 +3,6 @@
 import { ReactNode, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { StatusStrip } from "@/components/StatusStrip";
 import { TopCommandBar } from "@/components/TopCommandBar";
 import { BUILT_IN_REPAIR_FAMILIES } from "@/lib/repair-families";
 import { RepairFamilySummary } from "@/lib/types";
@@ -88,15 +87,6 @@ export function ProductRouteShell({
 
       <div className="route-shell-page">{children}</div>
 
-      <footer className="lm-status-wrap route-shell-status">
-        <StatusStrip
-          phase={status.phase}
-          family={status.family || "Not selected"}
-          procedure={status.procedure || "Not selected"}
-          confidence={status.confidence || "Contextual"}
-          readiness={status.readiness || "Operational"}
-        />
-      </footer>
     </main>
   );
 }

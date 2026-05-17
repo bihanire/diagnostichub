@@ -5,12 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { AIDiagnosticWorkspace } from "@/components/AIDiagnosticWorkspace";
 import { AppShell } from "@/components/AppShell";
-import { ContextIntelligencePanel } from "@/components/ContextIntelligencePanel";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { FamilyExplorer } from "@/components/FamilyExplorer";
 import { FamilyFlowSelector } from "@/components/FamilyFlowSelector";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
-import { StatusStrip } from "@/components/StatusStrip";
 import { TopCommandBar } from "@/components/TopCommandBar";
 import {
   ApiError,
@@ -192,8 +190,7 @@ function FamilyIntentSync({ onIntent }: { onIntent: (familyId: string | null) =>
 
 export default function HomePage() {
   const router = useRouter();
-  const [moduleMode, setModuleMode] = useState("diagnostic");
-  const [outputMode, setOutputMode] = useState<SearchOutputMode>("issue_interpretation");
+  const outputMode: SearchOutputMode = "issue_interpretation";
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [backendHealth, setBackendHealth] = useState<BackendHealthState>("ok");
   const [familyPickerSignal, setFamilyPickerSignal] = useState(0);
@@ -294,40 +291,7 @@ export default function HomePage() {
     quickDrillFamily?.id || activeFamily?.id || familyLoadingId || familyIntentId || null;
   const selectedFamily =
     (selectedFamilyId ? families.find((item) => item.id === selectedFamilyId) : null) || null;
-  const activeProcedureTitle =
-    searchResult?.best_match?.title ||
-    resumeSession?.procedure.title ||
-    quickDrillPrimaryProcedure?.title ||
-    "Not selected";
   const commandPaletteBestMatch = searchResult?.best_match || null;
-  const riskFlags = [
-    ...(activeFamily?.escalation_signals || []),
-    ...(quickDrillDetail?.escalation_signals || []),
-  ].filter((item, index, allItems) => allItems.indexOf(item) === index);
-  const eligibilityChecks = [
-    ...(activeFamily?.branch_checks || []),
-    ...(quickDrillDetail?.branch_checks || []),
-  ].filter((item, index, allItems) => allItems.indexOf(item) === index);
-  const contextAlternatives = searchResult?.alternatives || [];
-  const contextRelated = searchResult?.related || [];
-  const phaseLabel = searching
-    ? "Issue interpretation"
-    : searchResult
-      ? "Action planning"
-      : activeFamily || quickDrillFamily
-        ? "Learning path"
-        : "Case intake";
-  const learningPhase = searching
-    ? "interpretation"
-    : searchResult
-      ? "action"
-      : activeFamily || quickDrillFamily
-        ? "related"
-        : "intake";
-  const confidenceLabel = searchResult
-    ? `${Math.round(searchResult.confidence * 100)}% (${searchResult.confidence_state})`
-    : "Awaiting query";
-  const readinessLabel = error ? "Attention needed" : "Operational";
   const hasDeepWorkspace = Boolean(searching || searchResult || activeFamily || resumeSession || quickDrillActive);
   const isGatewayState = !hasDeepWorkspace;
 
@@ -1461,7 +1425,6 @@ export default function HomePage() {
               description={uiCopy.home.hero.description}
               hasRunError={Boolean(error)}
               inputRef={searchInputRef}
-              moduleMode={moduleMode}
               onClearFamily={clearSelectedFamily}
               onBlur={() => {
                 if (assistBlurTimeoutRef.current !== null) {
@@ -1481,31 +1444,15 @@ export default function HomePage() {
               }}
               onHoverSuggestion={setActiveSuggestionIndex}
               onKeyDown={handleSearchInputKeyDown}
-              onPromptClick={(value) => {
-                setQuery(value);
-                void runSearch(value);
-              }}
-              onOutputModeChange={setOutputMode}
               onOpenFamilyPicker={openFamilyPicker}
               onQueryChange={(value) => {
                 setQuery(value);
                 setSearchAssistOpen(Boolean(value.trim()));
               }}
-              onRun={() => {
-                void runSearch(query);
-              }}
-              learningPhase={learningPhase}
               onSelectSuggestion={(suggestion) => {
                 void applySuggestion(suggestion);
               }}
               onSubmit={handleSubmit}
-              promptChips={[
-                "The phone overheats during charging",
-                "Guide me step-by-step for a black screen",
-                "Check eligibility for replacement",
-                "Show related procedures for FRP lock",
-                "Convert this issue into branch actions",
-              ]}
               query={query}
               runSuccessKey={searchResultKey}
               searchAssistLoading={searchAssistLoading}
@@ -1514,7 +1461,6 @@ export default function HomePage() {
               suggestions={searchSuggestions}
               title={uiCopy.home.hero.title}
               isGateway={isGatewayState}
-              outputMode={outputMode}
             />
 
             {activeFamily ? (
@@ -1669,39 +1615,10 @@ export default function HomePage() {
                     </button>
                   </div>
                 </section>
-              ) : (
-                <section className="panel panel-compact">
-                  <p className="body-copy">
-                    Customer issue - interpretation - diagnostic path - SOP action - related procedures.
-                  </p>
-                </section>
-              )}
+              ) : null}
               </section>
             )}
           </section>
-        }
-        contextPanel={
-          isGatewayState ? null : (
-            <ContextIntelligencePanel
-              alternatives={contextAlternatives}
-              eligibilityChecks={eligibilityChecks}
-              onSelectProcedure={(procedure) => {
-                closeReviewGate();
-                void openFlow(procedure, searchResult?.query || procedure.title);
-              }}
-              related={contextRelated}
-              riskFlags={riskFlags}
-            />
-          )
-        }
-        statusStrip={
-          <StatusStrip
-            confidence={confidenceLabel}
-            family={selectedFamily?.title || "Not selected"}
-            phase={phaseLabel}
-            procedure={activeProcedureTitle === "Not selected" ? activeProcedureTitle : `Flow: ${activeProcedureTitle}`}
-            readiness={readinessLabel}
-          />
         }
       />
 
@@ -1773,8 +1690,8 @@ export default function HomePage() {
               <button
                 className="lm-palette-item"
                 onClick={() => {
-                  setModuleMode("guided");
                   setCommandPaletteOpen(false);
+                  window.setTimeout(() => searchInputRef.current?.focus(), 0);
                 }}
                 type="button"
               >
@@ -1783,8 +1700,8 @@ export default function HomePage() {
               <button
                 className="lm-palette-item"
                 onClick={() => {
-                  setModuleMode("explain");
                   setCommandPaletteOpen(false);
+                  window.setTimeout(() => searchInputRef.current?.focus(), 0);
                 }}
                 type="button"
               >

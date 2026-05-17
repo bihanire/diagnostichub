@@ -6348,23 +6348,6 @@ body {
   color: #6ee7a8;
 }
 
-.diag-convert-link {
-  font-size: 10px;
-  color: rgba(52, 211, 130, 0.45);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border: 1px solid rgba(52, 211, 130, 0.15);
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.diag-convert-link:hover {
-  color: rgba(52, 211, 130, 0.8);
-  border-color: rgba(52, 211, 130, 0.3);
-  background: rgba(52, 211, 130, 0.05);
-}
-
 .lm-mini-chip-row {
   display: flex;
   gap: 6px;
@@ -7029,53 +7012,11 @@ body {
   font-size: 12px;
 }
 
-.diag-convert-link {
-  font-size: 10px;
-  color: rgba(52, 211, 130, 0.4);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 4px 9px;
-  border: 1px solid rgba(52, 211, 130, 0.13);
-  border-radius: 5px;
-}
-
-.diag-convert-link:hover {
-  color: rgba(52, 211, 130, 0.75);
-  border-color: rgba(52, 211, 130, 0.28);
-  background: rgba(52, 211, 130, 0.04);
-}
-
 .lm-mini-chip-row {
   display: flex;
   gap: 6px;
   padding: 10px 16px;
   overflow-x: auto;
-}
-
-.output-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: 16px;
-  font-size: 11px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(255, 255, 255, 0.025);
-  color: rgba(255, 255, 255, 0.38);
-  cursor: pointer;
-  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.output-chip:hover {
-  border-color: rgba(52, 211, 130, 0.18);
-  color: rgba(255, 255, 255, 0.65);
-  background: rgba(52, 211, 130, 0.04);
-}
-
-.output-chip.selected {
-  border-color: rgba(52, 211, 130, 0.3);
-  background: rgba(52, 211, 130, 0.07);
-  color: #6ee7a8;
 }
 
 .diag-textarea {
@@ -7328,7 +7269,6 @@ body {
 .lm-utility-menu > summary,
 .lm-nav-tab,
 .lm-chip,
-.output-chip,
 .quick-pill,
 .primary-button,
 .secondary-button,
@@ -9626,4 +9566,359 @@ body {
 .run-btn {
   background: var(--accent);
   color: var(--bg);
+}
+
+.lm-shell,
+.lm-shell-gateway,
+.lm-shell-workspace {
+  min-height: 100svh;
+  padding: 0 24px 48px;
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+.lm-topbar-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  width: 100%;
+  min-height: 56px;
+  padding: 8px 0;
+  background: var(--bg);
+}
+
+.lm-topbar {
+  min-height: 56px;
+}
+
+.lm-main-grid,
+.lm-shell-gateway .lm-main-grid,
+.lm-shell-workspace .lm-main-grid {
+  display: block !important;
+  width: 100% !important;
+  max-width: 860px !important;
+  min-width: 0;
+  margin: 0 auto !important;
+  padding: 64px 0 0 !important;
+  overflow: visible !important;
+}
+
+.lm-workspace-wrap,
+.lm-shell-gateway .lm-workspace-wrap,
+.lm-shell-workspace .lm-workspace-wrap {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lm-context-wrap,
+.lm-status-wrap,
+.route-shell-status {
+  display: none !important;
+}
+
+.lm-workspace,
+.lm-shell-gateway .lm-workspace,
+.lm-shell-workspace .lm-workspace {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.lm-workspace-head,
+.lm-shell-gateway .lm-workspace-head,
+.lm-shell-workspace .lm-workspace-head,
+.hero {
+  height: auto !important;
+  min-height: 0;
+  padding: 0;
+  overflow: visible !important;
+}
+
+.lm-workspace-head h1,
+.lm-shell-gateway .lm-workspace-head h1 {
+  margin: 0 0 8px;
+  overflow: visible;
+  color: var(--text-primary);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+
+.lm-workspace-head p,
+.lm-shell-gateway .lm-workspace-head p {
+  max-width: 720px;
+  margin: 0 0 20px;
+  overflow: visible;
+  color: var(--text-muted);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.focus-bar,
+.lm-shell-gateway .focus-bar,
+.lm-shell-workspace .focus-bar {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  height: 40px;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.focus-eyebrow {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.focus-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--text-subtle);
+  box-shadow: none;
+}
+
+.focus-dot-success {
+  background: var(--accent);
+}
+
+.focus-dot-warn {
+  background: var(--warn);
+}
+
+.focus-dot-danger {
+  background: var(--danger);
+}
+
+.focus-family-chip {
+  margin-left: auto;
+}
+
+.backend-health-banner {
+  margin: -4px 0 18px;
+}
+
+.diag-panel,
+.lm-diagnosis-form {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.lm-diagnosis-form::before,
+.lm-diagnosis-form::after,
+.lm-diagnosis-form *::before,
+.lm-diagnosis-form *::after {
+  content: none !important;
+  display: none !important;
+}
+
+.lm-diagnosis-input-wrap {
+  width: 100%;
+}
+
+.diag-textarea,
+.lm-diagnosis-input,
+.lm-shell-gateway .diag-textarea,
+.lm-shell-workspace .diag-textarea {
+  width: 100%;
+  min-height: 120px;
+  max-height: 280px;
+  padding: 18px 42px 24px 18px;
+  resize: none;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.diag-idle-zone {
+  display: grid;
+  height: 180px;
+  place-items: center;
+  gap: 8px;
+  padding: 16px 0 14px;
+  background: transparent;
+}
+
+.lm-diagnosis-form.has-input .diag-idle-zone {
+  display: none;
+}
+
+.diag-idle-zone p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.diag-idle-illustration {
+  width: 180px;
+  height: 120px;
+  border-radius: 20px;
+  background:
+    linear-gradient(var(--accent), var(--accent)) 37px 68px / 106px 2px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 42px 42px / 14px 28px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 72px 28px / 14px 56px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 102px 38px / 14px 36px no-repeat,
+    linear-gradient(var(--accent), var(--accent)) 132px 46px / 14px 20px no-repeat;
+  filter: drop-shadow(0 0 14px rgba(0, 200, 150, 0.2));
+  opacity: 0.78;
+  animation: signalPulse 1.8s ease-in-out infinite;
+}
+
+.lm-action-bar {
+  width: 100%;
+  margin-top: 0;
+}
+
+.run-btn,
+.lm-run-btn,
+.primary-button.run-btn {
+  position: relative;
+  display: inline-flex !important;
+  width: 100%;
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.run-btn-tooltip {
+  position: absolute;
+  right: 50%;
+  bottom: calc(100% + 10px);
+  pointer-events: none;
+  transform: translateX(50%) translateY(4px);
+  opacity: 0;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.run-btn:hover .run-btn-tooltip,
+.run-btn:focus-visible .run-btn-tooltip {
+  opacity: 1;
+  transform: translateX(50%) translateY(0);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.run-btn-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.run-btn-loading .run-btn-icon {
+  animation: runIconTilt 700ms ease-in-out infinite alternate;
+}
+
+.run-btn::before,
+.run-btn::after,
+.lm-run-btn::before,
+.lm-run-btn::after {
+  display: none !important;
+}
+
+@keyframes signalPulse {
+  0%,
+  100% {
+    opacity: 0.58;
+    transform: translateY(2px);
+  }
+  50% {
+    opacity: 0.92;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes runIconTilt {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+@media (max-width: 720px) {
+  .lm-shell,
+  .lm-shell-gateway,
+  .lm-shell-workspace {
+    padding-inline: 14px;
+  }
+
+  .lm-main-grid,
+  .lm-shell-gateway .lm-main-grid,
+  .lm-shell-workspace .lm-main-grid {
+    padding-top: 36px !important;
+  }
+
+  .lm-workspace-head h1,
+  .lm-shell-gateway .lm-workspace-head h1 {
+    font-size: 32px;
+  }
 }
