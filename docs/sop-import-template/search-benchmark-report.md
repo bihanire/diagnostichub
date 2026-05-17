@@ -16,11 +16,11 @@
 | yellow light on screen | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.93 | 0.55 | Pass |
 | lines in screen and touch not working | 2 Screen Issue | 2 Screen Issue | 1 Phone Not Powering On | Display & Vision | 0.95 | 0.54 | Pass |
 | the screen is yellow and touch is not working | 2 Screen Issue | 2 Screen Issue | 9 SIM or Network Issue | Display & Vision | 0.76 | 0.26 | Pass |
-| green line on samsung screen after update | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.98 | 0.58 | Pass |
+| green line on phone screen after update | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.98 | 0.58 | Pass |
 | screen protector lifting and touch pressing itself | 2 Screen Issue | 2 Screen Issue | 8 Random Restart or Safe Mode Issue | Display & Vision | 0.81 | 0.58 | Pass |
 | my phone was snatched | 3 Stolen Phone | 3 Stolen Phone | 12 Liquid or Physical Damage | Security & Access | 0.72 | 0.29 | Pass |
 | need track stolen device | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.73 | 0.31 | Pass |
-| samsung find lock a lost phone | 3 Stolen Phone | 3 Stolen Phone | 11 FRP, Password, or Locked Device | Security & Access | 0.76 | 0.22 | Pass |
+| device finding lock a lost phone | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.87 | 0.44 | Pass |
 | charger connected but battery stays same | 4 Charging Issue | 4 Charging Issue | 1 Phone Not Powering On | Power & Thermal | 0.74 | 0.20 | Pass |
 | phone charges only when cable bent | 4 Charging Issue | 4 Charging Issue | 5 Overheating or Swollen Battery | Power & Thermal | 0.92 | 0.41 | Pass |
 | the phone is not charging when i insert a charger | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.94 | 0.38 | Pass |
@@ -31,7 +31,7 @@
 | battery drains fast even when idle | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.79 | 0.09 | Pass |
 | full charge finishes quickly | 6 Battery Draining Fast | 6 Battery Draining Fast | 4 Charging Issue | Power & Thermal | 0.82 | 0.29 | Pass |
 | the battery drains very fast even when the phone is idle | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.76 | 0.16 | Pass |
-| samsung members says battery weak | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.81 | 0.26 | Pass |
+| built-in support says battery weak | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.75 | 0.21 | Pass |
 | phone freezing and apps hanging | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 8 Random Restart or Safe Mode Issue | Logic & Software | 0.91 | 0.57 | Pass |
 | one app keeps crashing and phone hangs | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 4 Charging Issue | Logic & Software | 0.78 | 0.41 | Pass |
 | the phone keeps freezing whenever i open apps | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 1 Phone Not Powering On | Logic & Software | 0.63 | 0.38 | Pass |
@@ -63,15 +63,15 @@
 | refund request for returned phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 14 Replacement Request Eligibility | Returns & Recovery | 0.95 | 0.51 | Pass |
 | third party recovery reward for recovered device | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 11 FRP, Password, or Locked Device | Returns & Recovery | 0.98 | 0.69 | Pass |
 | the client wants a refund after returning the phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 3 Stolen Phone | Returns & Recovery | 0.68 | 0.44 | Pass |
-| my samsung galaxy is not charging even with the samsung charger | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.88 | 0.34 | Pass |
-| the galaxy phone keeps freezing and samsung members diagnostics points to apps | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 1 Phone Not Powering On | Logic & Software | 0.50 | 0.30 | Pass |
-| find my mobile says my samsung was stolen | 3 Stolen Phone | 3 Stolen Phone | 12 Liquid or Physical Damage | Security & Access | 0.84 | 0.40 | Pass |
+| my galaxy phone is not charging even with the approved charger | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.76 | 0.27 | Pass |
+| the galaxy phone keeps freezing and built-in support diagnostics points to apps | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 1 Phone Not Powering On | Logic & Software | 0.47 | 0.25 | Pass |
+| find my mobile says my phone was stolen | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.89 | 0.45 | Pass |
 | maintenance mode before sending this galaxy for repair | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 14 Replacement Request Eligibility | Operations & Compliance | 0.64 | 0.26 | Pass |
-| callers cannot hear me on my samsung and samsung members says mic test failed | 10 Speaker, Microphone, or Audio Issue | 10 Speaker, Microphone, or Audio Issue | 9 SIM or Network Issue | Connectivity & I/O | 0.62 | 0.29 | Pass |
+| callers cannot hear me on my phone and built-in support says mic test failed | 10 Speaker, Microphone, or Audio Issue | 10 Speaker, Microphone, or Audio Issue | 9 SIM or Network Issue | Connectivity & I/O | 0.60 | 0.27 | Pass |
 | my galaxy is stuck in safe mode after restart | 8 Random Restart or Safe Mode Issue | 8 Random Restart or Safe Mode Issue | 7 Freezing, Hanging, or App Issue | Logic & Software | 0.95 | 0.45 | Pass |
-| the galaxy sim card is not detected and samsung members network check fails | 9 SIM or Network Issue | 9 SIM or Network Issue | 10 Speaker, Microphone, or Audio Issue | Connectivity & I/O | 0.79 | 0.38 | Pass |
-| device care shows the samsung battery is draining too fast | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.82 | 0.08 | Pass |
-| the phone shows the samsung logo and refuses to start | 1 Phone Not Powering On | 1 Phone Not Powering On | 4 Charging Issue | Power & Thermal | 0.80 | 0.25 | Pass |
+| the galaxy sim card is not detected and built-in support network check fails | 9 SIM or Network Issue | 9 SIM or Network Issue | 4 Charging Issue | Connectivity & I/O | 0.76 | 0.35 | Pass |
+| device care shows the phone battery is draining too fast | 6 Battery Draining Fast | 6 Battery Draining Fast | 5 Overheating or Swollen Battery | Power & Thermal | 0.83 | 0.09 | Pass |
+| the phone shows the boot logo and refuses to start | 1 Phone Not Powering On | 1 Phone Not Powering On | 4 Charging Issue | Power & Thermal | 0.80 | 0.25 | Pass |
 | it switched off and now only vibrates when i hold power | 1 Phone Not Powering On | 1 Phone Not Powering On | 4 Charging Issue | Power & Thermal | 0.81 | 0.35 | Pass |
 | battery percentage goes down even while the charger is in | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.99 | 0.26 | Pass |
 | moisture warning keeps appearing when i try to charge | 4 Charging Issue | 4 Charging Issue | 5 Overheating or Swollen Battery | Power & Thermal | 0.85 | 0.25 | Pass |

@@ -25,7 +25,7 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
       "A display that fails after an update can still need inspection when visible panel symptoms persist.",
     ],
     localPhrases: ["green line", "yellow screen", "half display", "touch pressing itself"],
-    sourceIds: ["samsung-screen-flicker", "samsung-members-diagnostics", "watu-sop-pack"],
+    sourceIds: ["device-screen-flicker", "device-members-diagnostics", "watu-sop-pack"],
   },
   {
     id: "lesson-power-safety-first",
@@ -44,10 +44,10 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
     ],
     localPhrases: ["dead set", "not coming on", "charger bent", "battery finishes quickly"],
     sourceIds: [
-      "samsung-battery-care",
-      "samsung-device-care",
-      "samsung-moisture-port",
-      "samsung-members-diagnostics",
+      "device-battery-care",
+      "device-device-care",
+      "device-moisture-port",
+      "device-members-diagnostics",
       "watu-sop-pack",
     ],
   },
@@ -66,8 +66,8 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
       "Safe Mode entry, update availability, and reset wording vary by device generation and carrier build.",
       "Factory reset belongs behind ownership and data-loss checks.",
     ],
-    localPhrases: ["hanging", "freezing", "safe mode keeps coming", "stuck on Samsung logo"],
-    sourceIds: ["samsung-safe-mode", "samsung-software-update", "samsung-factory-reset", "watu-sop-pack"],
+    localPhrases: ["hanging", "freezing", "safe mode keeps coming", "stuck on boot logo"],
+    sourceIds: ["device-safe-mode", "device-software-update", "device-factory-reset", "watu-sop-pack"],
   },
   {
     id: "lesson-security-ownership-first",
@@ -86,8 +86,8 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
     ],
     localPhrases: ["phone was snatched", "forgot pattern", "Google lock", "shell managed"],
     sourceIds: [
-      "samsung-smartthings-find",
-      "samsung-factory-reset",
+      "device-smartthings-find",
+      "device-factory-reset",
       "knox-android-enterprise",
       "knox-guard-lock-unlock",
       "watu-sop-pack",
@@ -109,7 +109,7 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
       "A network outage should not be handled like a board-level repair symptom.",
     ],
     localPhrases: ["not reading SIM", "no service", "mouthpiece not working", "callers cannot hear me"],
-    sourceIds: ["samsung-members-diagnostics", "watu-sop-pack"],
+    sourceIds: ["device-members-diagnostics", "watu-sop-pack"],
   },
   {
     id: "lesson-physical-evidence-decides-path",
@@ -127,7 +127,7 @@ export const FAMILY_LESSON_CARDS: FamilyLessonCard[] = [
       "Visible damage can change warranty handling even when a software symptom is also present.",
     ],
     localPhrases: ["fell in water", "sim tray broken", "frame bent", "back cover lifting"],
-    sourceIds: ["samsung-moisture-port", "samsung-battery-care", "watu-sop-pack"],
+    sourceIds: ["device-moisture-port", "device-battery-care", "watu-sop-pack"],
   },
 ];
 
@@ -141,7 +141,7 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
       "Visible condition often decides whether the branch can continue a simple check or must capture evidence for inspection and warranty direction.",
     officerPrompt: "What can you see on the device before you touch the software path?",
     escalationRisk: "Skipping evidence can lead to a weak repair handover or wrong warranty expectation.",
-    sourceIds: ["samsung-screen-flicker", "samsung-moisture-port", "watu-sop-pack"],
+    sourceIds: ["device-screen-flicker", "device-moisture-port", "watu-sop-pack"],
   },
   {
     id: "decision-battery-risk",
@@ -152,7 +152,7 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
       "Heat, swelling, burnt smell, and moisture warnings are safety signals. They should narrow the path before repeated charger or reboot checks.",
     officerPrompt: "Is there any sign that continuing to charge or power the device could be unsafe?",
     escalationRisk: "Unsafe checks can damage the device further and put the customer or officer at risk.",
-    sourceIds: ["samsung-battery-care", "samsung-moisture-port", "watu-sop-pack"],
+    sourceIds: ["device-battery-care", "device-moisture-port", "watu-sop-pack"],
   },
   {
     id: "decision-reset-risk",
@@ -163,7 +163,7 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
       "Reset language can create data-loss and account-lock risk. It must stay behind ownership, backup, and guided decision checks.",
     officerPrompt: "Have ownership, backup risk, and account-lock implications been made clear?",
     escalationRisk: "Premature reset advice can lock the customer out or erase important data.",
-    sourceIds: ["samsung-factory-reset", "knox-android-enterprise", "watu-sop-pack"],
+    sourceIds: ["device-factory-reset", "knox-android-enterprise", "watu-sop-pack"],
   },
   {
     id: "decision-managed-device",
@@ -195,7 +195,7 @@ export const DECISION_TEACHING_NOTES: DecisionTeachingNote[] = [
       "The finished diagnosis should preserve enough structured evidence for another officer, reviewer, or future automation path to understand the case without replaying the whole conversation.",
     officerPrompt: "Would another team understand the case from the query, answer trail, decision, evidence, and source IDs?",
     escalationRisk: "Weak case structure creates rework when another team reviews or receives the case.",
-    sourceIds: ["samsung-service-readiness", "watu-sop-pack"],
+    sourceIds: ["device-service-readiness", "watu-sop-pack"],
   },
 ];
 

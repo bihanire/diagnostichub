@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.models import LinkedNode, Procedure
 from app.schemas.common import CustomerCare, ProcedureSummary, SopLayers
-from app.services.samsung_guidance_service import (
-    apply_samsung_customer_care,
-    apply_samsung_sop_layers,
+from app.services.device_guidance_service import (
+    apply_device_customer_care,
+    apply_device_sop_layers,
 )
 
 DEFAULT_GREETING = "Start with: 'I'll help you check this step by step.'"
@@ -43,7 +43,7 @@ def get_customer_care(procedure: Procedure) -> CustomerCare:
         listening=care.get("listening", DEFAULT_LISTENING),
         expectation=care.get("expectation", DEFAULT_EXPECTATION),
     )
-    return apply_samsung_customer_care(procedure, customer_care)
+    return apply_device_customer_care(procedure, customer_care)
 
 
 def get_sop_layers(procedure: Procedure) -> SopLayers:
@@ -56,7 +56,7 @@ def get_sop_layers(procedure: Procedure) -> SopLayers:
         explanation=steps.get("explanation"),
         related_actions=steps.get("related_actions", []),
     )
-    return apply_samsung_sop_layers(procedure, sop_layers)
+    return apply_device_sop_layers(procedure, sop_layers)
 
 
 def to_summary(procedure: Procedure) -> ProcedureSummary:

@@ -4,7 +4,7 @@ Reviewed: 2026-05-13
 
 ## North Star
 
-DiagnosticHub should feel like a learning-first Watu/Samsung diagnostic assistant. It must help a branch officer understand the issue, teach the safest next step, preserve Watu SOP decisions, and produce a clean case packet that can later become a ticket through an approved iPaaS workflow.
+DiagnosticHub should feel like a learning-first Watu/Device diagnostic assistant. It must help a branch officer understand the issue, teach the safest next step, preserve Watu SOP decisions, and produce a clean case packet that can later become a ticket through an approved iPaaS workflow.
 
 The app should not pretend to be a free-form LLM that invents repair answers. It should behave like an intelligent teaching layer over deterministic SOP/search/triage logic, with source-backed context and visible operational guardrails.
 
@@ -14,8 +14,8 @@ Use vendor documentation as reference context only. Do not copy manuals, tables,
 
 Current source families:
 
-- Samsung consumer support: Members diagnostics, Maintenance Mode, battery care, Device Care, moisture warnings, Safe Mode, software updates, screen behavior, factory reset/data risk, lost-device protection.
-- Samsung Knox: managed-device policy, Knox Guard lock/unlock states, Knox Configure enrollment, asset/fleet signals.
+- Device consumer support: Members diagnostics, Maintenance Mode, battery care, Device Care, moisture warnings, Safe Mode, software updates, screen behavior, factory reset/data risk, lost-device protection.
+- enterprise device management: managed-device policy, Knox Guard lock/unlock states, Knox Configure enrollment, asset/fleet signals.
 - iPaaS and webhooks: Power Automate HTTP triggers, Zapier webhooks and REST Hooks, Make webhooks, webhook security and delivery best practices.
 - Watu-owned SOP pack: the decision authority for warranty direction, branch routing, evidence, and operational handover.
 
@@ -46,7 +46,7 @@ Goal: make teaching richer without turning the app into ungoverned advice.
 
 - Build family-specific lesson cards for display, power, logic/software, security/access, connectivity, and physical/liquid.
 - Add "why this matters" explanations to common branch decisions.
-- Add model-aware caveats where Samsung behavior differs by device, carrier, Android version, One UI version, or Knox state.
+- Add model-aware caveats where Device behavior differs by device, carrier, Android version, One UI version, or Knox state.
 - Add multilingual and local phrasing improvements from feedback data.
 - Add content-health scoring in ops insights: low helpfulness, repeated wording confusion, high no-match recoveries, and high escalation reversals.
 
@@ -129,5 +129,5 @@ Implemented slice:
 
 - Choose the first iPaaS target for pilot.
 - Define privacy rules for customer notes and device identifiers before outbound automation.
-- Decide whether future Samsung/Knox source review belongs in ops UI or a repo-based review workflow.
+- Decide whether future Device/Knox source review belongs in ops UI or a repo-based review workflow.
 - Decide whether to add an actual LLM layer, and if so, keep it retrieval-grounded and subordinate to Watu SOP decisions.

@@ -54,7 +54,7 @@ const SYNONYM_GROUPS = [
   ["sim issue", "sim not detected", "no network", "network issue", "data issue"],
   ["speaker issue", "microphone issue", "mouthpiece issue", "audio issue"],
   ["screen issue", "display issue", "black screen", "lines on screen", "touch not working"],
-  ["samsung", "smasung", "samusng", "galaxy"]
+  ["galaxy", "smasung", "samusng", "galaxy"]
 ] as const;
 
 const DOCUMENTATION_LINKS: SearchAssistEntrySeed[] = [
@@ -218,7 +218,7 @@ function buildHardwareEntries(families: RepairFamilySummary[]): SearchAssistEntr
       family.title,
       family.hint,
       ...family.symptom_prompts,
-      "samsung",
+      "galaxy",
       "galaxy",
       "diagnosis",
       "triage"
@@ -232,7 +232,7 @@ function buildHardwareEntries(families: RepairFamilySummary[]): SearchAssistEntr
     subtitle: shortcut.hint,
     queryValue: shortcut.query,
     action: "search" as const,
-    keywords: [shortcut.label, shortcut.hint, shortcut.query, "samsung", "galaxy"]
+    keywords: [shortcut.label, shortcut.hint, shortcut.query, "galaxy", "galaxy"]
   }));
 
   const fromQuickQueries: SearchAssistEntrySeed[] = quickQueries.map((item) => ({
@@ -242,7 +242,7 @@ function buildHardwareEntries(families: RepairFamilySummary[]): SearchAssistEntr
     subtitle: item.hint,
     queryValue: item.query,
     action: "search" as const,
-    keywords: [item.label, item.query, item.hint, "samsung", "galaxy"]
+    keywords: [item.label, item.query, item.hint, "galaxy", "galaxy"]
   }));
 
   const securityAnchors: SearchAssistEntrySeed[] = [
@@ -253,7 +253,7 @@ function buildHardwareEntries(families: RepairFamilySummary[]): SearchAssistEntr
       subtitle: "Security and access flow for locked devices.",
       queryValue: "frp google lock locked device",
       action: "search",
-      keywords: ["frp", "google lock", "locked device", "activation", "samsung"]
+      keywords: ["frp", "google lock", "locked device", "activation", "galaxy"]
     },
     {
       id: "hardware-security-knox-guard",
@@ -262,7 +262,7 @@ function buildHardwareEntries(families: RepairFamilySummary[]): SearchAssistEntr
       subtitle: "Managed or shell-restricted device handling.",
       queryValue: "knox guard shell managed device",
       action: "search",
-      keywords: ["knox guard", "knox gaurd", "shell managed", "managed device", "samsung"]
+      keywords: ["knox guard", "knox gaurd", "shell managed", "managed device", "galaxy"]
     }
   ];
 

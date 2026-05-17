@@ -252,7 +252,7 @@ export default function FamilyLandingPage() {
         phase: "Family learning",
         family: family.title,
         procedure: routeCountLabel,
-        confidence: "Samsung guide",
+        confidence: "Device guide",
         readiness: error ? "Attention needed" : "Operational",
       }}
     >

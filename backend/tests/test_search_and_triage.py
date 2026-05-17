@@ -150,11 +150,11 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertIsNotNone(response.best_match)
         self.assertEqual(response.best_match.title, "Liquid or Physical Damage")
 
-    def test_search_matches_samsung_sentence_query(self) -> None:
+    def test_search_matches_galaxy_sentence_query(self) -> None:
         with self.SessionLocal() as db:
             response = search_procedures(
                 db,
-                "my Samsung Galaxy is not charging even with the Samsung charger",
+                "my Galaxy phone is not charging even with the approved charger",
             )
 
         self.assertFalse(response.no_match)
@@ -251,9 +251,9 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertEqual(response.current_node.id, 101)
         self.assertEqual(response.progress.step, 1)
         self.assertEqual(response.progress.total, 5)
-        self.assertIn("Samsung Galaxy", response.customer_care.expectation)
+        self.assertIn("Galaxy", response.customer_care.expectation)
 
-    def test_triage_layers_include_samsung_branch_guidance(self) -> None:
+    def test_triage_layers_include_device_branch_guidance(self) -> None:
         with self.SessionLocal() as db:
             response = start_triage(db, 13)
 
@@ -288,7 +288,7 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertGreater(len(final_step.outcome.evidence_checklist), 0)
         self.assertTrue(any("photos" in item.lower() for item in final_step.outcome.evidence_checklist))
 
-    def test_operational_outcomes_include_samsung_handover_guidance(self) -> None:
+    def test_operational_outcomes_include_device_handover_guidance(self) -> None:
         with self.SessionLocal() as db:
             final_step = next_triage_step(db, 1303, "yes")
 

@@ -5,11 +5,11 @@ the phone is not powering on and it only vibrates,1,Phone Not Powering On,Power 
 yellow light on screen,2,Screen Issue,Display & Vision,0.45,0.20
 lines in screen and touch not working,2,Screen Issue,Display & Vision,0.50,0.20
 the screen is yellow and touch is not working,2,Screen Issue,Display & Vision,0.50,0.20
-green line on samsung screen after update,2,Screen Issue,Display & Vision,0.45,0.15
+green line on phone screen after update,2,Screen Issue,Display & Vision,0.45,0.15
 screen protector lifting and touch pressing itself,2,Screen Issue,Display & Vision,0.45,0.15
 my phone was snatched,3,Stolen Phone,Security & Access,0.40,0.15
 need track stolen device,3,Stolen Phone,Security & Access,0.35,0.15
-samsung find lock a lost phone,3,Stolen Phone,Security & Access,0.40,0.15
+device finding lock a lost phone,3,Stolen Phone,Security & Access,0.40,0.15
 charger connected but battery stays same,4,Charging Issue,Power & Thermal,0.38,0.10
 phone charges only when cable bent,4,Charging Issue,Power & Thermal,0.40,0.15
 the phone is not charging when i insert a charger,4,Charging Issue,Power & Thermal,0.50,0.15
@@ -20,7 +20,7 @@ device care shows phone overheating,5,Overheating or Swollen Battery,Power & The
 battery drains fast even when idle,6,Battery Draining Fast,Power & Thermal,0.42,0.05
 full charge finishes quickly,6,Battery Draining Fast,Power & Thermal,0.35,0.15
 the battery drains very fast even when the phone is idle,6,Battery Draining Fast,Power & Thermal,0.45,0.05
-samsung members says battery weak,6,Battery Draining Fast,Power & Thermal,0.40,0.05
+built-in support says battery weak,6,Battery Draining Fast,Power & Thermal,0.40,0.05
 phone freezing and apps hanging,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
 one app keeps crashing and phone hangs,7,"Freezing, Hanging, or App Issue",Logic & Software,0.40,0.15
 the phone keeps freezing whenever i open apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.20
@@ -52,15 +52,15 @@ the faulty device has stayed at the repair centre for more than 15 days,15,Asset
 refund request for returned phone,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.45,0.20
 third party recovery reward for recovered device,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.40,0.25
 the client wants a refund after returning the phone,16,"Return, Refund, or Recovered Device Handling",Returns & Recovery,0.45,0.20
-my samsung galaxy is not charging even with the samsung charger,4,Charging Issue,Power & Thermal,0.50,0.12
-the galaxy phone keeps freezing and samsung members diagnostics points to apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.18
-find my mobile says my samsung was stolen,3,Stolen Phone,Security & Access,0.40,0.15
+my galaxy phone is not charging even with the approved charger,4,Charging Issue,Power & Thermal,0.50,0.12
+the galaxy phone keeps freezing and built-in support diagnostics points to apps,7,"Freezing, Hanging, or App Issue",Logic & Software,0.45,0.18
+find my mobile says my phone was stolen,3,Stolen Phone,Security & Access,0.40,0.15
 maintenance mode before sending this galaxy for repair,13,"Repair Ticket, Dispatch, or Legal Status Handling",Operations & Compliance,0.40,0.18
-callers cannot hear me on my samsung and samsung members says mic test failed,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.12
+callers cannot hear me on my phone and built-in support says mic test failed,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.40,0.12
 my galaxy is stuck in safe mode after restart,8,Random Restart or Safe Mode Issue,Logic & Software,0.45,0.18
-the galaxy sim card is not detected and samsung members network check fails,9,SIM or Network Issue,Connectivity & I/O,0.42,0.18
-device care shows the samsung battery is draining too fast,6,Battery Draining Fast,Power & Thermal,0.40,0.05
-the phone shows the samsung logo and refuses to start,1,Phone Not Powering On,Power & Thermal,0.45,0.18
+the galaxy sim card is not detected and built-in support network check fails,9,SIM or Network Issue,Connectivity & I/O,0.42,0.18
+device care shows the phone battery is draining too fast,6,Battery Draining Fast,Power & Thermal,0.40,0.05
+the phone shows the boot logo and refuses to start,1,Phone Not Powering On,Power & Thermal,0.45,0.18
 it switched off and now only vibrates when i hold power,1,Phone Not Powering On,Power & Thermal,0.45,0.18
 battery percentage goes down even while the charger is in,4,Charging Issue,Power & Thermal,0.45,0.12
 moisture warning keeps appearing when i try to charge,4,Charging Issue,Power & Thermal,0.45,0.18

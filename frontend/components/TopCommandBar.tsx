@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -28,6 +30,7 @@ export function TopCommandBar({
   const familyMenuRef = useRef<HTMLDivElement | null>(null);
   const familyTriggerRef = useRef<HTMLButtonElement | null>(null);
   const familyPanelRef = useRef<HTMLDivElement | null>(null);
+  const familyFilterRef = useRef<HTMLInputElement | null>(null);
   const familyItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const utilityMenuRef = useRef<HTMLDivElement | null>(null);
   const utilityTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -110,13 +113,17 @@ export function TopCommandBar({
       }
       const rect = trigger.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
+      const panelWidth = Math.min(470, viewportWidth - 24);
+      const maxRight = Math.max(12, viewportWidth - panelWidth - 12);
+      const right = Math.min(Math.max(12, viewportWidth - rect.right), maxRight);
       setFamilyMenuPosition({
         top: Math.round(rect.bottom + 8),
-        right: Math.max(12, Math.round(viewportWidth - rect.right))
+        right: Math.round(right)
       });
     }
 
     syncPosition();
+    window.setTimeout(() => familyFilterRef.current?.focus(), 0);
     window.addEventListener("resize", syncPosition);
     window.addEventListener("scroll", syncPosition, true);
     return () => {
@@ -124,6 +131,15 @@ export function TopCommandBar({
       window.removeEventListener("scroll", syncPosition, true);
     };
   }, [familyMenuOpen]);
+
+  useEffect(() => {
+    if (!familyMenuOpen || activeFamilyIndex < 0) {
+      return;
+    }
+    familyItemRefs.current[activeFamilyIndex]?.scrollIntoView?.({
+      block: "nearest",
+    });
+  }, [activeFamilyIndex, familyMenuOpen]);
 
   function closeMenus() {
     setFamilyMenuOpen(false);
@@ -139,9 +155,12 @@ export function TopCommandBar({
 
   function toggleFamilyMenu(event: MouseEvent<HTMLButtonElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const panelWidth = Math.min(470, viewportWidth - 24);
+    const maxRight = Math.max(12, viewportWidth - panelWidth - 12);
     setFamilyMenuPosition({
       top: Math.round(rect.bottom + 8),
-      right: Math.max(12, Math.round(window.innerWidth - rect.right))
+      right: Math.round(Math.min(Math.max(12, viewportWidth - rect.right), maxRight))
     });
     setUtilityMenuOpen(false);
     setFamilyMenuOpen((current) => !current);
@@ -191,7 +210,7 @@ export function TopCommandBar({
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      setFamilyMenuOpen(false);
+      closeMenus();
       familyTriggerRef.current?.focus();
     }
   }
@@ -262,11 +281,20 @@ export function TopCommandBar({
                 Find family
               </label>
               <input
+                aria-activedescendant={
+                  activeFamilyIndex >= 0 && filteredFamilies[activeFamilyIndex]
+                    ? `family-menu-option-${filteredFamilies[activeFamilyIndex].id}`
+                    : undefined
+                }
                 className="lm-family-filter-input"
                 id="family-filter"
                 onChange={(event) => setFamilyFilter(event.target.value)}
                 onKeyDown={handleFamilyFilterKeyDown}
                 placeholder="Display, power, security, SIM..."
+                ref={familyFilterRef}
+                role="combobox"
+                aria-controls="family-menu-list"
+                aria-expanded={familyMenuOpen}
                 value={familyFilter}
               />
               {activeFamily ? (
@@ -274,15 +302,18 @@ export function TopCommandBar({
                   Current family: <strong>{activeFamily.title}</strong>
                 </p>
               ) : null}
-              <div className="lm-family-menu-list" role="listbox">
+              <div className="lm-family-menu-list" id="family-menu-list" role="listbox">
                 {filteredFamilies.length ? (
                   filteredFamilies.map((family, index) => (
                     <button
                       aria-label={`Open ${family.title} diagnosis family`}
+                      aria-current={selectedFamilyId === family.id ? "true" : undefined}
                       className={`lm-family-menu-item ${selectedFamilyId === family.id ? "is-active" : ""} ${
                         activeFamilyIndex === index ? "is-highlighted" : ""
                       }`}
+                      id={`family-menu-option-${family.id}`}
                       key={`family-menu-${family.id}`}
+                      onMouseEnter={() => setActiveFamilyIndex(index)}
                       onClick={() => handleSelect(family.id)}
                       ref={(node) => {
                         familyItemRefs.current[index] = node;

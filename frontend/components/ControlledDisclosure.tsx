@@ -32,11 +32,15 @@ export function ControlledDisclosure({
   const [open, setOpen] = useState(defaultOpen);
 
   useEffect(() => {
+    setOpen(defaultOpen);
+  }, [defaultOpen]);
+
+  useEffect(() => {
     if (!open) {
       return;
     }
 
-    function closeIfOutside(event: globalThis.MouseEvent | globalThis.TouchEvent) {
+    function closeIfOutside(event: PointerEvent | FocusEvent) {
       const target = event.target;
       if (!(target instanceof Node)) {
         return;
@@ -55,12 +59,12 @@ export function ControlledDisclosure({
       triggerRef.current?.focus();
     }
 
-    document.addEventListener("mousedown", closeIfOutside);
-    document.addEventListener("touchstart", closeIfOutside, { passive: true });
+    document.addEventListener("pointerdown", closeIfOutside, true);
+    document.addEventListener("focusin", closeIfOutside);
     document.addEventListener("keydown", closeOnEscape);
     return () => {
-      document.removeEventListener("mousedown", closeIfOutside);
-      document.removeEventListener("touchstart", closeIfOutside);
+      document.removeEventListener("pointerdown", closeIfOutside, true);
+      document.removeEventListener("focusin", closeIfOutside);
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, [open]);

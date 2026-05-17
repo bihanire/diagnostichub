@@ -400,7 +400,7 @@ export type CasePacket = {
 
 export type KnowledgeSource = {
   id: string;
-  vendor: "Samsung" | "Samsung Knox" | "Microsoft" | "Zapier" | "Make" | "GitHub" | "Watu";
+  vendor: "Device support" | "Enterprise device management" | "Microsoft" | "Zapier" | "Make" | "GitHub" | "Watu";
   sourceType:
     | "official_documentation"
     | "integration_documentation"

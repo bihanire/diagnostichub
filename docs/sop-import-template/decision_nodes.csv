@@ -1,5 +1,5 @@
 id,procedure_id,question,yes_next,no_next,diagnosis,recommended_action,outcome_warranty_status,related_actions,follow_up_message
-101,1,"Does the phone show any sign of life such as vibration, sound, a charging symbol, or the Samsung logo?",102,104,,,,,
+101,1,"Does the phone show any sign of life such as vibration, sound, a charging symbol, or the boot logo?",102,104,,,,,
 102,1,"Is the screen black, cracked, flickering, blurry, yellow, or otherwise not showing the normal picture?",110,105,,,,,
 103,1,Outcome,,,Visible display damage is likely affecting startup visibility.,Book repair intake: explain that the display needs physical inspection and move the case to the screen issue repair path.,Cracks or impact damage are usually not covered.,Photograph the visible damage before intake.|Avoid promising warranty support where impact marks are already visible.,Explain that the phone appears alive but the visible display damage changes the repair and warranty path.
 104,1,Has the customer already tried a different working charger and cable for at least 20 minutes and attempted a forced restart?,106,107,,,,,

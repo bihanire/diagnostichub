@@ -82,11 +82,11 @@ FAMILY_DEFINITIONS: dict[str, _FamilyDefinition] = {
             },
             {
                 "title": "Black screen but the phone is still alive",
-                "description": "Use this when the phone vibrates, rings, or shows the Samsung logo but the display does not come up properly.",
+                "description": "Use this when the phone vibrates, rings, or shows the boot logo but the display does not come up properly.",
                 "search_examples": [
                     "black screen but vibrating",
                     "phone rings but screen is dark",
-                    "Samsung logo then dark",
+                    "boot logo then dark",
                     "phone alive no display",
                 ],
                 "primary_procedure": "Screen Issue",
@@ -168,7 +168,7 @@ FAMILY_DEFINITIONS: dict[str, _FamilyDefinition] = {
                     "not powering on",
                     "dead phone",
                     "phone only vibrates",
-                    "stuck on Samsung logo",
+                    "stuck on boot logo",
                 ],
                 "primary_procedure": "Phone Not Powering On",
                 "supporting_procedures": ["Screen Issue"],

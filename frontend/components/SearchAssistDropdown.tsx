@@ -90,6 +90,9 @@ export function SearchAssistDropdown({
                     key={item.id}
                     onClick={() => onSelect(item)}
                     onMouseEnter={() => onHover(item.index)}
+                    onPointerDown={(event) => {
+                      event.preventDefault();
+                    }}
                     role="option"
                     type="button"
                   >

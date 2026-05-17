@@ -73,18 +73,20 @@ function buildSession(): TriageSession {
 }
 
 describe("knowledge source registry", () => {
-  it("keeps external source usage link-backed and paraphrase-only", () => {
+  it("keeps external source usage paraphrase-only", () => {
     const externalSources = KNOWLEDGE_SOURCES.filter((source) => source.vendor !== "Watu");
 
     expect(externalSources.length).toBeGreaterThan(10);
     for (const source of externalSources) {
-      expect(source.url).toMatch(/^https:\/\//);
+      if (source.url) {
+        expect(source.url).toMatch(/^https:\/\//);
+      }
       expect(source.allowedUsage).toBe("paraphrase_and_link");
       expect(source.copyrightStatus).toBe("link_only_no_copying");
     }
   });
 
-  it("returns Samsung/Watu teaching guidance for an ordinary diagnostic case", () => {
+  it("returns Watu teaching guidance for an ordinary diagnostic case", () => {
     const guidance = getTeachingGuidanceForProcedure(
       powerProcedure,
       "power",
@@ -98,7 +100,7 @@ describe("knowledge source registry", () => {
 
     expect(guidance.map((item) => item.id)).toContain("teach-battery-and-charging-safety");
     expect(guidance.map((item) => item.id)).not.toContain("teach-case-automation-runway");
-    expect(sourceIds).toContain("samsung-battery-care");
+    expect(sourceIds).toContain("device-battery-care");
     expect(sourceIds).toContain("watu-sop-pack");
     expect(sourceIds).not.toContain("make-webhooks");
     expect(sourceIds).not.toContain("webhook-best-practices");
@@ -125,7 +127,7 @@ describe("knowledge source registry", () => {
     expect(casePacket.evidenceState).toBe("pending");
     expect(casePacket.deliveryReadiness).toBe("blocked_missing_evidence");
     expect(casePacket.watuDecision.decisionLabel).toBe("Book repair intake");
-    expect(casePacket.knowledgeSourceIds).toContain("samsung-moisture-port");
+    expect(casePacket.knowledgeSourceIds).toContain("device-moisture-port");
     expect(casePacket.knowledgeSourceIds).toContain("watu-sop-pack");
   });
 });

@@ -59,7 +59,7 @@ def _build_ticket_preview_payload(**overrides):
             "warrantyDirection": "Needs inspection",
             "ticketReadiness": "ready_for_ticket_draft",
         },
-        "knowledgeSourceIds": ["samsung-moisture-port", "watu-sop-pack"],
+        "knowledgeSourceIds": ["device-moisture-port", "watu-sop-pack"],
     }
     payload.update(overrides)
     return payload

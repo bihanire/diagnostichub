@@ -38,7 +38,7 @@ export const uiCopy = {
       eyebrow: "Watu Simu",
       title: "Diag & Troubleshooting Hub",
       description:
-        "Teach the branch-safe Samsung/Watu diagnostic path before deciding warranty, repair, or customer guidance."
+        "Teach the branch-safe Watu diagnostic path before deciding warranty, repair, or customer guidance."
     },
     savedProgress: {
       eyebrow: "Saved progress",

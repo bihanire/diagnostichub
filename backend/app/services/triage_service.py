@@ -21,7 +21,7 @@ from app.services.procedure_service import (
     procedure_query_with,
     to_summary,
 )
-from app.services.samsung_guidance_service import apply_samsung_outcome
+from app.services.device_guidance_service import apply_device_outcome
 
 
 def load_procedure(db: Session, procedure_id: int) -> Procedure | None:
@@ -169,7 +169,7 @@ def build_outcome(procedure: Procedure, outcome_data: dict | None) -> FinalOutco
         customer_care=customer_care,
         follow_up_message=follow_up_message,
     )
-    return apply_samsung_outcome(procedure, outcome)
+    return apply_device_outcome(procedure, outcome)
 
 
 def classify_decision_type(

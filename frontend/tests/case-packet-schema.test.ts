@@ -50,7 +50,7 @@ function buildPacket(overrides: Partial<CasePacket> = {}): CasePacket {
       warrantyDirection: "Needs inspection",
       ticketReadiness: "ready_for_ticket_draft",
     },
-    knowledgeSourceIds: ["samsung-moisture-port", "watu-sop-pack"],
+    knowledgeSourceIds: ["device-moisture-port", "watu-sop-pack"],
     ...overrides,
   };
 }

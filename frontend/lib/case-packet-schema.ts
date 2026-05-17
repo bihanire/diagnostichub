@@ -136,7 +136,7 @@ export function getCasePacketSchemaPreview(): Record<string, unknown> {
       },
       evidenceState: "pending",
       feedbackStatus: "not_saved",
-      knowledgeSourceIds: ["samsung-moisture-port", "watu-sop-pack"],
+      knowledgeSourceIds: ["device-moisture-port", "watu-sop-pack"],
     },
     delivery: {
       readiness: "blocked_missing_evidence",
@@ -185,7 +185,7 @@ export function getSampleCasePacketForDraft(): CasePacket {
       warrantyDirection: "Needs inspection",
       ticketReadiness: "ready_for_ticket_draft",
     },
-    knowledgeSourceIds: ["samsung-moisture-port", "watu-sop-pack"],
+    knowledgeSourceIds: ["device-moisture-port", "watu-sop-pack"],
   };
 }
 

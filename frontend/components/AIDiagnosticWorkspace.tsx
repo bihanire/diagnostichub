@@ -123,7 +123,7 @@ export function AIDiagnosticWorkspace({
           <span className="focus-dot" aria-hidden="true" />
           <span className="focus-eyebrow">Current focus</span>
           <span className="focus-text">
-            {activeFamilyTitle ? `${activeFamilyTitle} · ${modeLabel}` : "No family selected · Diagnostic Learning"}
+            {activeFamilyTitle ? `${activeFamilyTitle} - ${modeLabel}` : "No family selected - Diagnostic Learning"}
           </span>
         </div>
         {isGateway ? null : (
