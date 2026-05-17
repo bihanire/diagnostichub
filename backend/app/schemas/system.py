@@ -34,6 +34,12 @@ class DataIntegrityReport(BaseModel):
     issues: list[DataIntegrityIssue] = Field(default_factory=list)
 
 
+class HealthResponse(BaseModel):
+    status: Literal["ok", "degraded"]
+    db: bool
+    version: str
+
+
 class ReadinessResponse(BaseModel):
     status: Literal["ok", "degraded"]
     checks: dict[str, Literal["ok", "failed"]] = Field(default_factory=dict)

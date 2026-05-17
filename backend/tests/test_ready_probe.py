@@ -56,6 +56,26 @@ class ReadyProbeRouteTests(unittest.TestCase):
         for key, value in self.original_settings.items():
             setattr(self.settings, key, value)
 
+    def test_health_returns_version_and_database_status(self) -> None:
+        with patch("app.api.routes.system.database_is_ready", return_value=True):
+            with TestClient(self.app) as client:
+                response = client.get("/health", headers={"X-Client-Request-ID": "req-health-200"})
+
+        payload = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload, {"status": "ok", "db": True, "version": "1.2.3"})
+        self.assertEqual(response.headers.get("x-request-id"), "req-health-200")
+
+    def test_health_degrades_without_failing_liveness_when_database_is_unavailable(self) -> None:
+        with patch("app.api.routes.system.database_is_ready", return_value=False):
+            with TestClient(self.app) as client:
+                response = client.get("/health")
+
+        payload = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload, {"status": "degraded", "db": False, "version": "1.2.3"})
+        self.assertTrue(response.headers.get("x-request-id"))
+
     def test_ready_returns_200_when_all_checks_are_ok(self) -> None:
         with patch("app.api.routes.system.database_is_ready", return_value=True):
             with TestClient(self.app) as client:

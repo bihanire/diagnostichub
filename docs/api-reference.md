@@ -232,6 +232,22 @@ Checks live database readiness and the last startup workflow-validation result.
 
 When the app is not ready, this endpoint returns HTTP `503` with the same response shape and `status: "degraded"`.
 
+## `GET /health`
+
+Returns a lightweight liveness payload for deployment checks and frontend startup diagnostics.
+
+### Example response
+
+```json
+{
+  "status": "ok",
+  "db": true,
+  "version": "1.0.0"
+}
+```
+
+If the database check fails, the endpoint still returns HTTP `200` with `status: "degraded"` and `db: false`. Use `/ready` when an upstream system needs a failing HTTP status for readiness gates.
+
 ## `GET /meta`
 
 Returns API contract metadata used by the startup handshake gate.

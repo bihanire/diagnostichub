@@ -9,6 +9,7 @@ from app.core.database import database_is_ready
 from app.schemas.system import (
     ApiMetaResponse,
     DataIntegrityReport,
+    HealthResponse,
     ReadinessResponse,
     WorkflowValidationReport,
 )
@@ -60,9 +61,15 @@ def _empty_integrity_report() -> DataIntegrityReport:
     )
 
 
-@router.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+@router.get("/health", response_model=HealthResponse)
+def health() -> HealthResponse:
+    settings = get_settings()
+    db_ok = database_is_ready()
+    return HealthResponse(
+        status="ok" if db_ok else "degraded",
+        db=db_ok,
+        version=settings.api_version,
+    )
 
 
 @router.get("/meta", response_model=ApiMetaResponse)

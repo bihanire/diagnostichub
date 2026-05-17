@@ -77,7 +77,7 @@
 | `GET /ops/session` | Yes (`getOpsSession`) | Real auth state response | WIRED |
 | `GET /ops/telemetry/summary` | Yes (`getOpsTelemetrySummary`) | Real in-memory telemetry snapshot | WIRED |
 | `POST /telemetry/interaction` | Yes (`recordInteractionTelemetry`) | Real accepted interaction event | WIRED |
-| `GET /health` | No | Static liveness payload | BE_ONLY |
+| `GET /health` | No | Contract liveness payload with db/version status | BE_ONLY |
 
 ## Priority Classification
 
@@ -92,5 +92,5 @@
 
 ### P2 Backlog (deferred)
 1. `GET /health` (`BE_ONLY`)  
-   Rationale: used by infra/liveness automation, not an operator action in FE workflows.  
-   Suggested Phase 3 milestone: add FE-facing diagnostics page or document as infra-only heartbeat endpoint.
+   Rationale: used by infra/liveness automation and startup diagnostics, not an operator action in FE workflows.
+   Suggested Phase 3 milestone: add FE-facing diagnostics page if operators need a visible backend status surface.

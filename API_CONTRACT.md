@@ -15,6 +15,21 @@ This project uses semantic versioning for the frontend/backend startup contract.
 }
 ```
 
+## Liveness endpoint
+
+- `GET /health`
+- Response shape:
+
+```json
+{
+  "status": "ok",
+  "db": true,
+  "version": "1.0.0"
+}
+```
+
+`status` is `ok` when the lightweight database check passes and `degraded` when it fails. The endpoint still returns HTTP `200` so platform liveness checks do not restart an otherwise reachable process; use `GET /ready` for strict readiness gating.
+
 ## Version rules
 
 - `api_version` follows `MAJOR.MINOR.PATCH`.
