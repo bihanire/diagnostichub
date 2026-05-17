@@ -296,6 +296,7 @@ export default function HomePage() {
     resumeSession?.procedure.title ||
     quickDrillPrimaryProcedure?.title ||
     "Not selected";
+  const commandPaletteBestMatch = searchResult?.best_match || null;
   const riskFlags = [
     ...(activeFamily?.escalation_signals || []),
     ...(quickDrillDetail?.escalation_signals || []),
@@ -1774,31 +1775,48 @@ export default function HomePage() {
               ) : null}
             </div>
             <div className="lm-palette-grid">
-              <button className="lm-palette-item" onClick={() => setModuleMode("guided")} type="button">
+              <button
+                className="lm-palette-item"
+                onClick={() => {
+                  setModuleMode("guided");
+                  setCommandPaletteOpen(false);
+                }}
+                type="button"
+              >
                 Guide me step-by-step
-              </button>
-              <button className="lm-palette-item" onClick={() => setModuleMode("explain")} type="button">
-                Explain this SOP
-              </button>
-              <button className="lm-palette-item" onClick={() => searchInputRef.current?.focus()} type="button">
-                Focus diagnosis input
               </button>
               <button
                 className="lm-palette-item"
                 onClick={() => {
-                  if (searchResult?.best_match) {
-                    setCommandPaletteOpen(false);
-                    void openFlow(searchResult.best_match, searchResult.query);
-                    return;
-                  }
-                  setError("Run diagnosis first to unlock best-match triage.");
-                  searchInputRef.current?.focus();
+                  setModuleMode("explain");
+                  setCommandPaletteOpen(false);
                 }}
-                disabled={!searchResult?.best_match}
                 type="button"
               >
-                Start best-match triage
+                Explain this SOP
               </button>
+              <button
+                className="lm-palette-item"
+                onClick={() => {
+                  setCommandPaletteOpen(false);
+                  window.setTimeout(() => searchInputRef.current?.focus(), 0);
+                }}
+                type="button"
+              >
+                Use diagnosis input
+              </button>
+              {commandPaletteBestMatch ? (
+                <button
+                  className="lm-palette-item"
+                  onClick={() => {
+                    setCommandPaletteOpen(false);
+                    void openFlow(commandPaletteBestMatch, searchResult?.query || commandPaletteBestMatch.title);
+                  }}
+                  type="button"
+                >
+                  Start best-match triage
+                </button>
+              ) : null}
             </div>
           </div>
         </section>

@@ -616,6 +616,26 @@ describe("HomePage", () => {
     expect((input as HTMLTextAreaElement).value).toBe("");
   });
 
+  it("keeps the command palette action list free of unavailable duplicate starts", async () => {
+    const user = userEvent.setup();
+    render(<HomePage />);
+
+    await user.click(screen.getByLabelText(/global search/i));
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /use diagnosis input/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start best-match triage/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /use diagnosis input/i }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i)
+    ).toHaveFocus();
+  });
+
   it("opens a confidence gate for ambiguous matches before triage start", async () => {
     const user = userEvent.setup();
     apiMocks.searchProcedures.mockResolvedValueOnce({

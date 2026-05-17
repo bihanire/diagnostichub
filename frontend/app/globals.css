@@ -9352,6 +9352,74 @@ body {
   color: #075f57;
 }
 
+.lm-shell-gateway .lm-main-grid {
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  align-items: start;
+}
+
+.lm-shell-gateway .lm-workspace-wrap,
+.lm-shell-gateway .lm-context-wrap {
+  overflow: visible;
+}
+
+.lm-shell-gateway .lm-workspace-zone,
+.lm-shell-gateway .lm-context {
+  height: auto;
+  overflow: visible;
+  padding-right: 0;
+}
+
+.lm-shell-gateway .lm-guided-step p {
+  color: #385151;
+}
+
+.lm-shell-gateway .lm-guided-step strong {
+  color: #103b38;
+  font-weight: 760;
+}
+
+.lm-shell-gateway .lm-step-dot {
+  background: rgba(15, 156, 143, 0.1);
+  border-color: rgba(15, 156, 143, 0.22);
+  color: #0d8177;
+}
+
+.lm-shell-gateway .lm-context-gateway-card:last-child .eyebrow,
+.lm-shell-gateway .lm-context-gateway-card:last-child .lm-context-summary-grid strong,
+.lm-shell-gateway .lm-context-summary-grid strong {
+  color: #0d8177;
+}
+
+.lm-shell-gateway .lm-context-gateway-card:last-child .lm-context-summary-grid span,
+.lm-shell-gateway .lm-context-summary-grid span {
+  color: #385151;
+}
+
+.lm-palette {
+  max-height: min(76vh, 680px);
+  overflow: hidden;
+}
+
+.lm-palette-suggestions {
+  scrollbar-color: rgba(15, 156, 143, 0.46) rgba(255, 255, 255, 0.12);
+  scrollbar-width: thin;
+}
+
+.lm-palette-suggestions::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lm-palette-suggestions::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(15, 156, 143, 0.46);
+}
+
+.lm-palette-suggestions::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 @media (max-width: 720px) {
   .hero .eyebrow,
   .panel .eyebrow,
