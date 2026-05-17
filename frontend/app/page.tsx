@@ -11,7 +11,6 @@ import { FamilyExplorer } from "@/components/FamilyExplorer";
 import { FamilyFlowSelector } from "@/components/FamilyFlowSelector";
 import { ProcedureMatchCard } from "@/components/ProcedureMatchCard";
 import { StatusStrip } from "@/components/StatusStrip";
-import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import { TopCommandBar } from "@/components/TopCommandBar";
 import {
   ApiError,
@@ -68,6 +67,8 @@ type QuickDrillOrigin = {
   width: number;
   height: number;
 };
+
+type BackendHealthState = "ok" | "degraded" | "unreachable";
 
 const ISSUE_TYPE_TO_FAMILY_ID: Record<string, string> = {
   "Display & Vision": "display",
@@ -194,6 +195,8 @@ export default function HomePage() {
   const [moduleMode, setModuleMode] = useState("diagnostic");
   const [outputMode, setOutputMode] = useState<SearchOutputMode>("issue_interpretation");
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [backendHealth, setBackendHealth] = useState<BackendHealthState>("ok");
+  const [familyPickerSignal, setFamilyPickerSignal] = useState(0);
   const [familyIntentId, setFamilyIntentId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [searchResult, setSearchResult] = useState<SearchResponse | null>(null);
@@ -330,6 +333,36 @@ export default function HomePage() {
 
   useEffect(() => {
     setResumeSession(loadSession());
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkBackendHealth() {
+      try {
+        const response = await fetch("/api/health", { cache: "no-store" });
+        if (!active) {
+          return;
+        }
+        if (!response.ok) {
+          setBackendHealth("unreachable");
+          return;
+        }
+
+        const payload = (await response.json()) as { status?: string };
+        setBackendHealth(payload.status === "degraded" ? "degraded" : "ok");
+      } catch {
+        if (active) {
+          setBackendHealth("unreachable");
+        }
+      }
+    }
+
+    void checkBackendHealth();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -855,6 +888,10 @@ export default function HomePage() {
     }
 
     if (event.key === "Escape") {
+      if (query.trim()) {
+        clearSearchInput();
+        return;
+      }
       setSearchAssistOpen(false);
       return;
     }
@@ -895,6 +932,16 @@ export default function HomePage() {
   function closeReviewGate() {
     setReviewCandidates([]);
     setReviewSelectedProcedureId(null);
+  }
+
+  function openFamilyPicker() {
+    setFamilyPickerSignal((current) => current + 1);
+  }
+
+  function clearSelectedFamily() {
+    setActiveFamily(null);
+    setFamilyLoadingId(null);
+    setFamilyIntentId(null);
   }
 
   function tryOpenReviewGate(result: SearchResponse): boolean {
@@ -1394,6 +1441,7 @@ export default function HomePage() {
         topBar={
           <TopCommandBar
             families={families}
+            openFamilyMenuSignal={familyPickerSignal}
             onFocusSearch={() => {
               setCommandPaletteOpen(true);
               searchInputRef.current?.focus();
@@ -1409,9 +1457,12 @@ export default function HomePage() {
             <AIDiagnosticWorkspace
               activeSuggestionIndex={activeSuggestionIndex}
               activeFamilyTitle={selectedFamily?.title || null}
+              backendStatus={backendHealth}
               description={uiCopy.home.hero.description}
+              hasRunError={Boolean(error)}
               inputRef={searchInputRef}
               moduleMode={moduleMode}
+              onClearFamily={clearSelectedFamily}
               onBlur={() => {
                 if (assistBlurTimeoutRef.current !== null) {
                   window.clearTimeout(assistBlurTimeoutRef.current);
@@ -1435,6 +1486,7 @@ export default function HomePage() {
                 void runSearch(value);
               }}
               onOutputModeChange={setOutputMode}
+              onOpenFamilyPicker={openFamilyPicker}
               onQueryChange={(value) => {
                 setQuery(value);
                 setSearchAssistOpen(Boolean(value.trim()));
@@ -1455,6 +1507,7 @@ export default function HomePage() {
                 "Convert this issue into branch actions",
               ]}
               query={query}
+              runSuccessKey={searchResultKey}
               searchAssistLoading={searchAssistLoading}
               searchAssistOpen={searchAssistOpen}
               searching={searching}
@@ -1628,65 +1681,7 @@ export default function HomePage() {
           </section>
         }
         contextPanel={
-          isGatewayState ? (
-            <div className="lm-context lm-context-gateway" aria-live="polite">
-              <section className="lm-context-card lm-context-gateway-card">
-                <div className="panel-header">
-                  <h3>Start calm, then go deep</h3>
-                </div>
-                <div className="lm-guided-steps">
-                  <div className="lm-guided-step">
-                    <span className="lm-step-dot">1</span>
-                    <p>
-                      Say what the <strong>customer told you</strong> - exact words work best.
-                    </p>
-                  </div>
-                  <div className="lm-guided-step">
-                    <span className="lm-step-dot">2</span>
-                    <p>
-                      Pick a <strong>device family</strong> to unlock flows for that model.
-                    </p>
-                  </div>
-                  <div className="lm-guided-step">
-                    <span className="lm-step-dot">3</span>
-                    <p>
-                      One diagnosis <strong>opens</strong> the full procedure trail.
-                    </p>
-                  </div>
-                </div>
-              </section>
-              <section className="lm-context-card lm-context-gateway-card">
-                <div className="panel-header">
-                  <span className="eyebrow">After diagnosis</span>
-                </div>
-                <div className="lm-context-summary-grid">
-                  <span>
-                    <strong>Routes</strong>
-                    Flow Suggestions
-                  </span>
-                  <span>
-                    <strong>Checks</strong>
-                    Eligibility + Risks
-                  </span>
-                  <span>
-                    <strong>Actions</strong>
-                    Guided resolution
-                  </span>
-                  <span>
-                    <strong>Related</strong>
-                    Linked procedures
-                  </span>
-                </div>
-              </section>
-              <TeachingSourcePanel
-                className="lm-context-card"
-                compact
-                familyId={selectedFamily?.id || null}
-                limit={2}
-                title="How this assistant teaches"
-              />
-            </div>
-          ) : (
+          isGatewayState ? null : (
             <ContextIntelligencePanel
               alternatives={contextAlternatives}
               eligibilityChecks={eligibilityChecks}

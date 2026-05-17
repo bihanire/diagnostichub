@@ -113,13 +113,20 @@ const triageStartResponse: TriageStartResponse = {
   outcome: null
 };
 
+const diagnosisInputMatcher = /describe the issue in the customer's own words/i;
+const originalFetch = global.fetch;
+
 describe("HomePage", () => {
   afterEach(() => {
     vi.useRealTimers();
+    global.fetch = originalFetch;
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    global.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ status: "ok" }), { status: 200 })
+    );
     navigationMocks.searchParams = new URLSearchParams();
     HTMLElement.prototype.scrollIntoView = vi.fn();
     sessionMocks.loadSession.mockReturnValue(null);
@@ -329,7 +336,7 @@ describe("HomePage", () => {
     ).toBeInTheDocument();
 
     await user.type(
-      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
+      screen.getByPlaceholderText(diagnosisInputMatcher),
       "phone not turning on but vibrates"
     );
     await user.keyboard("{Enter}");
@@ -350,23 +357,11 @@ describe("HomePage", () => {
     expect(navigationMocks.push).toHaveBeenCalledWith("/triage");
   });
 
-  it("wires diagnosis output selector into the search request payload", async () => {
-    const user = userEvent.setup();
+  it("does not render the redundant output selector on the initial hub", () => {
     render(<HomePage />);
 
-    await user.click(screen.getByRole("button", { name: "SOP action" }));
-    await user.type(
-      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
-      "phone not turning on but vibrates"
-    );
-    await user.keyboard("{Enter}");
-
-    await waitFor(() => {
-      expect(apiMocks.searchProcedures).toHaveBeenCalledWith(
-        "phone not turning on but vibrates",
-        expect.objectContaining({ outputMode: "sop_action" })
-      );
-    });
+    expect(screen.queryByRole("button", { name: "Issue interpretation" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "SOP action" })).not.toBeInTheDocument();
   });
 
   it("shows the saved session banner and can continue or clear it", async () => {
@@ -584,7 +579,7 @@ describe("HomePage", () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    const input = screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i);
+    const input = screen.getByPlaceholderText(diagnosisInputMatcher);
     await user.type(input, "knox gaurd");
     await user.click(input);
     await waitFor(() => {
@@ -608,11 +603,11 @@ describe("HomePage", () => {
     const user = userEvent.setup();
     render(<HomePage />);
 
-    const input = screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i);
+    const input = screen.getByPlaceholderText(diagnosisInputMatcher);
     await user.type(input, "screen issue");
-    expect(screen.getByRole("button", { name: /clear search/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /clear input/i })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: /clear search/i }));
+    await user.click(screen.getByRole("button", { name: /clear input/i }));
     expect((input as HTMLTextAreaElement).value).toBe("");
   });
 
@@ -632,7 +627,7 @@ describe("HomePage", () => {
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
     expect(
-      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i)
+      screen.getByPlaceholderText(diagnosisInputMatcher)
     ).toHaveFocus();
   });
 
@@ -659,7 +654,7 @@ describe("HomePage", () => {
     render(<HomePage />);
 
     await user.type(
-      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
+      screen.getByPlaceholderText(diagnosisInputMatcher),
       "phone not turning on but vibrates"
     );
     await user.keyboard("{Enter}");
@@ -712,7 +707,7 @@ describe("HomePage", () => {
     render(<HomePage />);
 
     await user.type(
-      screen.getByPlaceholderText(/e\.g\. phone won't turn on but vibrates when i hold power/i),
+      screen.getByPlaceholderText(diagnosisInputMatcher),
       "my screen has weird lines"
     );
     await user.keyboard("{Enter}");

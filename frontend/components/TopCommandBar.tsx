@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { CSSProperties, KeyboardEvent, MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { CSSProperties, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 
 import { RepairFamilySummary } from "@/lib/types";
 
 type TopCommandBarProps = {
   families: RepairFamilySummary[];
+  openFamilyMenuSignal?: number;
+  opsAuthenticated?: boolean;
   selectedFamilyId: string | null;
   onFocusSearch: () => void;
   onOpenCommandPalette: () => void;
@@ -19,8 +21,42 @@ type FamilyMenuPosition = {
   right: number;
 };
 
+type NavIconName = "families" | "system" | "utilities" | "ops";
+
+function NavIcon({ name }: { name: NavIconName }) {
+  if (name === "families") {
+    return (
+      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
+        <path d="M3 5.5h12M3 9h12M3 12.5h12" />
+      </svg>
+    );
+  }
+  if (name === "system") {
+    return (
+      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
+        <path d="M9 3.25v11.5M3.25 9h11.5M5 5l8 8M13 5l-8 8" />
+      </svg>
+    );
+  }
+  if (name === "utilities") {
+    return (
+      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
+        <path d="M5.25 3.5h7.5v3h-7.5zM5.25 11.5h7.5v3h-7.5zM3.5 8.25h11" />
+      </svg>
+    );
+  }
+  return (
+    <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
+      <path d="M9 2.75 14 5v4.25c0 3-2 5.25-5 6-3-.75-5-3-5-6V5z" />
+      <path d="M6.75 9.2 8.25 10.7 11.4 7.5" />
+    </svg>
+  );
+}
+
 export function TopCommandBar({
   families,
+  openFamilyMenuSignal = 0,
+  opsAuthenticated = false,
   selectedFamilyId,
   onFocusSearch,
   onOpenCommandPalette,
@@ -133,6 +169,13 @@ export function TopCommandBar({
   }, [familyMenuOpen]);
 
   useEffect(() => {
+    if (openFamilyMenuSignal <= 0) {
+      return;
+    }
+    openFamilyMenuFromTrigger();
+  }, [openFamilyMenuSignal]);
+
+  useEffect(() => {
     if (!familyMenuOpen || activeFamilyIndex < 0) {
       return;
     }
@@ -148,13 +191,15 @@ export function TopCommandBar({
     setActiveFamilyIndex(0);
   }
 
-  function handleSelect(familyId: string) {
-    closeMenus();
-    onSelectFamily(familyId);
-  }
+  function openFamilyMenuFromTrigger() {
+    const trigger = familyTriggerRef.current;
+    if (!trigger) {
+      setUtilityMenuOpen(false);
+      setFamilyMenuOpen(true);
+      return;
+    }
 
-  function toggleFamilyMenu(event: MouseEvent<HTMLButtonElement>) {
-    const rect = event.currentTarget.getBoundingClientRect();
+    const rect = trigger.getBoundingClientRect();
     const viewportWidth = window.innerWidth;
     const panelWidth = Math.min(470, viewportWidth - 24);
     const maxRight = Math.max(12, viewportWidth - panelWidth - 12);
@@ -163,7 +208,21 @@ export function TopCommandBar({
       right: Math.round(Math.min(Math.max(12, viewportWidth - rect.right), maxRight))
     });
     setUtilityMenuOpen(false);
-    setFamilyMenuOpen((current) => !current);
+    setFamilyMenuOpen(true);
+  }
+
+  function handleSelect(familyId: string) {
+    closeMenus();
+    onSelectFamily(familyId);
+  }
+
+  function toggleFamilyMenu() {
+    if (!familyMenuOpen) {
+      openFamilyMenuFromTrigger();
+      return;
+    }
+    setUtilityMenuOpen(false);
+    setFamilyMenuOpen(false);
   }
 
   function toggleUtilityMenu() {
@@ -222,8 +281,6 @@ export function TopCommandBar({
 
   return (
     <div className="lm-topbar">
-      <span className="lm-topbar-status-dot" aria-hidden="true" />
-
       <button className="lm-brand" onClick={handleGoHome} type="button">
         <span>watu</span>
       </button>
@@ -258,6 +315,7 @@ export function TopCommandBar({
             ref={familyTriggerRef}
             type="button"
           >
+            <NavIcon name="families" />
             Families
           </button>
           {familyMenuOpen ? (
@@ -320,9 +378,6 @@ export function TopCommandBar({
                       }}
                       type="button"
                     >
-                      <span className="lm-family-menu-glyph" aria-hidden="true">
-                        {family.title.charAt(0)}
-                      </span>
                       <span className="lm-family-menu-copy">
                         <strong>{family.title}</strong>
                         <span>{family.hint}</span>
@@ -339,6 +394,7 @@ export function TopCommandBar({
         </div>
 
         <button className="lm-nav-tab" onClick={handleFocusSearch} type="button">
+          <NavIcon name="system" />
           System
         </button>
 
@@ -351,6 +407,7 @@ export function TopCommandBar({
             ref={utilityTriggerRef}
             type="button"
           >
+            <NavIcon name="utilities" />
             Utilities
           </button>
           {utilityMenuOpen ? (
@@ -383,7 +440,12 @@ export function TopCommandBar({
           ) : null}
         </div>
 
-        <Link className="lm-nav-tab lm-nav-tab-ops" href="/ops/login" onClick={closeMenus}>
+        <Link
+          className={`lm-nav-tab lm-nav-tab-ops ${opsAuthenticated ? "lm-nav-tab-ops-authenticated" : ""}`}
+          href="/ops/login"
+          onClick={closeMenus}
+        >
+          <NavIcon name="ops" />
           Ops
         </Link>
       </nav>

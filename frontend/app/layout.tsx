@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
+import { DM_Sans, Syne } from "next/font/google";
 
 import { AppStatusShell } from "@/components/AppStatusShell";
 import { StartupHandshakeGate } from "@/components/StartupHandshakeGate";
@@ -8,12 +8,14 @@ import { uiCopy } from "@/lib/copy";
 import "./globals.css";
 import "./startup-gate.css";
 
-const bodyFont = Manrope({
+const bodyFont = DM_Sans({
+  display: "swap",
   subsets: ["latin"],
   variable: "--font-body"
 });
 
-const displayFont = Space_Grotesk({
+const displayFont = Syne({
+  display: "swap",
   subsets: ["latin"],
   variable: "--font-display"
 });
