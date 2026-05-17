@@ -102,7 +102,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title=settings.app_name, lifespan=lifespan)
+app = FastAPI(title=settings.app_name, version=settings.api_version, lifespan=lifespan)
 if settings.standardize_error_responses:
     register_error_handlers(app)
 

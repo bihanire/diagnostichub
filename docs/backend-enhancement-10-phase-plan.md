@@ -34,15 +34,19 @@ Status: executed in this pass.
 Goal: stop silent frontend/backend drift and make contracts reviewable.
 
 Deliverables:
-- Ensure every route has explicit request and response models.
+- Ensure every JSON route has an explicit response model.
+- Ensure every POST route with a request body uses a Pydantic request model.
 - Add route-level contract tests for critical success and error shapes.
-- Generate and snapshot the OpenAPI schema in CI.
+- Generate and snapshot or validate the OpenAPI schema in CI.
 - Add compatibility rules for additive versus breaking changes.
 - Expand `API_CONTRACT.md` with endpoint ownership and versioning expectations.
 
 Exit gate:
-- OpenAPI snapshot changes are intentional and reviewed.
+- OpenAPI version metadata matches backend `API_VERSION`.
 - Critical routes cannot return untyped dictionaries unless they are documented exceptions.
+- Stable endpoint schema references are covered by tests.
+
+Status: baseline governance guardrails executed in this pass. Future work can add a stored OpenAPI snapshot once CI ownership is settled.
 
 ## Phase 3: Diagnostic Search Quality Engine
 

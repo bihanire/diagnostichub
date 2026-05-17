@@ -2,6 +2,8 @@
 
 Base URL: `http://localhost:8000`
 
+The generated OpenAPI schema uses the same API version exposed by `GET /meta`. JSON endpoints are expected to declare Pydantic request and response contracts; CSV exports are the documented non-JSON exception.
+
 ## `POST /search`
 
 Searches procedures from free-text input.

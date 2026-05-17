@@ -33,11 +33,21 @@ This project uses semantic versioning for the frontend/backend startup contract.
 ## Version rules
 
 - `api_version` follows `MAJOR.MINOR.PATCH`.
+- The generated OpenAPI schema uses the same `api_version` as `/meta`.
 - Frontend expected version is compiled from `NEXT_PUBLIC_EXPECTED_API_VERSION`.
 - Startup behavior:
   - **Major mismatch** (`MAJOR` differs): block UI startup and show update-required banner.
   - **Minor mismatch** (`MINOR` differs with same major): allow startup and log warning.
   - **Patch mismatch** (`PATCH` differs with same major/minor): allow startup.
+
+## Schema governance rules
+
+- JSON routes must declare explicit Pydantic response models.
+- POST routes with request bodies must use Pydantic request models.
+- Text/CSV export routes may use a non-JSON response class instead of a response model.
+- Stable endpoint response schema references are tested so accidental contract drift fails in CI.
+- Breaking response changes require a major `API_VERSION` update and coordinated frontend rollout.
+- Additive response fields are allowed when old clients can safely ignore them.
 
 ## Environment controls
 
