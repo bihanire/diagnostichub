@@ -154,7 +154,7 @@ export default function OpsDiagnosticsPage() {
     >
       <section className="hero hero-split diagnostics-hero">
         <div className="hero-copy">
-          <span className="eyebrow">Ops diagnostics</span>
+          <span className="eyebrow">Deployment health</span>
           <h1>Live deployment readiness</h1>
           <p>
             Confirm the frontend can reach the backend gateway, read contract metadata, and continue with the API version it expects.
@@ -182,7 +182,7 @@ export default function OpsDiagnosticsPage() {
                 {state.phase === "loading" ? "Running check..." : "Run check again"}
               </button>
               <Link className="secondary-button inline-action" href="/insights">
-                Open insights
+                Review insights
               </Link>
             </div>
           </div>
