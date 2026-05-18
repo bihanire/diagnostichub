@@ -96,6 +96,8 @@ Exit gate:
 - SOP/content validation reports freshness and source quality.
 - Imports fail loudly on malformed or unsafe content.
 
+Status: source metadata and freshness guardrails executed in this pass. The SOP pack now carries reviewed knowledge-source metadata, validates malformed or unsafe source rows, and reports source freshness in the audit output without adding database migrations.
+
 ## Phase 6: Feedback-to-Content Learning Loop
 
 Goal: convert branch feedback into controlled improvements without letting noisy data mutate production guidance automatically.

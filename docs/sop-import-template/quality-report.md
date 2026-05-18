@@ -8,6 +8,7 @@
 - Linked procedures: 56
 - Errors: 0
 - Warnings: 0
+- Knowledge sources: 16
 
 ## Procedure Coverage
 
@@ -29,6 +30,27 @@
 | 14 | Replacement Request Eligibility | 12 | 4 | 4 |
 | 15 | Asset Transfer or Loan Reschedule | 11 | 4 | 4 |
 | 16 | Return, Refund, or Recovered Device Handling | 15 | 4 | 3 |
+
+## Source Freshness
+
+| Procedure | Topic | Owner | Reviewed | Due | Type | Status |
+| ---: | --- | --- | --- | --- | --- | --- |
+| 1 | Phone Not Powering On | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 2 | Screen Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 3 | Stolen Phone | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 4 | Charging Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 5 | Overheating or Swollen Battery | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 6 | Battery Draining Fast | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 7 | Freezing, Hanging, or App Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 8 | Random Restart or Safe Mode Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 9 | SIM or Network Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 10 | Speaker, Microphone, or Audio Issue | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 11 | FRP, Password, or Locked Device | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 12 | Liquid or Physical Damage | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 13 | Repair Ticket, Dispatch, or Legal Status Handling | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 14 | Replacement Request Eligibility | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 15 | Asset Transfer or Loan Reschedule | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
+| 16 | Return, Refund, or Recovered Device Handling | DiagnosticHub Content Team | 2026-05-18 | 2027-05-18 | internal_sop | Current |
 
 ## Errors
 

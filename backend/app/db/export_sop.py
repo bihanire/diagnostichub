@@ -5,6 +5,7 @@ import csv
 from pathlib import Path
 
 from app.db.import_sop import (
+    KNOWLEDGE_SOURCE_COLUMNS,
     LINK_COLUMNS,
     NODE_COLUMNS,
     PROCEDURE_COLUMNS,
@@ -66,6 +67,21 @@ def export_sample_sop_directory(path: str | Path) -> Path:
         ["procedure_id", "linked_procedure_id"],
         _build_link_rows(),
         LINK_COLUMNS,
+    )
+    _write_csv(
+        base_path / "knowledge_sources.csv",
+        [
+            "procedure_id",
+            "topic",
+            "owner",
+            "reviewed_at",
+            "review_due_at",
+            "source_type",
+            "scope",
+            "summary",
+        ],
+        _build_knowledge_source_rows(),
+        KNOWLEDGE_SOURCE_COLUMNS,
     )
 
     package = load_sop_directory(base_path)
@@ -142,6 +158,28 @@ def _build_link_rows() -> list[dict[str, str]]:
                     "linked_procedure_id": str(linked_procedure_id),
                 }
             )
+    return rows
+
+
+def _build_knowledge_source_rows() -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for procedure in sorted(SAMPLE_PROCEDURES, key=lambda item: item["id"]):
+        rows.append(
+            {
+                "procedure_id": str(procedure["id"]),
+                "topic": procedure["title"],
+                "owner": "DiagnosticHub Content Team",
+                "reviewed_at": "2026-05-18",
+                "review_due_at": "2027-05-18",
+                "source_type": "internal_sop",
+                "scope": "Branch diagnostic teaching and escalation guidance.",
+                "summary": (
+                    "Original internal summary for "
+                    + procedure["title"]
+                    + " covering branch checks, evidence, and next-step guidance."
+                ),
+            }
+        )
     return rows
 
 

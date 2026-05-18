@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 
 from sqlalchemy import delete, or_, select
@@ -10,10 +11,12 @@ from app.core.database import SessionLocal
 from app.db.seed import create_schema
 from app.db.sop_csv import (
     LINK_COLUMNS,
+    KNOWLEDGE_SOURCE_COLUMNS,
     NODE_COLUMNS,
     PROCEDURE_COLUMNS,
     TAG_COLUMNS,
     DecisionNodeRow,
+    KnowledgeSourceRow,
     LinkedProcedureRow,
     ProcedureRow,
     SopImportError,
@@ -22,6 +25,13 @@ from app.db.sop_csv import (
     load_sop_directory,
 )
 from app.models.models import DecisionNode, LinkedNode, Procedure, Tag
+
+ALLOWED_KNOWLEDGE_SOURCE_TYPES = {
+    "internal_sop",
+    "policy_overlay",
+    "training_note",
+    "service_reference",
+}
 
 
 def validate_import_package(
@@ -37,11 +47,20 @@ def validate_import_package(
     link_pairs = _find_duplicate_pairs(
         (row.procedure_id, row.linked_procedure_id) for row in package.linked_procedures
     )
+    source_keys = _find_duplicate_pairs(
+        (
+            row.procedure_id,
+            row.source_type.lower(),
+            row.topic.lower(),
+        )
+        for row in package.knowledge_sources
+    )
 
     errors.extend(f"Duplicate procedure id: {item}" for item in procedure_ids)
     errors.extend(f"Duplicate decision node id: {item}" for item in node_ids)
     errors.extend(f"Duplicate tag for procedure: {item}" for item in tag_pairs)
     errors.extend(f"Duplicate linked procedure pair: {item}" for item in link_pairs)
+    errors.extend(f"Duplicate knowledge source metadata: {item}" for item in source_keys)
 
     imported_procedure_ids = {row.id for row in package.procedures}
     valid_link_procedure_ids = imported_procedure_ids | existing_procedure_ids
@@ -93,6 +112,9 @@ def validate_import_package(
             errors.append(f"Procedure {procedure_id} must include at least one tag")
         if procedure_id not in nodes_by_procedure:
             errors.append(f"Procedure {procedure_id} must include at least one decision node")
+
+    if package.knowledge_sources:
+        _validate_knowledge_sources(errors, package.knowledge_sources, imported_procedure_ids)
 
     all_node_ids = {row.id for row in package.decision_nodes}
     for node_row in package.decision_nodes:
@@ -223,6 +245,71 @@ def _build_final_outcome(row: DecisionNodeRow) -> dict | None:
         "related_actions": row.related_actions,
         "follow_up_message": row.follow_up_message,
     }
+
+
+def _validate_knowledge_sources(
+    errors: list[str],
+    rows: list[KnowledgeSourceRow],
+    imported_procedure_ids: set[int],
+) -> None:
+    source_procedure_ids = {row.procedure_id for row in rows}
+    missing_source_ids = imported_procedure_ids - source_procedure_ids
+    for procedure_id in sorted(missing_source_ids):
+        errors.append(f"Procedure {procedure_id} must include knowledge source metadata")
+
+    for row in rows:
+        label = f"Knowledge source for procedure {row.procedure_id}"
+        if row.procedure_id not in imported_procedure_ids:
+            errors.append(f"Knowledge source references unknown procedure id: {row.procedure_id}")
+
+        for field_name, value in [
+            ("topic", row.topic),
+            ("owner", row.owner),
+            ("reviewed_at", row.reviewed_at),
+            ("review_due_at", row.review_due_at),
+            ("source_type", row.source_type),
+            ("scope", row.scope),
+            ("summary", row.summary),
+        ]:
+            _require_text(errors, value, f"{label} {field_name}")
+
+        if row.source_type and row.source_type not in ALLOWED_KNOWLEDGE_SOURCE_TYPES:
+            allowed = ", ".join(sorted(ALLOWED_KNOWLEDGE_SOURCE_TYPES))
+            errors.append(f"{label} source_type must be one of: {allowed}")
+
+        reviewed_at = _parse_iso_date(row.reviewed_at, f"{label} reviewed_at", errors)
+        review_due_at = _parse_iso_date(row.review_due_at, f"{label} review_due_at", errors)
+        if reviewed_at and review_due_at and review_due_at < reviewed_at:
+            errors.append(f"{label} review_due_at cannot be earlier than reviewed_at")
+
+        if len(row.summary) > 360:
+            errors.append(f"{label} summary must stay under 360 characters")
+        if _looks_like_external_doc_copy(row.summary) or _looks_like_external_doc_copy(row.scope):
+            errors.append(f"{label} must use original internal summary text, not copied external text or URLs")
+
+
+def _parse_iso_date(value: str, label: str, errors: list[str]) -> date | None:
+    if not value.strip():
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        errors.append(f"{label} must be an ISO date in YYYY-MM-DD format")
+        return None
+
+
+def _looks_like_external_doc_copy(value: str) -> bool:
+    normalized = value.lower()
+    blocked_fragments = (
+        "http://",
+        "https://",
+        "www.",
+        "copyright",
+        "verbatim",
+        "copied from",
+        "manual excerpt",
+    )
+    return any(fragment in normalized for fragment in blocked_fragments)
 
 
 def _require_text(errors: list[str], value: str, label: str) -> None:

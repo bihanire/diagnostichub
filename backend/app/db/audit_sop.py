@@ -2,9 +2,16 @@ from __future__ import annotations
 
 import argparse
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 
-from app.db.import_sop import SopImportError, SopImportPackage, load_sop_directory, validate_import_package
+from app.db.import_sop import (
+    ALLOWED_KNOWLEDGE_SOURCE_TYPES,
+    SopImportError,
+    SopImportPackage,
+    load_sop_directory,
+    validate_import_package,
+)
 from app.services.search_service import STOPWORDS, normalize_text, tokenize
 
 MIN_TAGS_PER_PROCEDURE = 8
@@ -51,6 +58,18 @@ ACTION_PREFIXES = (
     "Continue branch processing:",
     "Pause and verify:",
 )
+SOURCE_DUE_SOON_DAYS = 45
+
+
+@dataclass(frozen=True)
+class SourceAuditSummary:
+    procedure_id: int
+    topic: str
+    owner: str
+    reviewed_at: str
+    review_due_at: str
+    source_type: str
+    status: str
 
 
 @dataclass(frozen=True)
@@ -73,12 +92,14 @@ class SopAuditReport:
     errors: list[str]
     warnings: list[str]
     procedure_summaries: list[ProcedureAuditSummary]
+    source_summaries: list[SourceAuditSummary]
 
 
 def audit_sop_directory(path: str | Path) -> SopAuditReport:
     package = load_sop_directory(path)
     errors, warnings = audit_import_package(package)
     summaries = _build_procedure_summaries(package)
+    source_summaries = _build_source_summaries(package)
     return SopAuditReport(
         procedure_count=len(package.procedures),
         tag_count=len(package.tags),
@@ -89,6 +110,7 @@ def audit_sop_directory(path: str | Path) -> SopAuditReport:
         errors=errors,
         warnings=warnings,
         procedure_summaries=summaries,
+        source_summaries=source_summaries,
     )
 
 
@@ -105,6 +127,7 @@ def audit_import_package(package: SopImportPackage) -> tuple[list[str], list[str
     tags_by_procedure: dict[int, list[str]] = {procedure_id: [] for procedure_id in procedures_by_id}
     finals_by_procedure: dict[int, list] = {procedure_id: [] for procedure_id in procedures_by_id}
     normalized_tag_index: dict[str, set[int]] = {}
+    sources_by_procedure: dict[int, list] = {procedure_id: [] for procedure_id in procedures_by_id}
 
     for tag in package.tags:
         tags_by_procedure.setdefault(tag.procedure_id, []).append(tag.keyword)
@@ -115,6 +138,9 @@ def audit_import_package(package: SopImportPackage) -> tuple[list[str], list[str
     for node in package.decision_nodes:
         if node.is_final:
             finals_by_procedure.setdefault(node.procedure_id, []).append(node)
+
+    for source in package.knowledge_sources:
+        sources_by_procedure.setdefault(source.procedure_id, []).append(source)
 
     for procedure_id, procedure in procedures_by_id.items():
         tag_count = len(tags_by_procedure.get(procedure_id, []))
@@ -139,6 +165,12 @@ def audit_import_package(package: SopImportPackage) -> tuple[list[str], list[str
             warnings.append(
                 f"Procedure {procedure_id} '{procedure.title}' has no clearly branch-resolvable outcome. "
                 "Review whether the flow is escalating too early."
+            )
+
+        if package.knowledge_sources and not sources_by_procedure.get(procedure_id):
+            warnings.append(
+                f"Procedure {procedure_id} '{procedure.title}' has no source metadata. "
+                "Add a reviewed source row before promoting this content."
             )
 
         for keyword in tags_by_procedure.get(procedure_id, []):
@@ -168,6 +200,8 @@ def audit_import_package(package: SopImportPackage) -> tuple[list[str], list[str
             "Confirm this overlap is intentional and not causing search ambiguity."
         )
 
+    warnings.extend(_audit_source_freshness(package))
+
     return _dedupe(errors), _dedupe(warnings)
 
 
@@ -183,6 +217,7 @@ def render_markdown_report(report: SopAuditReport) -> str:
         f"- Linked procedures: {report.linked_procedure_count}",
         f"- Errors: {report.error_count}",
         f"- Warnings: {report.warning_count}",
+        f"- Knowledge sources: {len(report.source_summaries)}",
         "",
         "## Procedure Coverage",
         "",
@@ -195,6 +230,25 @@ def render_markdown_report(report: SopAuditReport) -> str:
             f"| {summary.procedure_id} | {summary.title} | {summary.tag_count} | "
             f"{summary.final_outcome_count} | {summary.branch_resolution_paths} |"
         )
+
+    lines.extend(
+        [
+            "",
+            "## Source Freshness",
+            "",
+            "| Procedure | Topic | Owner | Reviewed | Due | Type | Status |",
+            "| ---: | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
+    if report.source_summaries:
+        for source in report.source_summaries:
+            lines.append(
+                f"| {source.procedure_id} | {source.topic} | {source.owner} | "
+                f"{source.reviewed_at} | {source.review_due_at} | {source.source_type} | "
+                f"{source.status} |"
+            )
+    else:
+        lines.append("| - | No source metadata found | - | - | - | - | Missing |")
 
     lines.extend(["", "## Errors", ""])
     if report.errors:
@@ -238,6 +292,69 @@ def _build_procedure_summaries(package: SopImportPackage) -> list[ProcedureAudit
         )
         for procedure in sorted(package.procedures, key=lambda item: item.id)
     ]
+
+
+def _build_source_summaries(package: SopImportPackage) -> list[SourceAuditSummary]:
+    today = date.today()
+    summaries: list[SourceAuditSummary] = []
+    for source in sorted(package.knowledge_sources, key=lambda item: (item.procedure_id, item.topic)):
+        due_date = _parse_date(source.review_due_at)
+        if due_date is None:
+            status = "Invalid"
+        elif due_date < today:
+            status = "Stale"
+        elif (due_date - today).days <= SOURCE_DUE_SOON_DAYS:
+            status = "Due soon"
+        else:
+            status = "Current"
+
+        summaries.append(
+            SourceAuditSummary(
+                procedure_id=source.procedure_id,
+                topic=source.topic,
+                owner=source.owner,
+                reviewed_at=source.reviewed_at,
+                review_due_at=source.review_due_at,
+                source_type=source.source_type,
+                status=status,
+            )
+        )
+    return summaries
+
+
+def _audit_source_freshness(package: SopImportPackage) -> list[str]:
+    warnings: list[str] = []
+    today = date.today()
+
+    for source in package.knowledge_sources:
+        due_date = _parse_date(source.review_due_at)
+        if due_date is None:
+            continue
+        if due_date < today:
+            warnings.append(
+                f"Knowledge source for procedure {source.procedure_id} '{source.topic}' is stale; "
+                f"review was due on {source.review_due_at}."
+            )
+        elif (due_date - today).days <= SOURCE_DUE_SOON_DAYS:
+            warnings.append(
+                f"Knowledge source for procedure {source.procedure_id} '{source.topic}' is due for review soon "
+                f"on {source.review_due_at}."
+            )
+
+        if source.source_type not in ALLOWED_KNOWLEDGE_SOURCE_TYPES:
+            warnings.append(
+                f"Knowledge source for procedure {source.procedure_id} '{source.topic}' uses unsupported "
+                f"source type '{source.source_type}'."
+            )
+
+    return warnings
+
+
+def _parse_date(value: str) -> date | None:
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def _extract_validation_errors(message: str) -> list[str]:

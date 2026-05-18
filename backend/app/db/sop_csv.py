@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -64,11 +64,24 @@ class LinkedProcedureRow:
 
 
 @dataclass(frozen=True)
+class KnowledgeSourceRow:
+    procedure_id: int
+    topic: str
+    owner: str
+    reviewed_at: str
+    review_due_at: str
+    source_type: str
+    scope: str
+    summary: str
+
+
+@dataclass(frozen=True)
 class SopImportPackage:
     procedures: list[ProcedureRow]
     tags: list[TagRow]
     decision_nodes: list[DecisionNodeRow]
     linked_procedures: list[LinkedProcedureRow]
+    knowledge_sources: list[KnowledgeSourceRow] = field(default_factory=list)
 
 
 PROCEDURE_COLUMNS = {
@@ -99,15 +112,31 @@ NODE_COLUMNS = {
     "follow_up_message",
 }
 LINK_COLUMNS = {"procedure_id", "linked_procedure_id"}
+KNOWLEDGE_SOURCE_COLUMNS = {
+    "procedure_id",
+    "topic",
+    "owner",
+    "reviewed_at",
+    "review_due_at",
+    "source_type",
+    "scope",
+    "summary",
+}
 
 
 def load_sop_directory(path: str | Path) -> SopImportPackage:
     base_path = Path(path)
+    knowledge_sources_path = base_path / "knowledge_sources.csv"
     return SopImportPackage(
         procedures=_load_procedures(base_path / "procedures.csv"),
         tags=_load_tags(base_path / "tags.csv"),
         decision_nodes=_load_decision_nodes(base_path / "decision_nodes.csv"),
         linked_procedures=_load_linked_procedures(base_path / "linked_procedures.csv"),
+        knowledge_sources=(
+            _load_knowledge_sources(knowledge_sources_path)
+            if knowledge_sources_path.exists()
+            else []
+        ),
     )
 
 
@@ -168,6 +197,23 @@ def _load_linked_procedures(path: Path) -> list[LinkedProcedureRow]:
         LinkedProcedureRow(
             procedure_id=_required_int(row, "procedure_id", path),
             linked_procedure_id=_required_int(row, "linked_procedure_id", path),
+        )
+        for row in rows
+    ]
+
+
+def _load_knowledge_sources(path: Path) -> list[KnowledgeSourceRow]:
+    rows = _read_csv(path, KNOWLEDGE_SOURCE_COLUMNS)
+    return [
+        KnowledgeSourceRow(
+            procedure_id=_required_int(row, "procedure_id", path),
+            topic=_text(row, "topic"),
+            owner=_text(row, "owner"),
+            reviewed_at=_text(row, "reviewed_at"),
+            review_due_at=_text(row, "review_due_at"),
+            source_type=_text(row, "source_type"),
+            scope=_text(row, "scope"),
+            summary=_text(row, "summary"),
         )
         for row in rows
     ]

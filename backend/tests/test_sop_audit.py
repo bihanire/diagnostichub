@@ -5,6 +5,7 @@ from app.db.audit_sop import audit_import_package, audit_sop_directory, render_m
 from app.db.export_sop import export_sample_sop_directory
 from app.db.import_sop import (
     DecisionNodeRow,
+    KnowledgeSourceRow,
     LinkedProcedureRow,
     ProcedureRow,
     SopImportPackage,
@@ -150,6 +151,42 @@ class SopAuditTests(unittest.TestCase):
             any("Shared normalized tag 'replacement'" in warning for warning in warnings)
         )
 
+    def test_audit_import_package_flags_stale_source_metadata(self) -> None:
+        package = build_audit_package()
+        package = SopImportPackage(
+            procedures=package.procedures,
+            tags=package.tags,
+            decision_nodes=package.decision_nodes,
+            linked_procedures=package.linked_procedures,
+            knowledge_sources=[
+                KnowledgeSourceRow(
+                    procedure_id=1,
+                    topic="Replacement Flow",
+                    owner="DiagnosticHub Content Team",
+                    reviewed_at="2024-01-01",
+                    review_due_at="2024-06-01",
+                    source_type="internal_sop",
+                    scope="Branch diagnostic teaching and escalation guidance.",
+                    summary="Original internal summary for replacement handling.",
+                ),
+                KnowledgeSourceRow(
+                    procedure_id=2,
+                    topic="Theft Flow",
+                    owner="DiagnosticHub Content Team",
+                    reviewed_at="2026-05-18",
+                    review_due_at="2027-05-18",
+                    source_type="internal_sop",
+                    scope="Branch diagnostic teaching and escalation guidance.",
+                    summary="Original internal summary for theft handling.",
+                ),
+            ],
+        )
+
+        errors, warnings = audit_import_package(package)
+
+        self.assertEqual(errors, [])
+        self.assertTrue(any("is stale" in warning for warning in warnings))
+
     def test_audit_exported_sample_pack_has_no_errors(self) -> None:
         with TemporaryDirectory() as temp_dir:
             export_sample_sop_directory(temp_dir)
@@ -168,4 +205,6 @@ class SopAuditTests(unittest.TestCase):
 
         self.assertIn("# SOP Quality Report", markdown)
         self.assertIn("| ID | Title | Tags | Final Outcomes | Branch-Resolvable Outcomes |", markdown)
+        self.assertIn("## Source Freshness", markdown)
+        self.assertIn("| Procedure | Topic | Owner | Reviewed | Due | Type | Status |", markdown)
         self.assertIn("## Warnings", markdown)

@@ -8,6 +8,7 @@ Use these CSV files to convert SOP content into PostgreSQL-ready DiagnosticHub k
 - `tags.csv`: searchable words and customer phrases for each procedure.
 - `decision_nodes.csv`: yes/no triage questions and final outcomes.
 - `linked_procedures.csv`: related procedure links.
+- `knowledge_sources.csv`: reviewed source metadata for each procedure, including owner, topic, review dates, source type, scope, and original summary.
 - `search-benchmark.csv`: messy real-world queries that must keep matching the right procedures with enough confidence and enough score separation from the next-best alternative.
 - `search-quality-benchmark.csv`: higher-order search quality cases for ambiguity gates, no-match recovery, typo tolerance, and branch-language routing.
 - feedback language candidate exports: reviewable CSVs generated from live branch feedback queries to help decide what should be promoted into `search-benchmark.csv` next.
@@ -27,6 +28,9 @@ This folder is now the canonical knowledge pack for seeded procedures. Backend s
   - `outcome_warranty_status`
   - `follow_up_message`
 - Non-final question rows should leave final outcome fields blank.
+- Every promoted procedure should have at least one row in `knowledge_sources.csv`.
+- Knowledge source summaries must be original internal summaries. Do not paste external documentation text, URLs, or copied manual excerpts.
+- `reviewed_at` and `review_due_at` must use `YYYY-MM-DD`; source reviews should be renewed before the due date.
 
 ## Export Command
 

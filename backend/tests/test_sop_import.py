@@ -9,6 +9,7 @@ from app.core.database import Base
 from app.db.export_sop import export_sample_sop_directory
 from app.db.import_sop import (
     DecisionNodeRow,
+    KnowledgeSourceRow,
     ProcedureRow,
     SopImportError,
     SopImportPackage,
@@ -136,6 +137,30 @@ class SopImportTests(unittest.TestCase):
         with self.assertRaisesRegex(SopImportError, "broken yes_next link"):
             validate_import_package(package)
 
+    def test_validate_import_package_rejects_malformed_source_metadata(self) -> None:
+        package = build_package()
+        package = SopImportPackage(
+            procedures=package.procedures,
+            tags=package.tags,
+            decision_nodes=package.decision_nodes,
+            linked_procedures=package.linked_procedures,
+            knowledge_sources=[
+                KnowledgeSourceRow(
+                    procedure_id=50,
+                    topic="Accessory Test",
+                    owner="DiagnosticHub Content Team",
+                    reviewed_at="2026/05/18",
+                    review_due_at="2026-01-01",
+                    source_type="external_manual_copy",
+                    scope="https://example.com/manual",
+                    summary="Copied from external manual excerpt.",
+                )
+            ],
+        )
+
+        with self.assertRaisesRegex(SopImportError, "source_type must be one of"):
+            validate_import_package(package)
+
     def test_import_sop_session_requires_replace_for_existing_procedure(self) -> None:
         package = build_package()
 
@@ -247,6 +272,7 @@ class SopImportTests(unittest.TestCase):
         package = load_sop_directory(DEFAULT_SOP_PACK_PATH)
 
         self.assertEqual(len(SAMPLE_PROCEDURES), len(package.procedures))
+        self.assertEqual(len(package.knowledge_sources), len(package.procedures))
         self.assertEqual(
             [procedure["title"] for procedure in SAMPLE_PROCEDURES],
             [procedure.title for procedure in sorted(package.procedures, key=lambda item: item.id)],
