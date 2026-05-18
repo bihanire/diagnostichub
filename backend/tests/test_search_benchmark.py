@@ -10,6 +10,9 @@ from app.db.search_benchmark import (
 )
 
 BENCHMARK_PATH = Path(__file__).resolve().parents[2] / "docs" / "sop-import-template" / "search-benchmark.csv"
+QUALITY_BENCHMARK_PATH = (
+    Path(__file__).resolve().parents[2] / "docs" / "sop-import-template" / "search-quality-benchmark.csv"
+)
 
 
 class SearchBenchmarkTests(unittest.TestCase):
@@ -31,6 +34,17 @@ class SearchBenchmarkTests(unittest.TestCase):
         self.assertEqual(report.failed_cases, 0)
         self.assertEqual(report.passed_cases, 88)
         self.assertGreater(min(result.margin for result in report.results), 0.04)
+
+    def test_run_search_quality_benchmark_passes_for_stage_three_pack(self) -> None:
+        report = run_search_benchmark(QUALITY_BENCHMARK_PATH)
+
+        self.assertEqual(report.total_cases, 19)
+        self.assertEqual(report.failed_cases, 0)
+        self.assertEqual(report.passed_cases, 19)
+        self.assertTrue(any(result.case.expected_no_match for result in report.results))
+        self.assertTrue(
+            any(result.case.expected_confidence_state == "caution" for result in report.results)
+        )
 
     def test_render_markdown_report_includes_case_table(self) -> None:
         report = run_search_benchmark(BENCHMARK_PATH)

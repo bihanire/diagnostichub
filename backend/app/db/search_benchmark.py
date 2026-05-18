@@ -37,15 +37,18 @@ BENCHMARK_COLUMNS = {
     "minimum_margin",
 }
 
-
 @dataclass(frozen=True)
 class SearchBenchmarkCase:
     query: str
-    expected_procedure_id: int
-    expected_procedure_title: str
-    expected_issue_type: str
+    expected_procedure_id: int | None
+    expected_procedure_title: str | None
+    expected_issue_type: str | None
     minimum_confidence: float
     minimum_margin: float
+    case_type: str = "routing"
+    expected_confidence_state: str | None = None
+    expected_no_match: bool = False
+    minimum_alternative_count: int = 0
 
 
 @dataclass(frozen=True)
@@ -85,14 +88,40 @@ def load_search_benchmark(path: str | Path) -> list[SearchBenchmarkCase]:
 
         cases: list[SearchBenchmarkCase] = []
         for row in reader:
+            expected_no_match = _optional_bool(row, "expected_no_match", default=False)
+            expected_procedure_id = (
+                None
+                if expected_no_match and not (row.get("expected_procedure_id") or "").strip()
+                else _required_int(row, "expected_procedure_id", csv_path)
+            )
+            expected_procedure_title = (
+                None
+                if expected_no_match and not (row.get("expected_procedure_title") or "").strip()
+                else _required_text(row, "expected_procedure_title", csv_path)
+            )
+            expected_issue_type = (
+                None
+                if expected_no_match and not (row.get("expected_issue_type") or "").strip()
+                else _required_text(row, "expected_issue_type", csv_path)
+            )
             cases.append(
                 SearchBenchmarkCase(
                     query=_required_text(row, "query", csv_path),
-                    expected_procedure_id=_required_int(row, "expected_procedure_id", csv_path),
-                    expected_procedure_title=_required_text(row, "expected_procedure_title", csv_path),
-                    expected_issue_type=_required_text(row, "expected_issue_type", csv_path),
+                    expected_procedure_id=expected_procedure_id,
+                    expected_procedure_title=expected_procedure_title,
+                    expected_issue_type=expected_issue_type,
                     minimum_confidence=_required_float(row, "minimum_confidence", csv_path),
                     minimum_margin=_required_float(row, "minimum_margin", csv_path),
+                    case_type=(row.get("case_type") or "routing").strip() or "routing",
+                    expected_confidence_state=(row.get("expected_confidence_state") or "").strip()
+                    or None,
+                    expected_no_match=expected_no_match,
+                    minimum_alternative_count=_optional_int(
+                        row,
+                        "minimum_alternative_count",
+                        csv_path,
+                        default=0,
+                    ),
                 )
             )
     return cases
@@ -137,7 +166,11 @@ def render_markdown_report(report: SearchBenchmarkReport) -> str:
     ]
 
     for result in report.results:
-        expected = f"{result.case.expected_procedure_id} {result.case.expected_procedure_title}"
+        expected = (
+            "No match"
+            if result.case.expected_no_match
+            else f"{result.case.expected_procedure_id} {result.case.expected_procedure_title}"
+        )
         matched_title = result.matched_procedure_title or "No match"
         matched_id = "-" if result.matched_procedure_id is None else str(result.matched_procedure_id)
         matched = f"{matched_id} {matched_title}".strip()
@@ -161,6 +194,46 @@ def _evaluate_case(db, case: SearchBenchmarkCase) -> SearchBenchmarkResult:
     margin = 0.0
     if ranked and alternative is not None:
         margin = round(ranked[0][0] - alternative[0], 4)
+
+    if case.expected_no_match:
+        if not response.no_match:
+            return SearchBenchmarkResult(
+                case=case,
+                passed=False,
+                matched_procedure_id=response.best_match.id if response.best_match else None,
+                matched_procedure_title=response.best_match.title if response.best_match else None,
+                matched_issue_type=response.structured_intent.issue_type,
+                confidence=response.confidence,
+                alternative_procedure_id=alternative[1] if alternative else None,
+                alternative_procedure_title=alternative[2] if alternative else None,
+                margin=margin,
+                reason="expected no-match recovery",
+            )
+        if case.expected_confidence_state and response.confidence_state != case.expected_confidence_state:
+            return SearchBenchmarkResult(
+                case=case,
+                passed=False,
+                matched_procedure_id=None,
+                matched_procedure_title=None,
+                matched_issue_type=response.structured_intent.issue_type,
+                confidence=response.confidence,
+                alternative_procedure_id=alternative[1] if alternative else None,
+                alternative_procedure_title=alternative[2] if alternative else None,
+                margin=margin,
+                reason="confidence state differs from expectation",
+            )
+        return SearchBenchmarkResult(
+            case=case,
+            passed=True,
+            matched_procedure_id=None,
+            matched_procedure_title=None,
+            matched_issue_type=response.structured_intent.issue_type,
+            confidence=response.confidence,
+            alternative_procedure_id=alternative[1] if alternative else None,
+            alternative_procedure_title=alternative[2] if alternative else None,
+            margin=margin,
+            reason="ok",
+        )
 
     if response.best_match is None:
         return SearchBenchmarkResult(
@@ -244,6 +317,34 @@ def _evaluate_case(db, case: SearchBenchmarkCase) -> SearchBenchmarkResult:
             alternative_procedure_title=alternative[2] if alternative else None,
             margin=margin,
             reason="match margin fell below the minimum threshold",
+        )
+
+    if case.expected_confidence_state and response.confidence_state != case.expected_confidence_state:
+        return SearchBenchmarkResult(
+            case=case,
+            passed=False,
+            matched_procedure_id=response.best_match.id,
+            matched_procedure_title=response.best_match.title,
+            matched_issue_type=response.structured_intent.issue_type,
+            confidence=response.confidence,
+            alternative_procedure_id=alternative[1] if alternative else None,
+            alternative_procedure_title=alternative[2] if alternative else None,
+            margin=margin,
+            reason="confidence state differs from expectation",
+        )
+
+    if len(response.alternatives) < case.minimum_alternative_count:
+        return SearchBenchmarkResult(
+            case=case,
+            passed=False,
+            matched_procedure_id=response.best_match.id,
+            matched_procedure_title=response.best_match.title,
+            matched_issue_type=response.structured_intent.issue_type,
+            confidence=response.confidence,
+            alternative_procedure_id=alternative[1] if alternative else None,
+            alternative_procedure_title=alternative[2] if alternative else None,
+            margin=margin,
+            reason="not enough review alternatives returned",
         )
 
     return SearchBenchmarkResult(
@@ -344,6 +445,27 @@ def _required_float(row: dict[str, str], column: str, path: Path) -> float:
         return float(value)
     except ValueError as exc:
         raise SearchBenchmarkError(f"{path.name} has an invalid number in {column}: {value}") from exc
+
+
+def _optional_int(row: dict[str, str], column: str, path: Path, *, default: int) -> int:
+    value = (row.get(column) or "").strip()
+    if not value:
+        return default
+    try:
+        return int(value)
+    except ValueError as exc:
+        raise SearchBenchmarkError(f"{path.name} has an invalid integer in {column}: {value}") from exc
+
+
+def _optional_bool(row: dict[str, str], column: str, *, default: bool) -> bool:
+    value = (row.get(column) or "").strip().lower()
+    if not value:
+        return default
+    if value in {"1", "true", "yes", "y"}:
+        return True
+    if value in {"0", "false", "no", "n"}:
+        return False
+    raise SearchBenchmarkError(f"Invalid boolean in {column}: {value}")
 
 
 def main() -> None:

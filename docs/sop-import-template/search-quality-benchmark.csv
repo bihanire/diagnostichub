@@ -1,0 +1,20 @@
+query,case_type,expected_no_match,expected_procedure_id,expected_procedure_title,expected_issue_type,minimum_confidence,minimum_margin,expected_confidence_state,minimum_alternative_count
+client says set is dead but vibrates once then screen stays off,high_confidence,false,1,Phone Not Powering On,Power & Thermal,0.55,0.20,strong,0
+charger port has moisture warning and refuses to charge,high_confidence,false,4,Charging Issue,Power & Thermal,0.55,0.18,strong,0
+battery cover is swollen and phone is hot,high_confidence,false,5,Overheating or Swollen Battery,Power & Thermal,0.60,0.20,strong,0
+apps crash after update and device is slow,high_confidence,false,7,"Freezing, Hanging, or App Issue",Logic & Software,0.55,0.20,strong,0
+sim not detected no service after another sim,high_confidence,false,9,SIM or Network Issue,Connectivity & I/O,0.55,0.20,strong,0
+forgot google account after factory reset,high_confidence,false,11,"FRP, Password, or Locked Device",Security & Access,0.55,0.20,strong,0
+cracked display touch ghost pressing,high_confidence,false,2,Screen Issue,Display & Vision,0.55,0.20,strong,0
+repair centre delay above fifteen days reschedule loan,high_confidence,false,15,Asset Transfer or Loan Reschedule,Replacements & Transfers,0.55,0.18,strong,0
+phone keeps rebooting after software update,ambiguity,false,7,"Freezing, Hanging, or App Issue",Logic & Software,0.55,0.03,caution,1
+battery hot and drains fast while charging,ambiguity,false,6,Battery Draining Fast,Power & Thermal,0.55,0.05,caution,1
+owner died and family wants transfer,ambiguity,false,15,Asset Transfer or Loan Reschedule,Replacements & Transfers,0.40,0.03,caution,1
+customer asks about laptop keyboard invoice,no_match,true,,,,0,0,low,0
+branch printer toner request,no_match,true,,,,0,0,low,0
+sales receipt correction for accessory,no_match,true,,,,0,0,low,0
+fon not chajin wen cabol bent,typo,false,4,Charging Issue,Power & Thermal,0.45,0.10,strong,0
+moutpiece lo callers cnt here,typo,false,10,"Speaker, Microphone, or Audio Issue",Connectivity & I/O,0.45,0.10,strong,0
+sim not reding and data not moving,typo,false,9,SIM or Network Issue,Connectivity & I/O,0.55,0.20,strong,0
+cust says phone was robbed need block and track,branch_language,false,3,Stolen Phone,Security & Access,0.55,0.20,strong,0
+stolen phone customer wants replacement,policy_intent,false,14,Replacement Request Eligibility,Replacements & Transfers,0.60,0.20,strong,0

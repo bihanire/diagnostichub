@@ -18,7 +18,7 @@
 | the screen is yellow and touch is not working | 2 Screen Issue | 2 Screen Issue | 9 SIM or Network Issue | Display & Vision | 0.76 | 0.26 | Pass |
 | green line on phone screen after update | 2 Screen Issue | 2 Screen Issue | 7 Freezing, Hanging, or App Issue | Display & Vision | 0.98 | 0.58 | Pass |
 | screen protector lifting and touch pressing itself | 2 Screen Issue | 2 Screen Issue | 8 Random Restart or Safe Mode Issue | Display & Vision | 0.81 | 0.58 | Pass |
-| my phone was snatched | 3 Stolen Phone | 3 Stolen Phone | 12 Liquid or Physical Damage | Security & Access | 0.72 | 0.29 | Pass |
+| my phone was snatched | 3 Stolen Phone | 3 Stolen Phone | 1 Phone Not Powering On | Security & Access | 0.67 | 0.41 | Pass |
 | need track stolen device | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.73 | 0.31 | Pass |
 | device finding lock a lost phone | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.87 | 0.44 | Pass |
 | charger connected but battery stays same | 4 Charging Issue | 4 Charging Issue | 1 Phone Not Powering On | Power & Thermal | 0.74 | 0.20 | Pass |
@@ -55,17 +55,17 @@
 | which repair ticket and legal status should i use for dispatch | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 16 Return, Refund, or Recovered Device Handling | Operations & Compliance | 0.93 | 0.39 | Pass |
 | maintenance mode before service handover | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 15 Asset Transfer or Loan Reschedule | Operations & Compliance | 0.77 | 0.54 | Pass |
 | replacement device after theft | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.99 | 0.38 | Pass |
-| customer wants new phone after ber | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 16 Return, Refund, or Recovered Device Handling | Replacements & Transfers | 0.69 | 0.31 | Pass |
-| the customer wants a replacement because the device was stolen | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.81 | 0.16 | Pass |
+| customer wants new phone after ber | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.80 | 0.44 | Pass |
+| the customer wants a replacement because the device was stolen | 14 Replacement Request Eligibility | 14 Replacement Request Eligibility | 15 Asset Transfer or Loan Reschedule | Replacements & Transfers | 0.87 | 0.24 | Pass |
 | ownership transfer for phone loan | 15 Asset Transfer or Loan Reschedule | 15 Asset Transfer or Loan Reschedule | 14 Replacement Request Eligibility | Replacements & Transfers | 0.99 | 0.21 | Pass |
 | faulty device at repair centre for 20 days need reschedule | 15 Asset Transfer or Loan Reschedule | 15 Asset Transfer or Loan Reschedule | 14 Replacement Request Eligibility | Replacements & Transfers | 0.81 | 0.38 | Pass |
 | the faulty device has stayed at the repair centre for more than 15 days | 15 Asset Transfer or Loan Reschedule | 15 Asset Transfer or Loan Reschedule | 13 Repair Ticket, Dispatch, or Legal Status Handling | Replacements & Transfers | 0.70 | 0.26 | Pass |
-| refund request for returned phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 14 Replacement Request Eligibility | Returns & Recovery | 0.95 | 0.51 | Pass |
+| refund request for returned phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 3 Stolen Phone | Returns & Recovery | 0.86 | 0.58 | Pass |
 | third party recovery reward for recovered device | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 11 FRP, Password, or Locked Device | Returns & Recovery | 0.98 | 0.69 | Pass |
-| the client wants a refund after returning the phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 3 Stolen Phone | Returns & Recovery | 0.68 | 0.44 | Pass |
+| the client wants a refund after returning the phone | 16 Return, Refund, or Recovered Device Handling | 16 Return, Refund, or Recovered Device Handling | 3 Stolen Phone | Returns & Recovery | 0.64 | 0.40 | Pass |
 | my galaxy phone is not charging even with the approved charger | 4 Charging Issue | 4 Charging Issue | 6 Battery Draining Fast | Power & Thermal | 0.76 | 0.27 | Pass |
 | the galaxy phone keeps freezing and built-in support diagnostics points to apps | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 1 Phone Not Powering On | Logic & Software | 0.47 | 0.25 | Pass |
-| find my mobile says my phone was stolen | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.89 | 0.45 | Pass |
+| find my mobile says my phone was stolen | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.80 | 0.20 | Pass |
 | maintenance mode before sending this galaxy for repair | 13 Repair Ticket, Dispatch, or Legal Status Handling | 13 Repair Ticket, Dispatch, or Legal Status Handling | 14 Replacement Request Eligibility | Operations & Compliance | 0.64 | 0.26 | Pass |
 | callers cannot hear me on my phone and built-in support says mic test failed | 10 Speaker, Microphone, or Audio Issue | 10 Speaker, Microphone, or Audio Issue | 9 SIM or Network Issue | Connectivity & I/O | 0.60 | 0.27 | Pass |
 | my galaxy is stuck in safe mode after restart | 8 Random Restart or Safe Mode Issue | 8 Random Restart or Safe Mode Issue | 7 Freezing, Hanging, or App Issue | Logic & Software | 0.95 | 0.45 | Pass |
@@ -85,10 +85,10 @@
 | only one app freezes and the rest of the phone is fine | 7 Freezing, Hanging, or App Issue | 7 Freezing, Hanging, or App Issue | 8 Random Restart or Safe Mode Issue | Logic & Software | 0.59 | 0.19 | Pass |
 | safe mode keeps coming back every time i restart the phone | 8 Random Restart or Safe Mode Issue | 8 Random Restart or Safe Mode Issue | 7 Freezing, Hanging, or App Issue | Logic & Software | 0.54 | 0.19 | Pass |
 | it keeps rebooting and showing safe mode again | 8 Random Restart or Safe Mode Issue | 8 Random Restart or Safe Mode Issue | 7 Freezing, Hanging, or App Issue | Logic & Software | 0.69 | 0.31 | Pass |
-| factory reset done and now it wants the old google account | 11 FRP, Password, or Locked Device | 11 FRP, Password, or Locked Device | 16 Return, Refund, or Recovered Device Handling | Security & Access | 0.76 | 0.22 | Pass |
+| factory reset done and now it wants the old google account | 11 FRP, Password, or Locked Device | 11 FRP, Password, or Locked Device | 16 Return, Refund, or Recovered Device Handling | Security & Access | 0.80 | 0.34 | Pass |
 | the phone is shell managed and locked | 11 FRP, Password, or Locked Device | 11 FRP, Password, or Locked Device | 3 Stolen Phone | Security & Access | 0.88 | 0.50 | Pass |
 | i forgot the phone password and cannot unlock it | 11 FRP, Password, or Locked Device | 11 FRP, Password, or Locked Device | 9 SIM or Network Issue | Security & Access | 0.97 | 0.59 | Pass |
-| the customer says the phone was stolen and they need to track it | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.76 | 0.40 | Pass |
+| the customer says the phone was stolen and they need to track it | 3 Stolen Phone | 3 Stolen Phone | 14 Replacement Request Eligibility | Security & Access | 0.66 | 0.28 | Pass |
 | sim card is not detected and there is no service | 9 SIM or Network Issue | 9 SIM or Network Issue | 10 Speaker, Microphone, or Audio Issue | Connectivity & I/O | 0.96 | 0.47 | Pass |
 | phone cannot register on the network even with another sim | 9 SIM or Network Issue | 9 SIM or Network Issue | 10 Speaker, Microphone, or Audio Issue | Connectivity & I/O | 0.82 | 0.36 | Pass |
 | wifi connects but says no internet on this phone | 9 SIM or Network Issue | 9 SIM or Network Issue | 10 Speaker, Microphone, or Audio Issue | Connectivity & I/O | 0.65 | 0.19 | Pass |

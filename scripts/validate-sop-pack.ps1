@@ -17,6 +17,8 @@ $resolvedPackPath = Resolve-Path (Join-Path $repoRoot $Path)
 $qualityReportPath = Join-Path $resolvedPackPath "quality-report.md"
 $benchmarkPath = Join-Path $resolvedPackPath "search-benchmark.csv"
 $benchmarkReportPath = Join-Path $resolvedPackPath "search-benchmark-report.md"
+$qualityBenchmarkPath = Join-Path $resolvedPackPath "search-quality-benchmark.csv"
+$qualityBenchmarkReportPath = Join-Path $resolvedPackPath "search-quality-benchmark-report.md"
 
 Push-Location $backendDir
 try {
@@ -30,6 +32,12 @@ try {
     Write-Host "Running search benchmark..."
     & $python -m app.db.search_benchmark --path $benchmarkPath --markdown $benchmarkReportPath --fail-on-mismatch | Out-Null
     Write-Host "Search benchmark passed. Report written to $benchmarkReportPath"
+
+    if (Test-Path $qualityBenchmarkPath) {
+        Write-Host "Running search quality benchmark..."
+        & $python -m app.db.search_benchmark --path $qualityBenchmarkPath --markdown $qualityBenchmarkReportPath --fail-on-mismatch | Out-Null
+        Write-Host "Search quality benchmark passed. Report written to $qualityBenchmarkReportPath"
+    }
 
     if ($Apply) {
         Write-Host "Applying SOP pack to the configured database..."

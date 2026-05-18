@@ -27,11 +27,17 @@ STOPWORDS = {
     "as",
     "at",
     "after",
+    "about",
+    "ask",
+    "asks",
     "be",
     "before",
+    "branch",
     "but",
     "by",
+    "because",
     "can",
+    "client",
     "customer",
     "does",
     "do",
@@ -69,6 +75,7 @@ STOPWORDS = {
     "please",
     "problem",
     "issue",
+    "request",
     "says",
     "said",
     "galaxy",
@@ -85,6 +92,9 @@ STOPWORDS = {
     "to",
     "up",
     "using",
+    "want",
+    "wants",
+    "was",
     "with",
     "device",
     "galaxy",
@@ -257,6 +267,8 @@ PHRASE_REPLACEMENTS = {
     "charges only when cable bent": "one position charge",
     "only when cable bent": "one position charge",
     "cable bent": "one position charge",
+    "cabol bent": "one position charge",
+    "not chajin": "charge fail",
     "insert a charger": "charger",
     "insert charger": "charger",
     "plug in charger": "charger",
@@ -294,6 +306,10 @@ PHRASE_REPLACEMENTS = {
     "mobile data": "data",
     "wi fi": "wifi",
     "mouth piece": "mouthpiece",
+    "moutpiece": "mouthpiece",
+    "callers cnt here": "microphone issue",
+    "caller cnt here": "microphone issue",
+    "callers cant hear": "microphone issue",
     "hear me badly": "microphone issue",
     "cant hear me": "microphone issue",
     "cannot hear me": "microphone issue",
@@ -327,6 +343,8 @@ PHRASE_REPLACEMENTS = {
     "recovered phone": "recovered device",
     "third party recovery": "recovery reward",
     "police abstract": "stolen abstract",
+    "robbed": "stolen",
+    "block and track": "stolen track",
     "after sales": "aftersales",
     "aftersales ticketing": "aftersales ticket",
     "support diagnostics": "membersdiagnostic",
@@ -397,6 +415,11 @@ TOKEN_NORMALIZATIONS = {
     "update": "update",
     "managed": "shell",
     "frame": "frame",
+    "fon": "phone",
+    "chajin": "charge",
+    "cabol": "cable",
+    "wen": "when",
+    "cnt": "cant",
     "selfrepairsls": "selfrepairsls",
     "waturepairsls": "waturepairsls",
     "removels": "removels",
@@ -670,6 +693,14 @@ def classify_confidence(best_score: float, margin: float) -> tuple[str, bool, st
     return "strong", False, None
 
 
+def has_search_domain_signal(
+    *,
+    exact_hits: int,
+    issue_type_scores: dict[str, int],
+) -> bool:
+    return exact_hits > 0 or any(score > 0 for score in issue_type_scores.values())
+
+
 def _get_indexed_procedures(db: Session) -> tuple[ProcedureSearchIndex, ...]:
     global _search_index_cache
     global _search_index_cache_expires_at
@@ -774,6 +805,10 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
         category_scores=issue_type_scores,
     )
     exact_hits = count_exact_hits(query_tokens, best_match_index.searchable_tokens)
+    has_domain_signal = has_search_domain_signal(
+        exact_hits=exact_hits,
+        issue_type_scores=issue_type_scores,
+    )
     structured_intent_issue_type = (
         issue_type
         if issue_type and issue_type.lower() in best_match.category.lower()
@@ -790,8 +825,32 @@ def search_procedures(db: Session, query: str) -> SearchResponse:
         if score >= max(best_score - 0.12, 0.28)
     ]
 
+    if best_score < 0.58 and not has_domain_signal:
+        return SearchResponse(
+            query=clean_query,
+            structured_intent=StructuredIntent(
+                issue_type=None,
+                symptoms=meaningful_tokens[:6],
+            ),
+            semantic_insight=build_semantic_insight(
+                normalized_query=normalized_query,
+                key_terms=meaningful_tokens,
+                confidence=0.0,
+                confidence_margin=0.0,
+                category_scores=issue_type_scores,
+            ),
+            confidence=round(min(best_score, 0.33), 2),
+            confidence_state="low",
+            confidence_margin=0.0,
+            needs_review=True,
+            review_message="No device or workflow signal was strong enough to choose a diagnostic flow.",
+            suggested_next_step="Try a shorter description, device symptom, workflow name, or short customer phrase.",
+            no_match=True,
+            message="I could not find a confident match yet.",
+        )
+
     if best_score < 0.34:
-        if exact_hits > 0 or issue_type:
+        if has_domain_signal:
             broad_alternatives: list[ProcedureSummary] = [
                 to_summary(procedure)
                 for score, procedure, _ in ranked[1:5]
