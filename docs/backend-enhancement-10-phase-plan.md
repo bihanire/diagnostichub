@@ -79,6 +79,8 @@ Exit gate:
 - Startup validation catches broken procedure graphs.
 - All production flows have complete terminal outcomes.
 
+Status: terminal-path and final-outcome integrity guardrails executed in this pass. Workflow validation now rejects incomplete final outcome payloads, one-sided branches, missing terminal outcomes, and reachable questions that cannot end cleanly.
+
 ## Phase 5: Knowledge Repository and Content Pipeline
 
 Goal: make knowledge ingestion safe, reviewable, and teaching-first.

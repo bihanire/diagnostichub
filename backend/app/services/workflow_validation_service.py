@@ -7,6 +7,18 @@ from app.schemas.system import WorkflowValidationIssue, WorkflowValidationReport
 from app.services.procedure_service import procedure_query
 from app.services.triage_service import find_root_node
 
+REQUIRED_FINAL_OUTCOME_KEYS = (
+    "diagnosis",
+    "recommended_action",
+    "warranty_status",
+    "related_actions",
+    "follow_up_message",
+)
+
+
+def _is_blank_text(value: object) -> bool:
+    return not isinstance(value, str) or not value.strip()
+
 
 def _walk_reachable(node_map: dict[int, DecisionNode], root_id: int) -> set[int]:
     visited: set[int] = set()
@@ -47,6 +59,28 @@ def _has_cycle(node_map: dict[int, DecisionNode]) -> bool:
     return any(visit(node_id) for node_id in node_map if state.get(node_id, 0) == 0)
 
 
+def _can_reach_final_outcome(
+    node_map: dict[int, DecisionNode],
+    node_id: int,
+    seen: set[int] | None = None,
+) -> bool:
+    node = node_map.get(node_id)
+    if node is None:
+        return False
+    if node.final_outcome is not None:
+        return True
+
+    seen = seen or set()
+    if node_id in seen:
+        return False
+    seen.add(node_id)
+
+    return any(
+        next_id is not None and _can_reach_final_outcome(node_map, next_id, set(seen))
+        for next_id in (node.yes_next, node.no_next)
+    )
+
+
 def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
     procedures = db.scalars(procedure_query().order_by(Procedure.id)).all()
     issues: list[WorkflowValidationIssue] = []
@@ -69,6 +103,7 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
 
         node_map = {node.id: node for node in nodes}
         referenced_ids: set[int] = set()
+        final_outcome_count = 0
 
         for node in nodes:
             for branch_name, next_id in (("yes", node.yes_next), ("no", node.no_next)):
@@ -87,7 +122,73 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
                         )
                     )
 
-            if node.final_outcome and (node.yes_next is not None or node.no_next is not None):
+            if node.final_outcome is not None:
+                final_outcome_count += 1
+                if not isinstance(node.final_outcome, dict):
+                    issues.append(
+                        WorkflowValidationIssue(
+                            procedure_id=procedure.id,
+                            procedure_title=procedure.title,
+                            severity="error",
+                            node_id=node.id,
+                            message="Final outcome payload must be a JSON object.",
+                        )
+                    )
+                else:
+                    missing_keys = [
+                        key for key in REQUIRED_FINAL_OUTCOME_KEYS if key not in node.final_outcome
+                    ]
+                    if missing_keys:
+                        issues.append(
+                            WorkflowValidationIssue(
+                                procedure_id=procedure.id,
+                                procedure_title=procedure.title,
+                                severity="error",
+                                node_id=node.id,
+                                message=(
+                                    "Final outcome is missing required keys: "
+                                    + ", ".join(sorted(missing_keys))
+                                ),
+                            )
+                        )
+
+                    blank_keys = [
+                        key
+                        for key in (
+                            "diagnosis",
+                            "recommended_action",
+                            "warranty_status",
+                            "follow_up_message",
+                        )
+                        if key in node.final_outcome and _is_blank_text(node.final_outcome.get(key))
+                    ]
+                    if blank_keys:
+                        issues.append(
+                            WorkflowValidationIssue(
+                                procedure_id=procedure.id,
+                                procedure_title=procedure.title,
+                                severity="error",
+                                node_id=node.id,
+                                message=(
+                                    "Final outcome has blank required text: "
+                                    + ", ".join(sorted(blank_keys))
+                                ),
+                            )
+                        )
+
+                    related_actions = node.final_outcome.get("related_actions")
+                    if related_actions is not None and not isinstance(related_actions, list):
+                        issues.append(
+                            WorkflowValidationIssue(
+                                procedure_id=procedure.id,
+                                procedure_title=procedure.title,
+                                severity="error",
+                                node_id=node.id,
+                                message="Final outcome related_actions must be a list.",
+                            )
+                        )
+
+            if node.final_outcome is not None and (node.yes_next is not None or node.no_next is not None):
                 issues.append(
                     WorkflowValidationIssue(
                         procedure_id=procedure.id,
@@ -95,6 +196,17 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
                         severity="error",
                         node_id=node.id,
                         message="Final outcome node should not point to another node.",
+                    )
+                )
+
+            if node.final_outcome is None and (node.yes_next is None) != (node.no_next is None):
+                issues.append(
+                    WorkflowValidationIssue(
+                        procedure_id=procedure.id,
+                        procedure_title=procedure.title,
+                        severity="error",
+                        node_id=node.id,
+                        message="Question node must define both yes and no branches or a final outcome.",
                     )
                 )
 
@@ -108,6 +220,32 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
                         message="Question node ends early and will fall back to manual review.",
                     )
                 )
+
+            if (
+                node.final_outcome is None
+                and node.yes_next is not None
+                and node.no_next is not None
+                and node.yes_next == node.no_next
+            ):
+                issues.append(
+                    WorkflowValidationIssue(
+                        procedure_id=procedure.id,
+                        procedure_title=procedure.title,
+                        severity="warning",
+                        node_id=node.id,
+                        message="Yes and no answers converge immediately to the same next node.",
+                    )
+                )
+
+        if final_outcome_count == 0:
+            issues.append(
+                WorkflowValidationIssue(
+                    procedure_id=procedure.id,
+                    procedure_title=procedure.title,
+                    severity="error",
+                    message="Procedure has no final outcome nodes.",
+                )
+            )
 
         root_candidates = [
             node for node in nodes if node.id not in referenced_ids and node.final_outcome is None
@@ -155,6 +293,19 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
                         severity="warning",
                         node_id=node.id,
                         message="Node is not reachable from the root question.",
+                    )
+                )
+
+        for node_id in reachable:
+            node = node_map[node_id]
+            if node.final_outcome is None and not _can_reach_final_outcome(node_map, node_id):
+                issues.append(
+                    WorkflowValidationIssue(
+                        procedure_id=procedure.id,
+                        procedure_title=procedure.title,
+                        severity="error",
+                        node_id=node.id,
+                        message="Reachable question cannot reach a final outcome.",
                     )
                 )
 
