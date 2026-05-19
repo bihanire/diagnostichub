@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -8,6 +9,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.routes.ops import router as ops_router
 from app.api.routes.search import router as search_router
+from app.api.routes.system import router as system_router
 from app.api.routes.telemetry import router as telemetry_router
 from app.core.config import get_settings
 from app.core.database import Base, get_db
@@ -74,6 +76,7 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
         self.app.add_middleware(RequestContextMiddleware)
         self.app.include_router(ops_router)
         self.app.include_router(search_router)
+        self.app.include_router(system_router)
         self.app.include_router(telemetry_router)
 
         def override_get_db():
@@ -131,6 +134,44 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
                 for endpoint in telemetry_payload["endpoints"]
             )
         )
+        search_endpoint = next(
+            endpoint
+            for endpoint in telemetry_payload["endpoints"]
+            if endpoint["path"] == "/search" and endpoint["method"] == "POST"
+        )
+        self.assertIn("error_rate", search_endpoint)
+        self.assertIn("failure_categories", search_endpoint)
+        self.assertGreaterEqual(telemetry_payload["search"]["diagnostic_success_count"], 0)
+        self.assertIn("no_match_rate", telemetry_payload["search"])
+        self.assertTrue(
+            any(slo["name"] == "search_response" for slo in telemetry_payload["slos"])
+        )
+
+    def test_telemetry_tracks_failure_categories_and_probe_events(self) -> None:
+        with TestClient(self.app) as client:
+            missing_response = client.get("/missing-route")
+            self.assertEqual(missing_response.status_code, 404)
+
+            with patch("app.api.routes.system.database_is_ready", return_value=True):
+                health_response = client.get("/health")
+            self.assertEqual(health_response.status_code, 200)
+
+            login_response = client.post("/ops/login", json={"password": "ops-password"})
+            self.assertEqual(login_response.status_code, 200)
+
+            telemetry_response = client.get("/ops/telemetry/summary")
+            self.assertEqual(telemetry_response.status_code, 200)
+            telemetry_payload = telemetry_response.json()
+
+        not_found_endpoint = next(
+            endpoint for endpoint in telemetry_payload["endpoints"] if endpoint["path"] == "/missing-route"
+        )
+        self.assertEqual(not_found_endpoint["failure_categories"].get("not_found"), 1)
+        self.assertTrue(
+            any(event["event"] == "health_probe" for event in telemetry_payload["recent_events"])
+        )
+        health_slo = next(slo for slo in telemetry_payload["slos"] if slo["name"] == "health_liveness")
+        self.assertGreaterEqual(health_slo["total_requests"], 1)
 
     def test_public_interaction_telemetry_records_events_for_ops_review(self) -> None:
         with TestClient(self.app) as client:

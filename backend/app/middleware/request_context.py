@@ -13,6 +13,32 @@ logger = get_logger("relational_encyclopedia.http")
 settings = get_settings()
 
 
+def _route_path(request: Request) -> str:
+    route = request.scope.get("route")
+    route_path = getattr(route, "path", None)
+    if isinstance(route_path, str) and route_path:
+        return route_path
+    return request.url.path
+
+
+def _failure_category(status_code: int) -> str | None:
+    if status_code < 400:
+        return None
+    if status_code == 401:
+        return "unauthorized"
+    if status_code == 403:
+        return "forbidden"
+    if status_code == 404:
+        return "not_found"
+    if status_code == 422:
+        return "validation_error"
+    if status_code == 429:
+        return "rate_limited"
+    if status_code >= 500:
+        return "server_error"
+    return "client_error"
+
+
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
         telemetry = get_telemetry_collector()
@@ -33,18 +59,21 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
         except Exception:
             duration_ms = round((perf_counter() - started_at) * 1000, 2)
+            route = _route_path(request)
             telemetry.record_http_request(
                 method=request.method,
-                path=request.url.path,
+                path=route,
                 status_code=500,
                 duration_ms=duration_ms,
+                failure_category="unhandled_exception",
             )
             telemetry.record_event(
                 event="request_failed",
                 status="error",
                 metadata={
                     "method": request.method,
-                    "path": request.url.path,
+                    "path": route,
+                    "failure_category": "unhandled_exception",
                     "client_request_id": client_request_id or "-",
                 },
                 request_id=request_id,
@@ -55,6 +84,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                     "event": "request_failed_forwarded",
                     "method": request.method,
                     "path": request.url.path,
+                    "route": route,
+                    "failure_category": "unhandled_exception",
                     "duration_ms": duration_ms,
                     "client_request_id": client_request_id,
                     "request_id": request_id,
@@ -69,11 +100,14 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         if response.status_code == 401 and "www-authenticate" in response.headers:
             del response.headers["www-authenticate"]
         duration_ms = round((perf_counter() - started_at) * 1000, 2)
+        route = _route_path(request)
+        failure_category = _failure_category(response.status_code)
         telemetry.record_http_request(
             method=request.method,
-            path=request.url.path,
+            path=route,
             status_code=response.status_code,
             duration_ms=duration_ms,
+            failure_category=failure_category,
         )
         log_method = logger.warning if response.status_code >= 400 else logger.debug
         log_method(
@@ -82,7 +116,9 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
                 "event": "request_completed",
                 "method": request.method,
                 "path": request.url.path,
+                "route": route,
                 "status_code": response.status_code,
+                "failure_category": failure_category,
                 "duration_ms": duration_ms,
                 "client_request_id": client_request_id,
                 "request_id": request_id,

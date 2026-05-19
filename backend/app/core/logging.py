@@ -31,6 +31,8 @@ class JsonFormatter(logging.Formatter):
             "path",
             "status_code",
             "duration_ms",
+            "route",
+            "failure_category",
             "procedure_id",
             "node_id",
             "feedback_id",

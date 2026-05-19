@@ -444,6 +444,19 @@ Exports recent feedback rows as CSV.
 
 This route requires a valid ops session cookie.
 
+## `GET /ops/telemetry/summary`
+
+Returns the in-memory operational telemetry snapshot for route health, search outcomes, interaction events, SLO status, and recent deploy/probe events.
+
+This route requires a valid ops session cookie.
+
+Key response fields:
+
+- `endpoints`: route-template request totals, p95 latency, error rate, and failure-category counts.
+- `slos`: production targets for search, triage, feedback, health, readiness, and ops telemetry routes.
+- `search`: diagnostic success count, no-match rate, review-required rate, issue type counts, confidence states, and ambiguity risk counts.
+- `recent_events`: request-correlated events such as `search_completed`, `health_probe`, and `readiness_probe`.
+
 ## Request tracing
 
 Every API response includes an `X-Request-ID` header. Frontend requests include `X-Client-Request-ID`, and the backend maps or generates a request ID so operators can trace incidents quickly.

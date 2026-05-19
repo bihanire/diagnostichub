@@ -129,6 +129,8 @@ Exit gate:
 - A backend incident can be traced from request ID to route, latency, and failure reason.
 - SLO breaches are observable without reading raw application logs.
 
+Status: observability and SLO reporting executed in this pass. HTTP telemetry now groups by route template, records failure categories, exposes endpoint error rates and SLO status, adds diagnostic success/no-match rates, and emits health/readiness probe events for deploy monitoring.
+
 ## Phase 8: Security and Ops Controls
 
 Goal: harden privileged surfaces and sensitive runtime behavior.

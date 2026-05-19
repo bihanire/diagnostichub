@@ -13,6 +13,7 @@ from app.schemas.system import (
     ReadinessResponse,
     WorkflowValidationReport,
 )
+from app.services.telemetry_service import get_telemetry_collector
 
 router = APIRouter(tags=["system"])
 
@@ -65,6 +66,11 @@ def _empty_integrity_report() -> DataIntegrityReport:
 def health() -> HealthResponse:
     settings = get_settings()
     db_ok = database_is_ready()
+    get_telemetry_collector().record_event(
+        event="health_probe",
+        status="success" if db_ok else "degraded",
+        metadata={"database_ok": str(db_ok).lower(), "version": settings.api_version},
+    )
     return HealthResponse(
         status="ok" if db_ok else "degraded",
         db=db_ok,
@@ -103,6 +109,11 @@ async def ready(request: Request, response: Response) -> ReadinessResponse:
 
     if not settings.readiness_probe_enabled:
         latency_ms = round((perf_counter() - started_at) * 1000, 2)
+        get_telemetry_collector().record_event(
+            event="readiness_probe",
+            status="success",
+            metadata={"enabled": "false", "latency_ms": latency_ms},
+        )
         return ReadinessResponse(
             status="ok",
             checks={},
@@ -136,6 +147,15 @@ async def ready(request: Request, response: Response) -> ReadinessResponse:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
     latency_ms = round((perf_counter() - started_at) * 1000, 2)
+    get_telemetry_collector().record_event(
+        event="readiness_probe",
+        status="success" if readiness_status == "ok" else "degraded",
+        metadata={
+            "failed": ",".join(failed) if failed else "-",
+            "database_ok": str(database_ok).lower(),
+            "latency_ms": latency_ms,
+        },
+    )
     return ReadinessResponse(
         status=readiness_status,
         checks=check_results,
