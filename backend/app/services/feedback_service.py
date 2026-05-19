@@ -1,3 +1,4 @@
+from collections import Counter
 from csv import DictWriter
 from datetime import datetime, timedelta, timezone
 from io import StringIO
@@ -25,6 +26,14 @@ from app.schemas.feedback import (
 
 _SPACE_PATTERN = re.compile(r"\s+")
 _NON_SIGNAL_PATTERN = re.compile(r"[^a-z0-9+ ]+")
+_REVIEW_SIGNAL_TAGS = {
+    "wrong_match",
+    "confusing_question",
+    "should_have_solved_at_branch",
+    "should_have_escalated_sooner",
+}
+_LOW_CONFIDENCE_STATES = {"low", "caution"}
+_PRIORITY_RANK = {"high": 0, "medium": 1, "low": 2}
 
 
 def create_feedback(db: Session, payload: FeedbackCreateRequest) -> FeedbackCreateResponse:
@@ -211,53 +220,75 @@ def get_feedback_language_candidates(
     where_clause = _feedback_where_clause(days)
     rows = db.execute(
         select(
+            FeedbackEntry.id,
             FeedbackEntry.query,
             FeedbackEntry.helpful,
             FeedbackEntry.branch_label,
             FeedbackEntry.created_at,
+            FeedbackEntry.procedure_id,
             Procedure.title,
+            FeedbackEntry.feedback_tags,
+            FeedbackEntry.search_confidence,
+            FeedbackEntry.search_confidence_state,
         )
         .select_from(FeedbackEntry)
         .join(Procedure, Procedure.id == FeedbackEntry.procedure_id, isouter=True)
         .where(where_clause, FeedbackEntry.query.is_not(None))
-        .order_by(desc(FeedbackEntry.created_at))
+        .order_by(desc(FeedbackEntry.created_at), desc(FeedbackEntry.id))
     ).all()
 
-    grouped: dict[str, FeedbackLanguageCandidateItem] = {}
+    grouped: dict[str, dict] = {}
 
-    for query, helpful, branch_label, created_at, procedure_title in rows:
+    for (
+        _entry_id,
+        query,
+        helpful,
+        branch_label,
+        created_at,
+        procedure_id,
+        procedure_title,
+        feedback_tags,
+        search_confidence,
+        search_confidence_state,
+    ) in rows:
         normalized_query = _normalize_feedback_query(query)
         if not normalized_query:
             continue
 
         existing = grouped.get(normalized_query)
         if existing is None:
-            grouped[normalized_query] = FeedbackLanguageCandidateItem(
-                normalized_query=normalized_query,
-                sample_query=query.strip(),
-                total_mentions=1,
-                helpful_count=1 if helpful else 0,
-                not_helpful_count=0 if helpful else 1,
-                latest_procedure_title=procedure_title,
-                latest_branch_label=branch_label,
-                latest_created_at=created_at,
-            )
-            continue
+            existing = {
+                "normalized_query": normalized_query,
+                "sample_query": query.strip(),
+                "total_mentions": 0,
+                "helpful_count": 0,
+                "not_helpful_count": 0,
+                "latest_procedure_id": procedure_id,
+                "latest_procedure_title": procedure_title,
+                "latest_branch_label": branch_label,
+                "latest_created_at": created_at,
+                "feedback_tags": Counter(),
+                "confidence_states": Counter(),
+                "search_confidences": [],
+            }
+            grouped[normalized_query] = existing
 
-        grouped[normalized_query] = FeedbackLanguageCandidateItem(
-            normalized_query=existing.normalized_query,
-            sample_query=existing.sample_query,
-            total_mentions=existing.total_mentions + 1,
-            helpful_count=existing.helpful_count + (1 if helpful else 0),
-            not_helpful_count=existing.not_helpful_count + (0 if helpful else 1),
-            latest_procedure_title=existing.latest_procedure_title,
-            latest_branch_label=existing.latest_branch_label,
-            latest_created_at=existing.latest_created_at,
-        )
+        existing["total_mentions"] += 1
+        existing["helpful_count"] += 1 if helpful else 0
+        existing["not_helpful_count"] += 0 if helpful else 1
+        existing["feedback_tags"].update(feedback_tags or [])
+        if search_confidence is not None:
+            existing["search_confidences"].append(search_confidence)
+        normalized_state = (search_confidence_state or "").strip().lower()
+        if normalized_state:
+            existing["confidence_states"].update([normalized_state])
+
+    items = [_build_language_candidate_item(candidate) for candidate in grouped.values()]
 
     sorted_items = sorted(
-        grouped.values(),
+        items,
         key=lambda item: (
+            _PRIORITY_RANK.get(item.review_priority, 3),
             -item.total_mentions,
             -item.not_helpful_count,
             item.normalized_query,
@@ -369,9 +400,17 @@ def export_feedback_language_candidates_csv(
             "total_mentions",
             "helpful_count",
             "not_helpful_count",
+            "latest_procedure_id",
             "latest_procedure_title",
             "latest_branch_label",
             "latest_created_at",
+            "review_priority",
+            "suggested_action",
+            "promotion_reason",
+            "benchmark_draft_query",
+            "feedback_tags",
+            "confidence_states",
+            "average_search_confidence",
         ],
     )
     writer.writeheader()
@@ -384,15 +423,96 @@ def export_feedback_language_candidates_csv(
                 "total_mentions": item.total_mentions,
                 "helpful_count": item.helpful_count,
                 "not_helpful_count": item.not_helpful_count,
+                "latest_procedure_id": item.latest_procedure_id or "",
                 "latest_procedure_title": item.latest_procedure_title or "",
                 "latest_branch_label": item.latest_branch_label or "",
                 "latest_created_at": item.latest_created_at.isoformat()
                 if item.latest_created_at
                 else "",
+                "review_priority": item.review_priority,
+                "suggested_action": item.suggested_action,
+                "promotion_reason": item.promotion_reason,
+                "benchmark_draft_query": item.benchmark_draft_query,
+                "feedback_tags": "|".join(item.feedback_tags),
+                "confidence_states": "|".join(
+                    f"{state}:{count}" for state, count in sorted(item.confidence_states.items())
+                ),
+                "average_search_confidence": (
+                    round(item.average_search_confidence, 4)
+                    if item.average_search_confidence is not None
+                    else ""
+                ),
             }
         )
 
     return buffer.getvalue()
+
+
+def _build_language_candidate_item(candidate: dict) -> FeedbackLanguageCandidateItem:
+    feedback_tags = sorted(candidate["feedback_tags"].keys())
+    confidence_states = dict(sorted(candidate["confidence_states"].items()))
+    search_confidences = candidate["search_confidences"]
+    average_search_confidence = (
+        sum(search_confidences) / len(search_confidences) if search_confidences else None
+    )
+    review_priority, suggested_action, promotion_reason = _score_language_candidate(
+        total_mentions=candidate["total_mentions"],
+        not_helpful_count=candidate["not_helpful_count"],
+        feedback_tags=feedback_tags,
+        confidence_states=confidence_states,
+    )
+
+    return FeedbackLanguageCandidateItem(
+        normalized_query=candidate["normalized_query"],
+        sample_query=candidate["sample_query"],
+        total_mentions=candidate["total_mentions"],
+        helpful_count=candidate["helpful_count"],
+        not_helpful_count=candidate["not_helpful_count"],
+        latest_procedure_id=candidate["latest_procedure_id"],
+        latest_procedure_title=candidate["latest_procedure_title"],
+        latest_branch_label=candidate["latest_branch_label"],
+        latest_created_at=candidate["latest_created_at"],
+        review_priority=review_priority,
+        suggested_action=suggested_action,
+        promotion_reason=promotion_reason,
+        benchmark_draft_query=candidate["normalized_query"],
+        feedback_tags=feedback_tags,
+        confidence_states=confidence_states,
+        average_search_confidence=average_search_confidence,
+    )
+
+
+def _score_language_candidate(
+    *,
+    total_mentions: int,
+    not_helpful_count: int,
+    feedback_tags: list[str],
+    confidence_states: dict[str, int],
+) -> tuple[str, str, str]:
+    review_tag_count = sum(1 for tag in feedback_tags if tag in _REVIEW_SIGNAL_TAGS)
+    low_confidence_count = sum(
+        count for state, count in confidence_states.items() if state in _LOW_CONFIDENCE_STATES
+    )
+
+    if not_helpful_count >= 2 or review_tag_count >= 2:
+        return (
+            "high",
+            "content_review",
+            "Repeated negative feedback or review tags indicate a possible guidance gap.",
+        )
+    if not_helpful_count >= 1 or review_tag_count >= 1:
+        return (
+            "medium",
+            "content_review",
+            "At least one operator marked this wording as unresolved or confusing.",
+        )
+    if total_mentions >= 2 or low_confidence_count >= 1:
+        return (
+            "medium",
+            "benchmark_candidate",
+            "Repeated or low-confidence wording may improve benchmark coverage after review.",
+        )
+    return ("low", "monitor", "Monitor for repeated branch wording.")
 
 
 def _normalize_feedback_query(query: str | None) -> str:

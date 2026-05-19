@@ -112,6 +112,8 @@ Exit gate:
 - Operators can identify top content gaps from backend data.
 - No automatic production guidance changes happen without review.
 
+Status: review-ready feedback learning executed in this pass. Language-candidate exports now rank repeated wording, low-confidence searches, and operator review tags into benchmark or content-review candidates with explicit reasons, while preserving the manual approval lane before any SOP or benchmark updates.
+
 ## Phase 7: Observability, Telemetry, and SLOs
 
 Goal: make backend reliability measurable in production.

@@ -533,6 +533,21 @@ class SearchAndTriageTests(unittest.TestCase):
                     branch_label="Jinja",
                     comment="Screen path needs a clearer branch.",
                     feedback_tags=["confusing_question", "should_have_solved_at_branch"],
+                    search_confidence=0.42,
+                    search_confidence_state="caution",
+                ),
+            )
+            create_feedback(
+                db,
+                FeedbackCreateRequest(
+                    helpful=False,
+                    procedure_id=2,
+                    query="Lines in screen and touch not working!",
+                    branch_label="Jinja",
+                    comment="Repeated branch wording should become a review candidate.",
+                    feedback_tags=["wrong_match"],
+                    search_confidence=0.32,
+                    search_confidence_state="low",
                 ),
             )
 
@@ -554,11 +569,21 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertGreaterEqual(len(language_candidates.items), 2)
         self.assertEqual(
             language_candidates.items[0].sample_query,
+            "Lines in screen and touch not working!",
+        )
+        self.assertEqual(language_candidates.items[0].total_mentions, 2)
+        self.assertEqual(language_candidates.items[0].review_priority, "high")
+        self.assertEqual(language_candidates.items[0].suggested_action, "content_review")
+        self.assertEqual(
+            language_candidates.items[0].benchmark_draft_query,
             "lines in screen and touch not working",
         )
+        self.assertEqual(language_candidates.items[0].confidence_states["low"], 1)
         self.assertIn("procedure_title", exported_csv)
         self.assertIn("Helpful power guidance.", exported_csv)
         self.assertIn("Screen path needs a clearer branch.", exported_csv)
         self.assertIn("feedback_tags", exported_csv)
+        self.assertIn("review_priority", language_csv)
+        self.assertIn("content_review", language_csv)
         self.assertIn("sample_query", language_csv)
         self.assertIn("lines in screen and touch not working", language_csv)

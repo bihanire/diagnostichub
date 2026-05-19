@@ -101,7 +101,7 @@ To export live branch wording from collected feedback into a review CSV:
 ..\venv\Scripts\python.exe -m app.db.export_feedback_language_candidates --days 30 --limit 50 --path ..\docs\sop-import-template\feedback-language-candidates.csv
 ```
 
-Use this file as the review lane between ops insights and the canonical benchmark pack:
+Use this file as the review lane between ops insights and the canonical benchmark pack. The export includes priority, suggested action, confidence-state counts, and review reasons; it never updates benchmark or SOP files automatically.
 
 1. review which phrases appear often
 2. decide which ones deserve new benchmark rows or tags

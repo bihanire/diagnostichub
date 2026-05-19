@@ -82,9 +82,17 @@ class FeedbackLanguageCandidateItem(BaseModel):
     total_mentions: int
     helpful_count: int
     not_helpful_count: int
+    latest_procedure_id: int | None = None
     latest_procedure_title: str | None = None
     latest_branch_label: str | None = None
     latest_created_at: datetime | None = None
+    review_priority: str = "low"
+    suggested_action: str = "monitor"
+    promotion_reason: str = "Monitor for repeated branch wording."
+    benchmark_draft_query: str = ""
+    feedback_tags: list[str] = Field(default_factory=list)
+    confidence_states: dict[str, int] = Field(default_factory=dict)
+    average_search_confidence: float | None = None
 
 
 class FeedbackLanguageCandidateResponse(BaseModel):

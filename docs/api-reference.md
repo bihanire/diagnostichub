@@ -400,7 +400,7 @@ This route requires a valid ops session cookie.
 
 ## `GET /feedback/language-candidates`
 
-Returns grouped branch search phrases from saved feedback queries so the ops team can promote real wording into the benchmark pack.
+Returns grouped branch search phrases from saved feedback queries so the ops team can identify review-ready benchmark and content update candidates. These fields are advisory only; they do not mutate production guidance.
 
 This route requires a valid ops session cookie.
 
@@ -416,9 +416,17 @@ This route requires a valid ops session cookie.
       "total_mentions": 3,
       "helpful_count": 2,
       "not_helpful_count": 1,
+      "latest_procedure_id": 3,
       "latest_procedure_title": "Charging Issue",
       "latest_branch_label": "Kampala Central",
-      "latest_created_at": "2026-04-27T06:55:58.176145Z"
+      "latest_created_at": "2026-04-27T06:55:58.176145Z",
+      "review_priority": "medium",
+      "suggested_action": "content_review",
+      "promotion_reason": "At least one operator marked this wording as unresolved or confusing.",
+      "benchmark_draft_query": "the phone is not charging when i insert a charger",
+      "feedback_tags": ["confusing_question"],
+      "confidence_states": {"caution": 1},
+      "average_search_confidence": 0.62
     }
   ]
 }
