@@ -4,9 +4,7 @@ import Link from "next/link";
 import { CSSProperties, startTransition, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
-import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
-import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import {
   ApiError,
   getRepairFamilyDetail,
@@ -362,16 +360,6 @@ export default function FamilyLandingPage() {
           </div>
         )}
       </section>
-
-      <TeachingSourcePanel
-        familyId={family.id}
-        title={`${family.title} teaching references`}
-      />
-
-      <LearningQualityPanel
-        familyId={family.id}
-        title={`${family.title} lesson cards`}
-      />
     </ProductRouteShell>
   );
 }

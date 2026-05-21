@@ -4,12 +4,9 @@ import { startTransition, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { CareGuide } from "@/components/CareGuide";
-import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
-import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { ProgressBar } from "@/components/ProgressBar";
-import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
 import { nextTriage } from "@/lib/api";
 import { uiCopy } from "@/lib/copy";
 import { loadSession, saveSession } from "@/lib/session";
@@ -335,22 +332,6 @@ export default function TriagePage() {
         </section>
       </div>
 
-      <TeachingSourcePanel
-        compact
-        familyId={session.learningFamilyId}
-        procedure={session.procedure}
-        query={session.query}
-        title="Teaching guardrails for this step"
-      />
-
-      <LearningQualityPanel
-        compact
-        familyId={session.learningFamilyId}
-        procedure={session.procedure}
-        query={session.query}
-        title="Decision teaching for this path"
-      />
-
       <div className={`triage-stage-grid ${questionSwitching ? "triage-stage-grid-syncing" : ""}`}>
         <section className={`panel question-panel motion-surface ${questionSwitching ? "question-panel-syncing" : ""}`}>
           <div key={`${questionKey}-${currentNode.id}`} className="question-surface">
@@ -406,19 +387,6 @@ export default function TriagePage() {
           Syncing the next guided step...
         </p>
       ) : null}
-
-      <ControlledDisclosure
-        className="panel panel-compact triage-secondary-panel"
-        eyebrow={uiCopy.triage.flowPurpose.eyebrow}
-        title={uiCopy.triage.flowPurpose.title}
-      >
-        <div className="stack-block">
-          <p className="body-copy">
-            {session.procedure.description || uiCopy.triage.flowPurpose.fallback}
-          </p>
-          <p className="muted-copy">{uiCopy.triage.reminder.description}</p>
-        </div>
-      </ControlledDisclosure>
 
       <CareGuide compact collapsible customerCare={session.customerCare} />
 

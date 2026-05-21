@@ -10144,3 +10144,446 @@ body {
 .lm-shell-gateway :where(.run-btn, .run-btn *) {
   color: var(--bg);
 }
+
+/* Family and triage workspace visual cleanup. Logic stays in the page components. */
+.network-banner {
+  min-height: 32px;
+  padding: 8px 16px;
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.triage-route,
+.family-route {
+  --workspace-surface: #f8fcfb;
+  --workspace-surface-2: #edf7f4;
+  --workspace-border: rgba(15, 23, 42, 0.14);
+  --workspace-ink: #0f172a;
+  --workspace-muted: #475569;
+  --workspace-subtle: #64748b;
+  --workspace-accent: #0f766e;
+  --workspace-accent-soft: rgba(15, 118, 110, 0.1);
+  color: var(--workspace-ink);
+}
+
+.triage-route.route-shell,
+.family-route.route-shell {
+  width: min(100% - 32px, 1120px);
+  padding-bottom: 48px;
+}
+
+.triage-route .route-shell-page,
+.family-route .route-shell-page {
+  gap: 16px;
+}
+
+.triage-route .hero,
+.family-route .family-landing-hero {
+  margin: 0;
+  border: 1px solid var(--workspace-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(235, 248, 244, 0.92));
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+}
+
+.triage-route .hero {
+  padding: 22px 24px;
+}
+
+.triage-route .hero::before,
+.triage-route .hero::after,
+.family-route .family-landing-hero::before,
+.family-route .family-landing-hero::after {
+  display: none;
+}
+
+.triage-route .hero h2,
+.family-route .family-landing-copy h1 {
+  color: var(--workspace-ink);
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0;
+  line-height: 1.04;
+  text-wrap: balance;
+}
+
+.triage-route .hero h2 {
+  margin: 8px 0;
+  font-size: clamp(2rem, 4.3vw, 3.15rem);
+}
+
+.family-route .family-landing-copy h1 {
+  margin: 0 0 12px;
+  max-width: 11ch;
+  font-size: clamp(2.3rem, 6.3vw, 5.6rem);
+}
+
+.triage-route .hero p,
+.family-route .family-landing-copy p {
+  max-width: 74ch;
+  color: var(--workspace-muted);
+  font-size: 0.98rem;
+  line-height: 1.58;
+}
+
+.triage-route .eyebrow,
+.family-route .eyebrow,
+.family-route .family-landing-eyebrow,
+.family-route .family-landing-section-head span {
+  color: var(--workspace-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.triage-learning-breadcrumb,
+.triage-route .hero-status-pill,
+.triage-hero-note,
+.family-landing-back {
+  color: var(--workspace-muted);
+}
+
+.triage-hero-note {
+  width: fit-content;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 118, 110, 0.14);
+  border-radius: 12px;
+  background: var(--workspace-accent-soft);
+}
+
+.triage-hero-note strong {
+  color: var(--workspace-ink);
+}
+
+.triage-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(260px, 1.1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.triage-route .progress-panel,
+.triage-route .case-frame-card,
+.triage-route .question-panel,
+.triage-route .visual-guide-panel,
+.triage-route .controlled-disclosure,
+.family-route .family-flow-router-panel,
+.family-route .family-flow-card,
+.family-route .family-landing-empty,
+.family-route .family-landing-loading {
+  border: 1px solid var(--workspace-border);
+  border-radius: 16px;
+  background: var(--workspace-surface);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.1);
+  color: var(--workspace-ink);
+}
+
+.triage-route .progress-panel,
+.triage-route .case-frame-card {
+  min-height: auto;
+  padding: 16px;
+}
+
+.triage-route .progress-panel {
+  display: grid;
+  align-content: center;
+}
+
+.triage-route .case-frame-card .body-copy {
+  margin: 8px 0 0;
+  color: var(--workspace-muted);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
+.triage-stage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(300px, 0.96fr);
+  gap: 14px;
+  align-items: stretch;
+}
+
+.triage-route .question-panel {
+  display: grid;
+  min-height: 360px;
+  padding: clamp(20px, 2.2vw, 28px);
+}
+
+.triage-route .question-surface {
+  padding: 0 0 18px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.14);
+}
+
+.triage-route .triage-question {
+  max-width: 12ch;
+  margin: 8px 0 0;
+  color: var(--workspace-ink);
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.triage-route .question-answer-block {
+  align-self: end;
+  margin-top: 22px;
+}
+
+.triage-route .answer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.triage-route .answer-button {
+  min-height: 112px;
+  padding: 16px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff, #edf7f4);
+  color: var(--workspace-ink);
+  box-shadow: none;
+}
+
+.triage-route .answer-button:hover {
+  border-color: rgba(15, 118, 110, 0.36);
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.triage-route .answer-button-label {
+  color: var(--workspace-ink);
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.triage-route .answer-button-note {
+  color: var(--workspace-muted);
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.triage-route .visual-guide-panel {
+  padding: 18px;
+}
+
+.triage-route .visual-guide-header {
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.triage-route .visual-guide-header h3 {
+  color: var(--workspace-ink);
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.triage-route .visual-guide-badge,
+.triage-route .visual-art-tag {
+  border-color: rgba(15, 118, 110, 0.18);
+  background: var(--workspace-accent-soft);
+  color: var(--workspace-accent);
+  font-size: 0.68rem;
+}
+
+.triage-route .visual-guide-grid {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.triage-route .visual-card {
+  padding: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.triage-route .visual-copy strong {
+  color: var(--workspace-ink);
+  font-size: 0.92rem;
+}
+
+.triage-route .visual-copy p {
+  color: var(--workspace-muted);
+  font-size: 0.82rem;
+  line-height: 1.42;
+}
+
+.triage-route .controlled-disclosure {
+  overflow: hidden;
+}
+
+.triage-route .detail-toggle-summary {
+  min-height: 54px;
+  padding: 14px 16px;
+}
+
+.triage-route .detail-toggle-body {
+  padding: 0 16px 16px;
+}
+
+.triage-route .guidance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.triage-route .guidance-item {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 12px;
+  background: var(--workspace-surface-2);
+}
+
+.triage-route .guidance-item p {
+  color: var(--workspace-muted);
+  font-size: 0.9rem;
+  line-height: 1.48;
+}
+
+.family-route .family-landing-page {
+  padding: 0;
+}
+
+.family-route .family-landing-hero {
+  grid-template-columns: minmax(0, 0.95fr) minmax(330px, 1.05fr);
+  gap: clamp(18px, 3vw, 34px);
+  padding: clamp(20px, 3vw, 32px);
+  align-items: center;
+}
+
+.family-route .family-landing-back {
+  margin-bottom: 18px;
+  color: var(--workspace-accent);
+}
+
+.family-route .family-flow-router-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.family-route .family-router-title-row {
+  align-items: center;
+}
+
+.family-route .family-router-title-row h2,
+.family-route .family-landing-section-head h2 {
+  color: var(--workspace-ink);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1.12;
+}
+
+.family-route .family-router-title-row p,
+.family-route .family-flow-router-copy small,
+.family-route .family-flow-card span {
+  color: var(--workspace-muted);
+}
+
+.family-route .family-flow-router-input {
+  min-height: 48px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 12px;
+  background: var(--workspace-surface-2);
+  color: var(--workspace-ink);
+}
+
+.family-route .family-flow-router-input::placeholder {
+  color: var(--workspace-subtle);
+}
+
+.family-route .family-flow-router-list {
+  max-height: min(48vh, 460px);
+  padding-right: 2px;
+}
+
+.family-route .family-flow-router-item {
+  border: 1px solid rgba(15, 23, 42, 0.11);
+  border-radius: 13px;
+  background: var(--workspace-surface);
+  color: var(--workspace-ink);
+}
+
+.family-route .family-flow-router-item:hover {
+  border-color: rgba(15, 118, 110, 0.34);
+  background: #ffffff;
+}
+
+.family-route .family-flow-router-copy strong,
+.family-route .family-flow-card strong {
+  color: var(--workspace-ink);
+}
+
+.family-route .family-flow-router-action,
+.family-route .family-flow-card em {
+  color: var(--workspace-accent);
+}
+
+.family-route .family-landing-flows {
+  margin-top: 2px;
+}
+
+.family-route .family-flow-card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.family-route .family-flow-card {
+  min-height: 0;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.family-route .family-flow-card:hover {
+  border-color: rgba(15, 118, 110, 0.34);
+  background: #ffffff;
+}
+
+@media (max-width: 980px) {
+  .triage-top-grid,
+  .triage-stage-grid,
+  .family-route .family-landing-hero,
+  .family-route .family-flow-card-grid,
+  .triage-route .guidance-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .triage-route .question-panel {
+    min-height: auto;
+  }
+
+  .triage-route .triage-question {
+    max-width: 16ch;
+  }
+}
+
+@media (max-width: 640px) {
+  .triage-route.route-shell,
+  .family-route.route-shell {
+    width: calc(100% - 20px);
+  }
+
+  .triage-route .hero,
+  .family-route .family-landing-hero,
+  .triage-route .question-panel,
+  .triage-route .visual-guide-panel,
+  .family-route .family-flow-router-panel {
+    border-radius: 14px;
+  }
+
+  .triage-route .answer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .triage-route .answer-button {
+    min-height: 92px;
+  }
+
+  .family-route .family-flow-router-item {
+    grid-template-columns: 1fr;
+  }
+}
