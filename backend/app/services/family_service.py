@@ -1,6 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import NotRequired, TypedDict
+from typing import TypedDict
+from typing_extensions import NotRequired
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
