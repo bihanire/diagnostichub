@@ -358,27 +358,42 @@
   line-height: 1;
 }
 
-/* ── Nav tabs ────────────────────────────────────────────── */
+/* ── Nav tabs — consistent on dark topbar ────────────────── */
 .lm-nav-tab {
-  color: rgba(168, 200, 184, 0.75) !important;
-  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+  color: rgba(160, 210, 190, 0.68) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease !important;
 }
 
 .lm-nav-tab:hover {
-  color: #e8f5ef !important;
-  background: rgba(0, 200, 150, 0.08) !important;
+  color: rgba(224, 248, 238, 0.92) !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .lm-nav-tab.active {
   color: #00c896 !important;
-  background: rgba(0, 200, 150, 0.12) !important;
-  border-color: rgba(0, 200, 150, 0.28) !important;
+  background: rgba(0, 200, 150, 0.16) !important;
+  border-color: rgba(0, 200, 150, 0.34) !important;
+  box-shadow: 0 0 0 1px rgba(0, 200, 150, 0.1) inset !important;
 }
 
 .lm-nav-tab-ops {
-  color: #a7f3d0 !important;
+  color: #5ee8b8 !important;
   background: rgba(0, 200, 150, 0.1) !important;
-  border-color: rgba(0, 200, 150, 0.22) !important;
+  border-color: rgba(0, 200, 150, 0.24) !important;
+}
+
+.lm-nav-tab-ops:hover {
+  background: rgba(0, 200, 150, 0.18) !important;
+  color: #a7f3d0 !important;
+}
+
+.lm-nav-tab-ops.lm-nav-tab-ops-authenticated {
+  background: rgba(0, 200, 150, 0.18) !important;
+  border-color: rgba(0, 200, 150, 0.4) !important;
+  color: #00c896 !important;
 }
 
 /* ── Eyebrow — teal on dark bg, deep teal on light bg ─────── */
@@ -570,6 +585,12 @@
 .lm-hint-sep {
   color: rgba(15, 113, 104, 0.3);
   margin: 0 1px;
+}
+
+/* ── Topbar chrome refinement ────────────────────────────── */
+.lm-topbar {
+  border-bottom: 1px solid rgba(0, 200, 150, 0.08) !important;
+  box-shadow: 0 1px 0 rgba(0, 200, 150, 0.05) !important;
 }
 
 /* ── Responsive: max-width containment ───────────────────── */
