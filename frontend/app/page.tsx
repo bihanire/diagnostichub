@@ -1,5 +1,6 @@
 "use client";
 
+import { BookOpen, ClipboardList, Route, Search, Sparkles, X } from "lucide-react";
 import { FormEvent, KeyboardEvent, PointerEvent, Suspense, startTransition, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -1649,24 +1650,38 @@ export default function HomePage() {
           />
           <div className="lm-palette">
             <div className="panel-header">
-              <span className="eyebrow">Command palette</span>
-              <h3>What should I do next?</h3>
+              <div>
+                <span className="eyebrow">Command palette</span>
+                <h3>What should I do next?</h3>
+              </div>
+              <button
+                aria-label="Close command palette"
+                className="lm-palette-close"
+                onClick={() => setCommandPaletteOpen(false)}
+                type="button"
+              >
+                <X size={15} strokeWidth={2.2} aria-hidden="true" />
+              </button>
             </div>
             <div className="lm-palette-search-wrap">
-              <input
-                aria-label="Global learning search"
-                className="lm-palette-search"
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    setCommandPaletteOpen(false);
-                    void runSearch(query);
-                  }
-                }}
-                placeholder="Search families, flows, procedures, or customer wording"
-                value={query}
-              />
+              <div className="lm-palette-search-field">
+                <Search size={15} aria-hidden="true" className="lm-palette-search-icon" />
+                <input
+                  aria-label="Global learning search"
+                  className="lm-palette-search"
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      setCommandPaletteOpen(false);
+                      void runSearch(query);
+                    }
+                  }}
+                  placeholder="Search families, flows, procedures, or symptom description"
+                  value={query}
+                />
+                <kbd className="lm-palette-enter-hint" aria-hidden="true">↵ search</kbd>
+              </div>
               {query.trim() && searchSuggestions.length ? (
                 <div className="lm-palette-suggestions">
                   {searchSuggestions.slice(0, 5).map((suggestion) => (
@@ -1695,7 +1710,13 @@ export default function HomePage() {
                 }}
                 type="button"
               >
-                Guide me step-by-step
+                <span className="lm-palette-item-icon" aria-hidden="true">
+                  <Route size={16} strokeWidth={1.9} />
+                </span>
+                <span className="lm-palette-item-body">
+                  <strong>Guide me step-by-step</strong>
+                  <span>Walk through a structured diagnosis flow</span>
+                </span>
               </button>
               <button
                 className="lm-palette-item"
@@ -1705,7 +1726,13 @@ export default function HomePage() {
                 }}
                 type="button"
               >
-                Explain this SOP
+                <span className="lm-palette-item-icon" aria-hidden="true">
+                  <BookOpen size={16} strokeWidth={1.9} />
+                </span>
+                <span className="lm-palette-item-body">
+                  <strong>Explain this SOP</strong>
+                  <span>Plain-language breakdown of any procedure</span>
+                </span>
               </button>
               <button
                 className="lm-palette-item"
@@ -1715,7 +1742,13 @@ export default function HomePage() {
                 }}
                 type="button"
               >
-                Use diagnosis input
+                <span className="lm-palette-item-icon" aria-hidden="true">
+                  <ClipboardList size={16} strokeWidth={1.9} />
+                </span>
+                <span className="lm-palette-item-body">
+                  <strong>Use diagnosis input</strong>
+                  <span>Describe the symptom and let the system route you</span>
+                </span>
               </button>
               {commandPaletteBestMatch ? (
                 <button
@@ -1726,7 +1759,13 @@ export default function HomePage() {
                   }}
                   type="button"
                 >
-                  Start best-match triage
+                  <span className="lm-palette-item-icon lm-palette-item-icon-accent" aria-hidden="true">
+                    <Sparkles size={16} strokeWidth={1.9} />
+                  </span>
+                  <span className="lm-palette-item-body">
+                    <strong>Start best-match triage</strong>
+                    <span>{commandPaletteBestMatch.title}</span>
+                  </span>
                 </button>
               ) : null}
             </div>
