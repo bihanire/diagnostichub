@@ -1,8 +1,15 @@
+import { AlertTriangle } from "lucide-react";
 import { CustomerCare, ProcedureSummary } from "@/lib/types";
 import { uiCopy } from "@/lib/copy";
 import { formatRatioPercent } from "@/lib/format";
 import { ControlledDisclosure } from "@/components/ControlledDisclosure";
 import { IssueVisualGuide } from "@/components/IssueVisualGuide";
+
+function getConfidenceLevel(confidence: number): "high" | "medium" | "low" {
+  if (confidence >= 0.8) return "high";
+  if (confidence >= 0.6) return "medium";
+  return "low";
+}
 
 type ProcedureMatchCardProps = {
   procedure: ProcedureSummary;
@@ -27,6 +34,9 @@ export function ProcedureMatchCard({
   onStart,
   busy
 }: ProcedureMatchCardProps) {
+  const confLevel = getConfidenceLevel(confidence);
+  const isCaution = confidenceState === "caution";
+
   return (
     <section className="panel match-card motion-surface">
       <div className="match-heading">
@@ -34,7 +44,7 @@ export function ProcedureMatchCard({
           <span className="eyebrow">{uiCopy.matchCard.eyebrow}</span>
           <h2>{procedure.title}</h2>
         </div>
-        <div className="confidence-pill">
+        <div className={`confidence-pill confidence-pill-${confLevel}`}>
           {formatRatioPercent(confidence)} {uiCopy.matchCard.matchSuffix}
         </div>
       </div>
@@ -55,12 +65,13 @@ export function ProcedureMatchCard({
         variant="embedded"
       />
       <div
-        className={`muted-card stack-block motion-card ${confidenceState === "caution" ? "match-review-card" : ""}`}
+        className={`muted-card stack-block motion-card ${isCaution ? "match-review-card" : ""}`}
       >
-        <strong>
-          {confidenceState === "caution"
-            ? uiCopy.matchCard.cautionTitle
-            : uiCopy.matchCard.cautionStrongTitle}
+        <strong className="match-review-heading">
+          {isCaution ? (
+            <AlertTriangle size={14} aria-hidden="true" strokeWidth={2} className="match-review-icon" />
+          ) : null}
+          {isCaution ? uiCopy.matchCard.cautionTitle : uiCopy.matchCard.cautionStrongTitle}
         </strong>
         <p>{reviewMessage || nextStep}</p>
         {typeof confidenceMargin === "number" ? (

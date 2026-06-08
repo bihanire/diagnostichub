@@ -13,10 +13,11 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <section className={`lm-shell ${isGateway ? "lm-shell-gateway" : "lm-shell-workspace"}`}>
-      <header className="lm-topbar-wrap">{topBar}</header>
-      <div className="lm-main-grid">
+      <a className="lm-skip-link" href="#lm-main-content">Skip to main content</a>
+      <header className="lm-topbar-wrap" role="banner">{topBar}</header>
+      <main id="lm-main-content" className="lm-main-grid">
         <section className="lm-workspace-wrap">{workspace}</section>
-      </div>
+      </main>
     </section>
   );
 }

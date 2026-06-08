@@ -1,4 +1,7 @@
+import { useState } from "react";
 import { ProcedureSummary, RepairFamilyDetail } from "@/lib/types";
+
+const MAX_VISIBLE = 6;
 
 type FamilyFlowSelectorProps = {
   family: RepairFamilyDetail | null;
@@ -6,6 +9,8 @@ type FamilyFlowSelectorProps = {
 };
 
 export function FamilyFlowSelector({ family, onSelectFlow }: FamilyFlowSelectorProps) {
+  const [showAll, setShowAll] = useState(false);
+
   if (!family) {
     return (
       <section className="lm-flow-selector">
@@ -20,7 +25,9 @@ export function FamilyFlowSelector({ family, onSelectFlow }: FamilyFlowSelectorP
     );
   }
 
-  const categories = family.common_categories.slice(0, 6);
+  const allCategories = family.common_categories;
+  const categories = showAll ? allCategories : allCategories.slice(0, MAX_VISIBLE);
+  const hiddenCount = allCategories.length - MAX_VISIBLE;
 
   return (
     <section className="lm-flow-selector">
@@ -38,10 +45,19 @@ export function FamilyFlowSelector({ family, onSelectFlow }: FamilyFlowSelectorP
             type="button"
           >
             <strong>{category.primary_procedure.title}</strong>
-            <span>Route: {category.title}</span>
+            <span>{category.title}</span>
           </button>
         ))}
       </div>
+      {!showAll && hiddenCount > 0 ? (
+        <button
+          className="lm-flow-show-more"
+          onClick={() => setShowAll(true)}
+          type="button"
+        >
+          Show all {allCategories.length} routes
+        </button>
+      ) : null}
     </section>
   );
 }

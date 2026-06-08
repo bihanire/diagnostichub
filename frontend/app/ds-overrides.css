@@ -818,6 +818,403 @@
   box-shadow: 0 2px 12px rgba(4, 20, 16, 0.1) !important;
 }
 
+/* ── Phase A: Diagnostic workspace states ────────────────── */
+
+/* Loading dots on run button */
+@keyframes dotPulse {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.75); }
+  40%            { opacity: 1;    transform: scale(1); }
+}
+
+.run-btn-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-right: 2px;
+}
+
+.run-btn-dots span {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: dotPulse 1.2s ease-in-out infinite;
+}
+
+.run-btn-dots span:nth-child(2) { animation-delay: 0.2s; }
+.run-btn-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* Error state */
+.run-btn-error {
+  background: rgba(200, 40, 40, 0.14) !important;
+  border-color: rgba(200, 40, 40, 0.4) !important;
+  color: #f87171 !important;
+}
+
+.run-btn-error:hover:not(:disabled) {
+  background: rgba(200, 40, 40, 0.22) !important;
+  border-color: rgba(200, 40, 40, 0.56) !important;
+}
+
+/* Success flash */
+.run-btn-success {
+  background: rgba(0, 200, 150, 0.2) !important;
+  border-color: rgba(0, 200, 150, 0.45) !important;
+  color: #a7f3d0 !important;
+}
+
+/* Loading state */
+.run-btn-loading {
+  opacity: 0.72 !important;
+  cursor: wait !important;
+}
+
+/* Disabled textarea */
+.lm-diagnosis-input:disabled,
+.diag-textarea:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+}
+
+/* Backend health alert strip */
+.backend-health-banner {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-top: 10px !important;
+  padding: 9px 14px !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  border-left: 3px solid #f59e0b !important;
+  border-radius: 10px !important;
+  font-size: 0.84rem !important;
+  font-weight: 500 !important;
+  color: #fde68a !important;
+}
+
+.backend-health-banner svg {
+  color: #fbbf24 !important;
+  flex-shrink: 0;
+}
+
+/* Skip link (Phase F) */
+.lm-skip-link {
+  position: absolute !important;
+  top: -9999px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+  padding: 10px 20px !important;
+  background: #ffffff !important;
+  color: #007a62 !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border-radius: 0 0 10px 10px !important;
+  border: 2px solid rgba(0, 200, 150, 0.5) !important;
+  border-top: none !important;
+  text-decoration: none !important;
+  white-space: nowrap;
+}
+
+.lm-skip-link:focus {
+  top: 0 !important;
+}
+
+/* ── Phase B: Confidence pill colour coding ──────────────── */
+.confidence-pill-high {
+  background: rgba(0, 200, 150, 0.14) !important;
+  border: 1px solid rgba(0, 200, 150, 0.32) !important;
+  color: #00c896 !important;
+  font-weight: 700 !important;
+}
+
+.confidence-pill-medium {
+  background: rgba(245, 158, 11, 0.14) !important;
+  border: 1px solid rgba(245, 158, 11, 0.32) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+}
+
+.confidence-pill-low {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border: 1px solid rgba(239, 68, 68, 0.32) !important;
+  color: #f87171 !important;
+  font-weight: 700 !important;
+}
+
+/* Caution card — amber warning block */
+.match-review-card {
+  background: rgba(245, 158, 11, 0.08) !important;
+  border: 1px solid rgba(245, 158, 11, 0.28) !important;
+  border-left: 3px solid #f59e0b !important;
+}
+
+.match-review-heading {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.match-review-icon {
+  flex-shrink: 0;
+  color: #fbbf24 !important;
+}
+
+.match-review-card .match-review-heading {
+  color: #fde68a !important;
+}
+
+.match-review-card p,
+.match-review-card .muted-copy {
+  color: rgba(253, 230, 138, 0.8) !important;
+}
+
+/* ── Phase C: Flow chips ─────────────────────────────────── */
+.lm-flow-chip {
+  border-left: 3px solid transparent !important;
+  transition:
+    background 130ms ease,
+    border-color 130ms ease,
+    transform 120ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.lm-flow-chip:hover {
+  border-left-color: #0f9c8f !important;
+  transform: translateX(3px) translateY(0) !important;
+}
+
+.lm-flow-chip:focus-visible {
+  outline: 2px solid var(--tok-accent) !important;
+  outline-offset: 2px !important;
+  border-left-color: #0f9c8f !important;
+}
+
+/* Show-all button */
+.lm-flow-show-more {
+  margin-top: 6px !important;
+  padding: 7px 14px !important;
+  width: 100% !important;
+  background: transparent !important;
+  border: 1px dashed rgba(163, 233, 213, 0.3) !important;
+  border-radius: 10px !important;
+  color: rgba(197, 230, 221, 0.7) !important;
+  font-size: 0.78rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background 130ms ease, border-color 130ms ease, color 130ms ease !important;
+}
+
+.lm-flow-show-more:hover {
+  background: rgba(0, 200, 150, 0.06) !important;
+  border-color: rgba(0, 200, 150, 0.36) !important;
+  color: #a7f3d0 !important;
+}
+
+/* Critical stream cards in FamilyExplorer */
+.family-stream-card-critical {
+  border-left: 3px solid #ef4444 !important;
+  background: rgba(239, 68, 68, 0.06) !important;
+}
+
+.family-stream-card-critical .eyebrow,
+.family-stream-card-critical > strong:first-of-type {
+  color: #f87171 !important;
+}
+
+/* ── Phase D: Quick drill — white panel ──────────────────── */
+.quick-drill-shroud {
+  background: rgba(4, 16, 12, 0.42) !important;
+  backdrop-filter: blur(8px) saturate(0.8) !important;
+  -webkit-backdrop-filter: blur(8px) saturate(0.8) !important;
+}
+
+.quick-drill-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f2fcf8 100%) !important;
+  border: 1px solid rgba(15, 113, 104, 0.14) !important;
+  border-top: 2.5px solid rgba(0, 200, 150, 0.52) !important;
+  box-shadow:
+    0 32px 80px rgba(4, 20, 16, 0.52),
+    0 0 0 1px rgba(15, 113, 104, 0.07) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #0f2420 !important;
+}
+
+/* Remove the pseudo-element hairline (we have border now) */
+.quick-drill-panel::before {
+  display: none !important;
+}
+
+.quick-drill-head h3 {
+  color: #0d3530 !important;
+  font-size: clamp(1.4rem, 2.6vw, 2rem) !important;
+}
+
+.quick-drill-head .body-copy {
+  color: #4d706a !important;
+}
+
+.quick-drill-close {
+  color: #4d706a !important;
+  border-color: rgba(15, 113, 104, 0.16) !important;
+  background: rgba(15, 113, 104, 0.05) !important;
+}
+
+.quick-drill-close:hover {
+  background: rgba(220, 60, 50, 0.08) !important;
+  border-color: rgba(220, 60, 50, 0.22) !important;
+  color: #b83232 !important;
+}
+
+/* Chip items on white surface */
+.quick-drill-chip {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(15, 113, 104, 0.14) !important;
+  color: #0f2420 !important;
+}
+
+.quick-drill-chip:hover {
+  background: rgba(15, 156, 143, 0.08) !important;
+  border-color: rgba(15, 156, 143, 0.3) !important;
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 4px 14px rgba(15, 113, 104, 0.12) !important;
+}
+
+.quick-drill-chip:focus-visible {
+  outline: 2px solid var(--tok-accent) !important;
+  outline-offset: 3px !important;
+}
+
+.quick-drill-chip-active {
+  background: rgba(0, 200, 150, 0.14) !important;
+  border-color: rgba(0, 200, 150, 0.36) !important;
+  color: #006650 !important;
+}
+
+/* Track cards on white surface */
+.quick-drill-track-card {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(15, 113, 104, 0.12) !important;
+}
+
+.quick-drill-track-copy strong {
+  color: #0d3530 !important;
+}
+
+.quick-drill-track-copy .body-copy {
+  color: #4d706a !important;
+}
+
+.quick-drill-track-prompt {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(15, 113, 104, 0.12) !important;
+  color: #2e5f58 !important;
+}
+
+.quick-drill-track-action {
+  background: rgba(0, 200, 150, 0.1) !important;
+  border-color: rgba(0, 200, 150, 0.26) !important;
+  color: #007a62 !important;
+}
+
+.quick-drill-track-action:hover {
+  background: rgba(0, 200, 150, 0.18) !important;
+  border-color: rgba(0, 200, 150, 0.4) !important;
+  transform: translateY(-1px) !important;
+}
+
+.quick-drill-track-action:focus-visible {
+  outline: 2px solid var(--tok-accent) !important;
+  outline-offset: 2px !important;
+}
+
+.quick-drill-primary {
+  background: rgba(0, 200, 150, 0.14) !important;
+  border-color: rgba(0, 200, 150, 0.4) !important;
+  color: #007a62 !important;
+  animation: none !important;
+}
+
+.quick-drill-primary:hover {
+  background: rgba(0, 200, 150, 0.22) !important;
+  box-shadow: 0 6px 20px rgba(0, 200, 150, 0.18) !important;
+}
+
+.quick-drill-primary:focus-visible {
+  outline: 2px solid var(--tok-accent) !important;
+  outline-offset: 3px !important;
+}
+
+.quick-drill-secondary {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border-color: rgba(15, 113, 104, 0.18) !important;
+  color: #2e5f58 !important;
+}
+
+.quick-drill-secondary:focus-visible {
+  outline: 2px solid var(--tok-accent) !important;
+  outline-offset: 3px !important;
+}
+
+.quick-drill-error {
+  color: #dc2626 !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  border: 1px solid rgba(239, 68, 68, 0.22) !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+}
+
+/* ── Phase E: Inline search assist on light topbar ───────── */
+.search-assist-panel {
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdf8 100%) !important;
+  border: 1px solid rgba(15, 113, 104, 0.16) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 48px rgba(4, 20, 16, 0.32) !important;
+  color: #0f2420 !important;
+}
+
+.search-assist-group-title {
+  color: #2e5f58 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.search-assist-item {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(15, 113, 104, 0.1) !important;
+  border-left: 3px solid transparent !important;
+  color: #0f2420 !important;
+  transition: background 130ms ease, border-color 130ms ease, transform 120ms ease !important;
+}
+
+.search-assist-item:hover,
+.search-assist-item-active {
+  background: rgba(15, 156, 143, 0.07) !important;
+  border-color: rgba(15, 156, 143, 0.2) !important;
+  border-left-color: #0f9c8f !important;
+  transform: translateX(3px) translateY(0) !important;
+  box-shadow: 0 2px 10px rgba(15, 113, 104, 0.1) !important;
+}
+
+.search-assist-item-label {
+  color: #0d3530 !important;
+  font-weight: 700 !important;
+}
+
+.search-assist-item-subtitle {
+  color: #4d706a !important;
+}
+
+.search-assist-item-label strong,
+.search-assist-item-subtitle strong {
+  color: #007a62 !important;
+}
+
+.search-assist-empty {
+  color: #4d706a !important;
+}
+
 /* ── Responsive: max-width containment ───────────────────── */
 @media (min-width: 1240px) {
   .lm-topbar,
@@ -825,4 +1222,8 @@
     max-width: var(--shell-max);
     margin-inline: auto;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .run-btn-dots span { animation: none !important; opacity: 1 !important; transform: none !important; }
 }

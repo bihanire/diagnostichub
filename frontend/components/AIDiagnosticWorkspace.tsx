@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, X as XIcon } from "lucide-react";
 import { FormEvent, KeyboardEvent, useEffect, useState } from "react";
 
 import { SearchAssistDropdown } from "@/components/SearchAssistDropdown";
@@ -153,9 +154,10 @@ export function AIDiagnosticWorkspace({
           </button>
         )}
         {backendIssue ? (
-          <p className="backend-health-banner" role="status">
-            Backend issue detected - results may be unavailable.
-          </p>
+          <div className="backend-health-banner" role="alert">
+            <AlertTriangle size={15} aria-hidden="true" strokeWidth={2} />
+            <span>Backend issue detected — results may be unavailable.</span>
+          </div>
         ) : null}
       </header>
 
@@ -179,7 +181,7 @@ export function AIDiagnosticWorkspace({
           />
           {query.trim() ? (
             <button aria-label="Clear input" className="lm-clear-btn" onClick={onClear} type="button">
-              x
+              <XIcon size={13} aria-hidden="true" strokeWidth={2.5} />
             </button>
           ) : null}
           {characterCount > 20 ? (
@@ -210,16 +212,23 @@ export function AIDiagnosticWorkspace({
 
         <div className="lm-action-bar">
           <button
-            aria-label="Run diagnosis"
+            aria-label={searching ? "Running diagnosis" : hasRunError ? "Retry diagnosis" : "Run diagnosis"}
             className={`primary-button lm-run-btn run-btn run-btn-${activeRunState}`}
             disabled={searching}
             type="submit"
           >
-            <StethoscopeIcon />
+            {activeRunState === "loading" ? (
+              <span className="run-btn-dots" aria-hidden="true">
+                <span /><span /><span />
+              </span>
+            ) : activeRunState === "error" ? (
+              <AlertTriangle size={16} aria-hidden="true" strokeWidth={2} />
+            ) : activeRunState === "success" ? (
+              <CheckCircle2 size={16} aria-hidden="true" strokeWidth={2} />
+            ) : (
+              <StethoscopeIcon />
+            )}
             <span>{runButtonText}</span>
-            <span className="run-btn-tooltip" role="tooltip">
-              Enter to run - Esc to clear
-            </span>
           </button>
           <span className="sr-only" id="diagnosis-helper">
             Enter runs diagnosis. Escape clears the input.
