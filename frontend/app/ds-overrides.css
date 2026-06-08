@@ -90,15 +90,13 @@
   animation: modalOut var(--dur-exit) var(--ease-in) both;
 }
 
-/* ── Router panel scrim — light touch, not a blackout ─────── */
+/* ── Router panel scrim — invisible click-catcher only ─────── */
 .lm-family-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(4, 16, 12, 0.32);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  animation: backdropIn var(--dur-enter) var(--ease-out) both;
+  background: transparent;
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
