@@ -16,6 +16,63 @@ type TopCommandBarProps = {
   onGoHome: () => void;
 };
 
+type FamilyIconConfig = { d: string; bg: string; stroke: string };
+
+const FAMILY_ICON_MAP: Record<string, FamilyIconConfig> = {
+  display: {
+    d: "M2 3.5h14v9H2z M6 12.5v2 M12 12.5v2 M4 14.5h10",
+    bg: "rgba(14, 165, 233, 0.12)",
+    stroke: "#0284c7",
+  },
+  power: {
+    d: "M10.5 2.5l-5 7h4.5l-2 6 6-8.5h-5z",
+    bg: "rgba(245, 158, 11, 0.12)",
+    stroke: "#b45309",
+  },
+  logic: {
+    d: "M5.5 5.5h7v7h-7z M3 7.5h2.5 M3 10.5h2.5 M12.5 7.5H15 M12.5 10.5H15 M7.5 3v2.5 M10.5 3v2.5 M7.5 12.5V15 M10.5 12.5V15",
+    bg: "rgba(139, 92, 246, 0.12)",
+    stroke: "#7c3aed",
+  },
+  security: {
+    d: "M9 2l5.5 2.5v4c0 3.5-2.5 6-5.5 7-3-1-5.5-3.5-5.5-7V4.5z M6.5 9l2 2 3-3.5",
+    bg: "rgba(15, 118, 110, 0.12)",
+    stroke: "#0f766e",
+  },
+  connectivity: {
+    d: "M1.5 9a10.5 10.5 0 0 1 15 0 M4.5 12a6 6 0 0 1 9 0 M7.5 15a2.5 2.5 0 0 1 3 0 M9 17.5h.01",
+    bg: "rgba(59, 130, 246, 0.12)",
+    stroke: "#1d4ed8",
+  },
+  physical: {
+    d: "M9 2.5c-3 4.5-4.5 7-4.5 9.5a4.5 4.5 0 0 0 9 0c0-2.5-1.5-5-4.5-9.5z",
+    bg: "rgba(6, 182, 212, 0.12)",
+    stroke: "#0891b2",
+  },
+};
+
+function FamilyIconChip({ familyId }: { familyId: string }) {
+  const config = FAMILY_ICON_MAP[familyId];
+  if (!config) {
+    return <span className="lm-family-icon-chip lm-family-icon-chip-generic" aria-hidden="true" />;
+  }
+  return (
+    <span className="lm-family-icon-chip" aria-hidden="true" style={{ background: config.bg } as CSSProperties}>
+      <svg viewBox="0 0 18 18" fill="none" stroke={config.stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d={config.d} />
+      </svg>
+    </span>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="lm-family-check-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 9l3.5 3.5 6.5-7" />
+    </svg>
+  );
+}
+
 type FamilyMenuPosition = {
   top: number;
   right: number;
@@ -376,13 +433,21 @@ export function TopCommandBar({
                       ref={(node) => {
                         familyItemRefs.current[index] = node;
                       }}
+                      style={{ "--item-index": index } as CSSProperties}
                       type="button"
                     >
+                      <FamilyIconChip familyId={family.id} />
                       <span className="lm-family-menu-copy">
                         <strong>{family.title}</strong>
-                        <span>{family.hint}</span>
+                        <span title={family.hint}>{family.hint}</span>
                       </span>
-                      <span className="lm-family-menu-count">{family.procedure_count} flows</span>
+                      <span className="lm-family-menu-badge-slot">
+                        {selectedFamilyId === family.id ? (
+                          <CheckIcon />
+                        ) : (
+                          <span className="lm-family-menu-count">{family.procedure_count} flows</span>
+                        )}
+                      </span>
                     </button>
                   ))
                 ) : (
