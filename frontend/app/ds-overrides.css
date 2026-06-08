@@ -90,14 +90,14 @@
   animation: modalOut var(--dur-exit) var(--ease-in) both;
 }
 
-/* ── Router panel scrim ──────────────────────────────────── */
+/* ── Router panel scrim — light touch, not a blackout ─────── */
 .lm-family-backdrop {
   position: fixed;
   inset: 0;
   z-index: 9998;
-  background: rgba(4, 14, 10, 0.52);
-  backdrop-filter: blur(6px) saturate(0.6);
-  -webkit-backdrop-filter: blur(6px) saturate(0.6);
+  background: rgba(4, 16, 12, 0.32);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   animation: backdropIn var(--dur-enter) var(--ease-out) both;
 }
 
@@ -109,112 +109,120 @@
   .lm-family-backdrop { animation: none !important; }
 }
 
-/* ── Operational Router — dark surface ───────────────────── */
+/* ── Operational Router — light panel on dark background ──── */
+/* Restores the original white-card-floats-on-dark-bg aesthetic */
 .lm-family-menu-panel {
-  background: rgba(10, 22, 18, 0.98) !important;
-  border-color: rgba(0, 200, 150, 0.22) !important;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.56), 0 0 24px rgba(0,200,150,0.1) !important;
-  color: #e8f5ef !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f4fdf8 100%) !important;
+  border-color: rgba(15, 113, 104, 0.16) !important;
+  box-shadow: 0 24px 60px rgba(4, 20, 16, 0.46), 0 0 0 1px rgba(15,113,104,0.1) !important;
+  color: #0f2420 !important;
 }
 
 .lm-family-router-head strong {
-  color: #e8f5ef !important;
-  font-size: 1.05rem;
+  color: #123f3a !important;
+  font-size: 1.04rem;
   font-weight: 700;
 }
 
 .lm-family-router-head p,
 .lm-family-active-note {
-  color: #a8c8b8 !important;
+  color: #4d706a !important;
 }
 
 .lm-family-filter-label {
-  color: #a8c8b8 !important;
+  color: #2e5f58 !important;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
 }
 
 .lm-family-filter-input {
-  background: rgba(0, 200, 150, 0.06) !important;
-  border: 1px solid rgba(0, 200, 150, 0.14) !important;
-  color: #e8f5ef !important;
-  caret-color: #00c896;
+  background: #f8fdfa !important;
+  border: 1px solid rgba(15, 113, 104, 0.18) !important;
+  color: #0f2420 !important;
+  caret-color: #0f9c8f;
 }
 
-.lm-family-filter-input::placeholder { color: #6d9480; opacity: 1; }
+.lm-family-filter-input::placeholder { color: #7a9e98; opacity: 1; }
 
 .lm-family-filter-input:focus {
-  border-color: rgba(0, 200, 150, 0.36) !important;
-  background: rgba(0, 200, 150, 0.09) !important;
-  box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.14) !important;
+  border-color: rgba(15, 156, 143, 0.5) !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(15, 156, 143, 0.12) !important;
   outline: none;
 }
 
-/* Step pills */
+/* Step pills — light */
 .lm-family-router-steps span {
-  background: rgba(0, 200, 150, 0.06) !important;
-  border: 1px solid rgba(0, 200, 150, 0.1) !important;
-  color: #6d9480 !important;
+  background: rgba(15, 113, 104, 0.06) !important;
+  border: 1px solid rgba(15, 113, 104, 0.12) !important;
+  color: #4d706a !important;
 }
 
 .lm-family-router-steps .is-current {
-  background: rgba(0, 200, 150, 0.16) !important;
-  border-color: rgba(0, 200, 150, 0.32) !important;
-  color: #00c896 !important;
+  background: rgba(15, 156, 143, 0.14) !important;
+  border-color: rgba(15, 156, 143, 0.32) !important;
+  color: #056b62 !important;
   font-weight: 800;
-  box-shadow: 0 0 0 1px rgba(0,200,150,0.18), 0 2px 8px rgba(0,200,150,0.12) !important;
+  box-shadow: 0 0 0 1px rgba(15,156,143,0.2), 0 2px 8px rgba(15,156,143,0.1) !important;
 }
 
 .lm-family-router-steps .is-current::after { display: none; }
 
-/* Family items */
+/* Family items — white cards */
 .lm-family-menu-item {
-  background: rgba(0, 200, 150, 0.04) !important;
-  border: 1px solid rgba(0, 200, 150, 0.1) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(15, 113, 104, 0.1) !important;
   border-left: 3px solid transparent !important;
-  color: #e8f5ef !important;
+  color: #0f2420 !important;
 }
 
 .lm-family-menu-item:hover,
 .lm-family-menu-item.is-highlighted {
-  background: rgba(0, 200, 150, 0.1) !important;
-  border-color: rgba(0, 200, 150, 0.26) !important;
-  border-left-color: #00c896 !important;
+  background: rgba(15, 156, 143, 0.07) !important;
+  border-color: rgba(15, 156, 143, 0.22) !important;
+  border-left-color: #0f9c8f !important;
 }
 
 .lm-family-menu-item:focus-visible {
-  background: rgba(0, 200, 150, 0.1) !important;
-  border-color: rgba(0, 200, 150, 0.32) !important;
-  border-left-color: #00c896 !important;
-  box-shadow: 0 0 0 3px rgba(0,200,150,0.18) !important;
+  background: rgba(15, 156, 143, 0.08) !important;
+  border-color: rgba(15, 156, 143, 0.3) !important;
+  border-left-color: #0f9c8f !important;
+  box-shadow: 0 0 0 3px rgba(15,156,143,0.16) !important;
   outline: none;
 }
 
 .lm-family-menu-item.is-active {
-  background: rgba(0, 200, 150, 0.12) !important;
-  border-color: rgba(0, 200, 150, 0.28) !important;
-  border-left-color: #00c896 !important;
+  background: rgba(15, 156, 143, 0.1) !important;
+  border-color: rgba(15, 156, 143, 0.26) !important;
+  border-left-color: #0f9c8f !important;
 }
 
-.lm-family-menu-copy strong { color: #e8f5ef !important; }
-.lm-family-menu-copy span   { color: #a8c8b8 !important; }
+/* Text in items */
+.lm-family-menu-copy strong { color: #123f3a !important; font-weight: 700; }
+.lm-family-menu-copy span   { color: #4d706a !important; }
 
+/* Flow count badge */
 .lm-family-menu-count {
-  background: rgba(0, 200, 150, 0.12) !important;
-  color: #00c896 !important;
+  background: rgba(15, 156, 143, 0.1) !important;
+  color: #0a7268 !important;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.03em;
+  border: 1px solid rgba(15,156,143,0.18) !important;
 }
 
-.lm-family-check-icon { color: #00c896 !important; }
+/* Check badge for active family */
+.lm-family-check-badge {
+  background: rgba(15, 156, 143, 0.14) !important;
+  color: #0a7268 !important;
+}
 
 .lm-family-empty {
-  background: rgba(0,200,150,0.04) !important;
-  border-color: rgba(0,200,150,0.12) !important;
-  color: #a8c8b8 !important;
+  background: rgba(15, 113, 104, 0.04) !important;
+  border-color: rgba(15, 113, 104, 0.14) !important;
+  color: #4d706a !important;
 }
 
 /* ── Icon chip (lucide icons) ────────────────────────────── */
@@ -279,12 +287,17 @@
   border-color: rgba(0, 200, 150, 0.22) !important;
 }
 
-/* ── Eyebrow ─────────────────────────────────────────────── */
+/* ── Eyebrow — teal on dark bg, deep teal on light bg ─────── */
 .eyebrow {
   color: #00c896 !important;
   font-size: 0.7rem !important;
   font-weight: 700 !important;
   letter-spacing: 0.1em !important;
+}
+
+/* Inside the light panel, use darker teal so it stays readable */
+.lm-family-menu-panel .eyebrow {
+  color: #0a7268 !important;
 }
 
 /* ── Chip / Pill ─────────────────────────────────────────── */
