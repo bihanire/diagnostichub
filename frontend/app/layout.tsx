@@ -7,6 +7,8 @@ import { uiCopy } from "@/lib/copy";
 
 import "./globals.css";
 import "./startup-gate.css";
+import "./tokens.css";
+import "./ds-overrides.css";
 
 const bodyFont = DM_Sans({
   display: "swap",

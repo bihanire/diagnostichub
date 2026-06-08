@@ -1,7 +1,29 @@
 "use client";
 
 import Link from "next/link";
-import { CSSProperties, KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ChevronRight,
+  Cpu,
+  Droplets,
+  LayoutGrid,
+  Monitor,
+  Settings2,
+  Shield,
+  ShieldCheck,
+  Smartphone,
+  Wifi,
+  Wrench,
+  Zap,
+} from "lucide-react";
+import {
+  CSSProperties,
+  ElementType,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { RepairFamilySummary } from "@/lib/types";
 
@@ -16,98 +38,49 @@ type TopCommandBarProps = {
   onGoHome: () => void;
 };
 
-type FamilyIconConfig = { d: string; bg: string; stroke: string };
+type FamilyMenuPosition = { top: number; right: number };
+
+/* ── Per-family icon + color config ───────────────────────── */
+type FamilyIconConfig = {
+  Icon: ElementType;
+  bg: string;
+  stroke: string;
+};
 
 const FAMILY_ICON_MAP: Record<string, FamilyIconConfig> = {
-  display: {
-    d: "M2 3.5h14v9H2z M6 12.5v2 M12 12.5v2 M4 14.5h10",
-    bg: "rgba(14, 165, 233, 0.12)",
-    stroke: "#0284c7",
-  },
-  power: {
-    d: "M10.5 2.5l-5 7h4.5l-2 6 6-8.5h-5z",
-    bg: "rgba(245, 158, 11, 0.12)",
-    stroke: "#b45309",
-  },
-  logic: {
-    d: "M5.5 5.5h7v7h-7z M3 7.5h2.5 M3 10.5h2.5 M12.5 7.5H15 M12.5 10.5H15 M7.5 3v2.5 M10.5 3v2.5 M7.5 12.5V15 M10.5 12.5V15",
-    bg: "rgba(139, 92, 246, 0.12)",
-    stroke: "#7c3aed",
-  },
-  security: {
-    d: "M9 2l5.5 2.5v4c0 3.5-2.5 6-5.5 7-3-1-5.5-3.5-5.5-7V4.5z M6.5 9l2 2 3-3.5",
-    bg: "rgba(15, 118, 110, 0.12)",
-    stroke: "#0f766e",
-  },
-  connectivity: {
-    d: "M1.5 9a10.5 10.5 0 0 1 15 0 M4.5 12a6 6 0 0 1 9 0 M7.5 15a2.5 2.5 0 0 1 3 0 M9 17.5h.01",
-    bg: "rgba(59, 130, 246, 0.12)",
-    stroke: "#1d4ed8",
-  },
-  physical: {
-    d: "M9 2.5c-3 4.5-4.5 7-4.5 9.5a4.5 4.5 0 0 0 9 0c0-2.5-1.5-5-4.5-9.5z",
-    bg: "rgba(6, 182, 212, 0.12)",
-    stroke: "#0891b2",
-  },
+  display:      { Icon: Monitor,     bg: "rgba(56,189,248,0.14)",   stroke: "#38bdf8" },
+  power:        { Icon: Zap,         bg: "rgba(251,191,36,0.14)",   stroke: "#fbbf24" },
+  logic:        { Icon: Cpu,         bg: "rgba(167,139,250,0.14)",  stroke: "#a78bfa" },
+  security:     { Icon: ShieldCheck, bg: "rgba(52,211,153,0.14)",   stroke: "#34d399" },
+  connectivity: { Icon: Wifi,        bg: "rgba(96,165,250,0.14)",   stroke: "#60a5fa" },
+  physical:     { Icon: Droplets,    bg: "rgba(34,211,238,0.14)",   stroke: "#22d3ee" },
 };
 
 function FamilyIconChip({ familyId }: { familyId: string }) {
-  const config = FAMILY_ICON_MAP[familyId];
-  if (!config) {
-    return <span className="lm-family-icon-chip lm-family-icon-chip-generic" aria-hidden="true" />;
-  }
+  const cfg = FAMILY_ICON_MAP[familyId];
+  const IconComp = cfg?.Icon ?? Wrench;
+  const bg     = cfg?.bg     ?? "rgba(0,200,150,0.1)";
+  const stroke = cfg?.stroke ?? "#00c896";
   return (
-    <span className="lm-family-icon-chip" aria-hidden="true" style={{ background: config.bg } as CSSProperties}>
-      <svg viewBox="0 0 18 18" fill="none" stroke={config.stroke} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d={config.d} />
-      </svg>
+    <span
+      className="lm-family-icon-chip"
+      aria-hidden="true"
+      style={{ background: bg, color: stroke } as CSSProperties}
+    >
+      <IconComp size={15} strokeWidth={1.75} />
     </span>
   );
 }
 
-function CheckIcon() {
-  return (
-    <svg className="lm-family-check-icon" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M4 9l3.5 3.5 6.5-7" />
-    </svg>
-  );
-}
-
-type FamilyMenuPosition = {
-  top: number;
-  right: number;
-};
-
-type NavIconName = "families" | "system" | "utilities" | "ops";
-
-function NavIcon({ name }: { name: NavIconName }) {
-  if (name === "families") {
-    return (
-      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
-        <path d="M3 5.5h12M3 9h12M3 12.5h12" />
-      </svg>
-    );
-  }
-  if (name === "system") {
-    return (
-      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
-        <path d="M9 3.25v11.5M3.25 9h11.5M5 5l8 8M13 5l-8 8" />
-      </svg>
-    );
-  }
-  if (name === "utilities") {
-    return (
-      <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
-        <path d="M5.25 3.5h7.5v3h-7.5zM5.25 11.5h7.5v3h-7.5zM3.5 8.25h11" />
-      </svg>
-    );
-  }
-  return (
-    <svg aria-hidden="true" className="lm-nav-icon" viewBox="0 0 18 18">
-      <path d="M9 2.75 14 5v4.25c0 3-2 5.25-5 6-3-.75-5-3-5-6V5z" />
-      <path d="M6.75 9.2 8.25 10.7 11.4 7.5" />
-    </svg>
-  );
+/* ── Nav bar inline icons ─────────────────────────────────── */
+function NavIcon({ name }: { name: string }) {
+  const props = { size: 13, strokeWidth: 1.8, "aria-hidden": true, className: "lm-nav-icon-lc" };
+  if (name === "families")    return <LayoutGrid    {...props} />;
+  if (name === "system")      return <Settings2     {...props} />;
+  if (name === "utilities")   return <Wrench        {...props} />;
+  if (name === "ops")         return <ShieldCheck   {...props} />;
+  if (name === "smartphone")  return <Smartphone    {...props} />;
+  return <ChevronRight {...props} />;
 }
 
 export function TopCommandBar({
@@ -120,125 +93,106 @@ export function TopCommandBar({
   onSelectFamily,
   onGoHome,
 }: TopCommandBarProps) {
-  const familyMenuRef = useRef<HTMLDivElement | null>(null);
+  const familyMenuRef    = useRef<HTMLDivElement | null>(null);
   const familyTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const familyPanelRef = useRef<HTMLDivElement | null>(null);
-  const familyFilterRef = useRef<HTMLInputElement | null>(null);
-  const familyItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const utilityMenuRef = useRef<HTMLDivElement | null>(null);
+  const familyPanelRef   = useRef<HTMLDivElement | null>(null);
+  const familyFilterRef  = useRef<HTMLInputElement | null>(null);
+  const familyItemRefs   = useRef<Array<HTMLButtonElement | null>>([]);
+  const utilityMenuRef   = useRef<HTMLDivElement | null>(null);
   const utilityTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const [familyFilter, setFamilyFilter] = useState("");
+
+  const [familyFilter, setFamilyFilter]         = useState("");
   const [activeFamilyIndex, setActiveFamilyIndex] = useState(0);
-  const [familyMenuOpen, setFamilyMenuOpen] = useState(false);
-  const [utilityMenuOpen, setUtilityMenuOpen] = useState(false);
-  const [familyMenuPosition, setFamilyMenuPosition] = useState<FamilyMenuPosition>({ top: 64, right: 16 });
-  const activeFamily = families.find((family) => family.id === selectedFamilyId) || null;
+  const [familyMenuOpen, setFamilyMenuOpen]     = useState(false);
+  const [utilityMenuOpen, setUtilityMenuOpen]   = useState(false);
+  const [familyMenuPosition, setFamilyMenuPosition] =
+    useState<FamilyMenuPosition>({ top: 64, right: 16 });
+
+  const activeFamily = families.find((f) => f.id === selectedFamilyId) ?? null;
 
   const filteredFamilies = useMemo(() => {
-    const clean = familyFilter.trim().toLowerCase();
-    if (!clean) {
-      return families;
-    }
-    return families.filter((family) => {
-      const prompts = Array.isArray(family.symptom_prompts) ? family.symptom_prompts : [];
-      const searchable = `${family.title} ${family.hint} ${prompts.join(" ")}`.toLowerCase();
-      return searchable.includes(clean);
+    const q = familyFilter.trim().toLowerCase();
+    if (!q) return families;
+    return families.filter((f) => {
+      const prompts = Array.isArray(f.symptom_prompts) ? f.symptom_prompts : [];
+      return `${f.title} ${f.hint} ${prompts.join(" ")}`.toLowerCase().includes(q);
     });
   }, [families, familyFilter]);
 
-  useEffect(() => {
-    setActiveFamilyIndex(0);
-  }, [familyFilter]);
+  useEffect(() => { setActiveFamilyIndex(0); }, [familyFilter]);
 
+  /* close on outside click / focus */
   useEffect(() => {
-    if (!familyMenuOpen && !utilityMenuOpen) {
-      return;
-    }
-
-    function closeIfOutside(event: PointerEvent | FocusEvent) {
-      const target = event.target;
-      if (!(target instanceof Node)) {
-        return;
-      }
+    if (!familyMenuOpen && !utilityMenuOpen) return;
+    function closeIfOutside(e: PointerEvent | FocusEvent) {
+      const t = e.target;
+      if (!(t instanceof Node)) return;
       if (
-        familyMenuRef.current?.contains(target) ||
-        familyPanelRef.current?.contains(target) ||
-        utilityMenuRef.current?.contains(target)
-      ) {
-        return;
-      }
+        familyMenuRef.current?.contains(t) ||
+        familyPanelRef.current?.contains(t) ||
+        utilityMenuRef.current?.contains(t)
+      ) return;
       closeMenus();
     }
-
-    function closeOnEscape(event: globalThis.KeyboardEvent) {
-      if (event.key !== "Escape") {
-        return;
-      }
-      const shouldFocusFamily = familyMenuOpen;
-      const shouldFocusUtility = !familyMenuOpen && utilityMenuOpen;
+    function onEsc(e: globalThis.KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      const focusFamily  = familyMenuOpen;
+      const focusUtility = !familyMenuOpen && utilityMenuOpen;
       closeMenus();
-      if (shouldFocusFamily) {
-        familyTriggerRef.current?.focus();
-      } else if (shouldFocusUtility) {
-        utilityTriggerRef.current?.focus();
-      }
+      if (focusFamily)  familyTriggerRef.current?.focus();
+      if (focusUtility) utilityTriggerRef.current?.focus();
     }
-
     document.addEventListener("pointerdown", closeIfOutside, true);
-    document.addEventListener("focusin", closeIfOutside);
-    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("focusin",     closeIfOutside);
+    document.addEventListener("keydown",     onEsc);
     return () => {
       document.removeEventListener("pointerdown", closeIfOutside, true);
-      document.removeEventListener("focusin", closeIfOutside);
-      document.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("focusin",     closeIfOutside);
+      document.removeEventListener("keydown",     onEsc);
     };
   }, [familyMenuOpen, utilityMenuOpen]);
 
+  /* sync panel position + body scroll lock */
   useEffect(() => {
-    if (!familyMenuOpen) {
-      return;
-    }
+    if (!familyMenuOpen) return;
 
-    function syncPosition() {
+    /* body scroll lock */
+    const scrollY = window.scrollY;
+    document.body.style.overflow = "hidden";
+
+    function syncPos() {
       const trigger = familyTriggerRef.current;
-      if (!trigger) {
-        return;
-      }
+      if (!trigger) return;
       const rect = trigger.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const panelWidth = Math.min(470, viewportWidth - 24);
-      const maxRight = Math.max(12, viewportWidth - panelWidth - 12);
-      const right = Math.min(Math.max(12, viewportWidth - rect.right), maxRight);
-      setFamilyMenuPosition({
-        top: Math.round(rect.bottom + 8),
-        right: Math.round(right)
-      });
+      const vw   = window.innerWidth;
+      const pw   = Math.min(470, vw - 24);
+      const maxR = Math.max(12, vw - pw - 12);
+      const right = Math.min(Math.max(12, vw - rect.right), maxR);
+      setFamilyMenuPosition({ top: Math.round(rect.bottom + 8), right: Math.round(right) });
     }
 
-    syncPosition();
-    window.setTimeout(() => familyFilterRef.current?.focus(), 0);
-    window.addEventListener("resize", syncPosition);
-    window.addEventListener("scroll", syncPosition, true);
+    syncPos();
+    setTimeout(() => familyFilterRef.current?.focus(), 0);
+    window.addEventListener("resize", syncPos);
+    window.addEventListener("scroll", syncPos, true);
     return () => {
-      window.removeEventListener("resize", syncPosition);
-      window.removeEventListener("scroll", syncPosition, true);
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+      window.removeEventListener("resize", syncPos);
+      window.removeEventListener("scroll", syncPos, true);
     };
   }, [familyMenuOpen]);
 
+  /* external signal to open */
   useEffect(() => {
-    if (openFamilyMenuSignal <= 0) {
-      return;
-    }
-    openFamilyMenuFromTrigger();
+    if (openFamilyMenuSignal > 0) openFamilyMenuFromTrigger();
   }, [openFamilyMenuSignal]);
 
+  /* scroll active item into view */
   useEffect(() => {
-    if (!familyMenuOpen || activeFamilyIndex < 0) {
-      return;
+    if (familyMenuOpen && activeFamilyIndex >= 0) {
+      familyItemRefs.current[activeFamilyIndex]?.scrollIntoView({ block: "nearest" });
     }
-    familyItemRefs.current[activeFamilyIndex]?.scrollIntoView?.({
-      block: "nearest",
-    });
   }, [activeFamilyIndex, familyMenuOpen]);
 
   function closeMenus() {
@@ -250,270 +204,272 @@ export function TopCommandBar({
 
   function openFamilyMenuFromTrigger() {
     const trigger = familyTriggerRef.current;
-    if (!trigger) {
-      setUtilityMenuOpen(false);
-      setFamilyMenuOpen(true);
-      return;
+    const vw  = window.innerWidth;
+    const pw  = Math.min(470, vw - 24);
+    const maxR = Math.max(12, vw - pw - 12);
+    let top  = 64;
+    let right = 16;
+    if (trigger) {
+      const rect = trigger.getBoundingClientRect();
+      top   = Math.round(rect.bottom + 8);
+      right = Math.round(Math.min(Math.max(12, vw - rect.right), maxR));
     }
-
-    const rect = trigger.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const panelWidth = Math.min(470, viewportWidth - 24);
-    const maxRight = Math.max(12, viewportWidth - panelWidth - 12);
-    setFamilyMenuPosition({
-      top: Math.round(rect.bottom + 8),
-      right: Math.round(Math.min(Math.max(12, viewportWidth - rect.right), maxRight))
-    });
+    setFamilyMenuPosition({ top, right });
     setUtilityMenuOpen(false);
     setFamilyMenuOpen(true);
   }
 
-  function handleSelect(familyId: string) {
+  function handleSelect(id: string) {
     closeMenus();
-    onSelectFamily(familyId);
+    onSelectFamily(id);
   }
 
   function toggleFamilyMenu() {
-    if (!familyMenuOpen) {
-      openFamilyMenuFromTrigger();
-      return;
-    }
-    setUtilityMenuOpen(false);
+    if (!familyMenuOpen) { openFamilyMenuFromTrigger(); return; }
     setFamilyMenuOpen(false);
+    setUtilityMenuOpen(false);
   }
 
   function toggleUtilityMenu() {
     setFamilyMenuOpen(false);
-    setUtilityMenuOpen((current) => !current);
+    setUtilityMenuOpen((c) => !c);
   }
 
-  function handleOpenCommandPalette() {
-    closeMenus();
-    onOpenCommandPalette();
-  }
+  function handleOpenCommandPalette() { closeMenus(); onOpenCommandPalette(); }
+  function handleFocusSearch()        { closeMenus(); onFocusSearch(); }
+  function handleGoHome()             { closeMenus(); onGoHome(); }
 
-  function handleFocusSearch() {
-    closeMenus();
-    onFocusSearch();
-  }
-
-  function handleGoHome() {
-    closeMenus();
-    onGoHome();
-  }
-
-  function handleFamilyFilterKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (!filteredFamilies.length) {
+  function handleFilterKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (!filteredFamilies.length) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveFamilyIndex((c) => (c + 1) % filteredFamilies.length);
       return;
     }
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      setActiveFamilyIndex((current) => (current + 1) % filteredFamilies.length);
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveFamilyIndex((c) => (c <= 0 ? filteredFamilies.length - 1 : c - 1));
       return;
     }
-    if (event.key === "ArrowUp") {
-      event.preventDefault();
-      setActiveFamilyIndex((current) => (current <= 0 ? filteredFamilies.length - 1 : current - 1));
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const sel = filteredFamilies[activeFamilyIndex] ?? filteredFamilies[0];
+      if (sel) handleSelect(sel.id);
       return;
     }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const selected = filteredFamilies[activeFamilyIndex] || filteredFamilies[0];
-      if (selected) {
-        handleSelect(selected.id);
-      }
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
+    if (e.key === "Escape") {
+      e.preventDefault();
       closeMenus();
       familyTriggerRef.current?.focus();
     }
   }
 
-  const familyMenuStyle: CSSProperties = {
-    top: familyMenuPosition.top,
-    right: familyMenuPosition.right
+  const panelStyle: CSSProperties = {
+    top:   familyMenuPosition.top,
+    right: familyMenuPosition.right,
   };
 
   return (
-    <div className="lm-topbar">
-      <button className="lm-brand" onClick={handleGoHome} type="button">
-        <span>watu</span>
-      </button>
+    <>
+      {/* Scrim backdrop when router is open */}
+      {familyMenuOpen && (
+        <div
+          className="lm-family-backdrop"
+          aria-hidden="true"
+          onClick={closeMenus}
+        />
+      )}
 
-      <span className="lm-command-kbd lm-command-kbd-static" aria-hidden="true">
-        /
-      </span>
-
-      <input
-        aria-label="Global search"
-        className="lm-topbar-search"
-        onClick={handleOpenCommandPalette}
-        onFocus={handleOpenCommandPalette}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            handleOpenCommandPalette();
-          }
-        }}
-        placeholder="Ask anything - problem, procedure, or family"
-        readOnly
-        value=""
-      />
-
-      <nav className="lm-nav-tabs" aria-label="Primary navigation">
-        <div className="lm-family-menu" ref={familyMenuRef}>
-          <button
-            aria-expanded={familyMenuOpen}
-            aria-haspopup="listbox"
-            className={`lm-nav-tab ${selectedFamilyId || familyMenuOpen ? "active" : ""}`}
-            onClick={toggleFamilyMenu}
-            ref={familyTriggerRef}
-            type="button"
-          >
-            <NavIcon name="families" />
-            Families
-          </button>
-          {familyMenuOpen ? (
-            <div
-              aria-label="Family operational router"
-              className="lm-family-menu-panel"
-              ref={familyPanelRef}
-              style={familyMenuStyle}
-            >
-              <div className="lm-family-router-head">
-                <span className="eyebrow">Operational router</span>
-                <strong>Choose family, then flow</strong>
-                <p>Open the right workspace first, then select the exact guided route.</p>
-              </div>
-              <div className="lm-family-router-steps" aria-label="Router steps">
-                <span className="is-current">1 Family</span>
-                <span>2 Flow</span>
-                <span>3 Guided workspace</span>
-              </div>
-              <label className="lm-family-filter-label" htmlFor="family-filter">
-                Find family
-              </label>
-              <input
-                aria-activedescendant={
-                  activeFamilyIndex >= 0 && filteredFamilies[activeFamilyIndex]
-                    ? `family-menu-option-${filteredFamilies[activeFamilyIndex].id}`
-                    : undefined
-                }
-                className="lm-family-filter-input"
-                id="family-filter"
-                onChange={(event) => setFamilyFilter(event.target.value)}
-                onKeyDown={handleFamilyFilterKeyDown}
-                placeholder="Display, power, security, SIM..."
-                ref={familyFilterRef}
-                role="combobox"
-                aria-controls="family-menu-list"
-                aria-expanded={familyMenuOpen}
-                value={familyFilter}
-              />
-              {activeFamily ? (
-                <p className="lm-family-active-note">
-                  Current family: <strong>{activeFamily.title}</strong>
-                </p>
-              ) : null}
-              <div className="lm-family-menu-list" id="family-menu-list" role="listbox">
-                {filteredFamilies.length ? (
-                  filteredFamilies.map((family, index) => (
-                    <button
-                      aria-label={`Open ${family.title} diagnosis family`}
-                      aria-current={selectedFamilyId === family.id ? "true" : undefined}
-                      className={`lm-family-menu-item ${selectedFamilyId === family.id ? "is-active" : ""} ${
-                        activeFamilyIndex === index ? "is-highlighted" : ""
-                      }`}
-                      id={`family-menu-option-${family.id}`}
-                      key={`family-menu-${family.id}`}
-                      onMouseEnter={() => setActiveFamilyIndex(index)}
-                      onClick={() => handleSelect(family.id)}
-                      ref={(node) => {
-                        familyItemRefs.current[index] = node;
-                      }}
-                      style={{ "--item-index": index } as CSSProperties}
-                      type="button"
-                    >
-                      <FamilyIconChip familyId={family.id} />
-                      <span className="lm-family-menu-copy">
-                        <strong>{family.title}</strong>
-                        <span title={family.hint}>{family.hint}</span>
-                      </span>
-                      <span className="lm-family-menu-badge-slot">
-                        {selectedFamilyId === family.id ? (
-                          <CheckIcon />
-                        ) : (
-                          <span className="lm-family-menu-count">{family.procedure_count} flows</span>
-                        )}
-                      </span>
-                    </button>
-                  ))
-                ) : (
-                  <div className="lm-family-empty">No family matches that wording. Try power, display, security, SIM, or liquid.</div>
-                )}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <button className="lm-nav-tab" onClick={handleFocusSearch} type="button">
-          <NavIcon name="system" />
-          System
+      <div className="lm-topbar">
+        <button className="lm-brand" onClick={handleGoHome} type="button">
+          <span>watu</span>
         </button>
 
-        <div className="lm-utility-menu" ref={utilityMenuRef}>
-          <button
-            aria-expanded={utilityMenuOpen}
-            aria-haspopup="menu"
-            className={`lm-nav-tab ${utilityMenuOpen ? "active" : ""}`}
-            onClick={toggleUtilityMenu}
-            ref={utilityTriggerRef}
-            type="button"
-          >
-            <NavIcon name="utilities" />
-            Utilities
-          </button>
-          {utilityMenuOpen ? (
-          <div className="lm-utility-panel" role="menu">
-            <a
-              href="https://docs.google.com/spreadsheets/d/1jlpD74o0F88-wxq8p0x_nCptMLSjMuv6u2WuAcaa9Cs/edit?gid=655564610#gid=655564610"
-              onClick={closeMenus}
-              rel="noreferrer"
-              role="menuitem"
-              target="_blank"
-            >
-              Master queries
-            </a>
-            <a
-              href="https://docs.google.com/document/d/13k8YVkqgaSG7Nck_0KTLh-emb9BhacJziuxxyxARXZ8/edit?tab=t.0"
-              onClick={closeMenus}
-              rel="noreferrer"
-              role="menuitem"
-              target="_blank"
-            >
-              SOP guide
-            </a>
-            <button onClick={handleOpenCommandPalette} role="menuitem" type="button">
-              Open command palette
-            </button>
-            <Link href="/ops/diagnostics" onClick={closeMenus} role="menuitem">
-              Deployment diagnostics
-            </Link>
-          </div>
-          ) : null}
-        </div>
+        <span className="lm-command-kbd lm-command-kbd-static" aria-hidden="true">/</span>
 
-        <Link
-          className={`lm-nav-tab lm-nav-tab-ops ${opsAuthenticated ? "lm-nav-tab-ops-authenticated" : ""}`}
-          href="/ops/login"
-          onClick={closeMenus}
-        >
-          <NavIcon name="ops" />
-          Ops
-        </Link>
-      </nav>
-    </div>
+        <input
+          aria-label="Global search"
+          className="lm-topbar-search"
+          onClick={handleOpenCommandPalette}
+          onFocus={handleOpenCommandPalette}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleOpenCommandPalette(); } }}
+          placeholder="Ask anything — problem, procedure, or family"
+          readOnly
+          value=""
+        />
+
+        <nav className="lm-nav-tabs" aria-label="Primary navigation">
+          {/* Families */}
+          <div className="lm-family-menu" ref={familyMenuRef}>
+            <button
+              aria-expanded={familyMenuOpen}
+              aria-haspopup="listbox"
+              className={`lm-nav-tab${selectedFamilyId || familyMenuOpen ? " active" : ""}`}
+              onClick={toggleFamilyMenu}
+              ref={familyTriggerRef}
+              type="button"
+            >
+              <NavIcon name="families" />
+              Families
+            </button>
+
+            {familyMenuOpen && (
+              <div
+                aria-label="Family operational router"
+                className="lm-family-menu-panel"
+                ref={familyPanelRef}
+                style={panelStyle}
+              >
+                {/* Header */}
+                <div className="lm-family-router-head">
+                  <span className="eyebrow">Operational router</span>
+                  <strong>Choose family, then flow</strong>
+                  <p>Open the right workspace first, then select the exact guided route.</p>
+                </div>
+
+                {/* Step indicator */}
+                <div className="lm-family-router-steps" aria-label="Router steps">
+                  <span className="is-current" aria-current="step">1 Family</span>
+                  <span>2 Flow</span>
+                  <span>3 Guided workspace</span>
+                </div>
+
+                {/* Filter */}
+                <label className="lm-family-filter-label" htmlFor="family-filter">
+                  Find family
+                </label>
+                <input
+                  aria-activedescendant={
+                    activeFamilyIndex >= 0 && filteredFamilies[activeFamilyIndex]
+                      ? `fmo-${filteredFamilies[activeFamilyIndex].id}`
+                      : undefined
+                  }
+                  aria-controls="family-menu-list"
+                  aria-expanded={familyMenuOpen}
+                  className="lm-family-filter-input"
+                  id="family-filter"
+                  onChange={(e) => setFamilyFilter(e.target.value)}
+                  onKeyDown={handleFilterKeyDown}
+                  placeholder="Display, power, security, SIM…"
+                  ref={familyFilterRef}
+                  role="combobox"
+                  value={familyFilter}
+                />
+
+                {activeFamily && (
+                  <p className="lm-family-active-note">
+                    Current: <strong>{activeFamily.title}</strong>
+                  </p>
+                )}
+
+                {/* List */}
+                <div className="lm-family-menu-list" id="family-menu-list" role="listbox">
+                  {filteredFamilies.length ? (
+                    filteredFamilies.map((family, index) => {
+                      const isActive      = selectedFamilyId === family.id;
+                      const isHighlighted = activeFamilyIndex === index;
+                      return (
+                        <button
+                          aria-current={isActive ? "true" : undefined}
+                          aria-label={`Open ${family.title} diagnosis family`}
+                          className={`lm-family-menu-item${isActive ? " is-active" : ""}${isHighlighted ? " is-highlighted" : ""}`}
+                          id={`fmo-${family.id}`}
+                          key={`fmo-${family.id}`}
+                          onClick={() => handleSelect(family.id)}
+                          onMouseEnter={() => setActiveFamilyIndex(index)}
+                          ref={(n) => { familyItemRefs.current[index] = n; }}
+                          style={{ "--item-index": index } as CSSProperties}
+                          type="button"
+                        >
+                          <FamilyIconChip familyId={family.id} />
+                          <span className="lm-family-menu-copy">
+                            <strong>{family.title}</strong>
+                            <span title={family.hint}>{family.hint}</span>
+                          </span>
+                          <span className="lm-family-menu-badge-slot">
+                            {isActive ? (
+                              <span className="lm-family-check-badge" aria-label="selected">
+                                ✓
+                              </span>
+                            ) : (
+                              <span className="lm-family-menu-count">
+                                {family.procedure_count} flows
+                              </span>
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className="lm-family-empty" role="status">
+                      No family matches. Try power, display, security, SIM, or liquid.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* System */}
+          <button className="lm-nav-tab" onClick={handleFocusSearch} type="button">
+            <NavIcon name="system" />
+            System
+          </button>
+
+          {/* Utilities */}
+          <div className="lm-utility-menu" ref={utilityMenuRef}>
+            <button
+              aria-expanded={utilityMenuOpen}
+              aria-haspopup="menu"
+              className={`lm-nav-tab${utilityMenuOpen ? " active" : ""}`}
+              onClick={toggleUtilityMenu}
+              ref={utilityTriggerRef}
+              type="button"
+            >
+              <NavIcon name="utilities" />
+              Utilities
+            </button>
+            {utilityMenuOpen && (
+              <div className="lm-utility-panel" role="menu">
+                <a
+                  href="https://docs.google.com/spreadsheets/d/1jlpD74o0F88-wxq8p0x_nCptMLSjMuv6u2WuAcaa9Cs/edit?gid=655564610#gid=655564610"
+                  onClick={closeMenus}
+                  rel="noreferrer"
+                  role="menuitem"
+                  target="_blank"
+                >
+                  Master queries
+                </a>
+                <a
+                  href="https://docs.google.com/document/d/13k8YVkqgaSG7Nck_0KTLh-emb9BhacJziuxxyxARXZ8/edit?tab=t.0"
+                  onClick={closeMenus}
+                  rel="noreferrer"
+                  role="menuitem"
+                  target="_blank"
+                >
+                  SOP guide
+                </a>
+                <button onClick={handleOpenCommandPalette} role="menuitem" type="button">
+                  Open command palette
+                </button>
+                <Link href="/ops/diagnostics" onClick={closeMenus} role="menuitem">
+                  Deployment diagnostics
+                </Link>
+              </div>
+            )}
+          </div>
+
+          {/* Ops */}
+          <Link
+            className={`lm-nav-tab lm-nav-tab-ops${opsAuthenticated ? " lm-nav-tab-ops-authenticated" : ""}`}
+            href="/ops/login"
+            onClick={closeMenus}
+          >
+            <NavIcon name="ops" />
+            Ops
+          </Link>
+        </nav>
+      </div>
+    </>
   );
 }

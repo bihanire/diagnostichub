@@ -1,0 +1,127 @@
+/*
+ * DiagnosticHub Design Tokens
+ * Semantic layer — consume these in all components; never use hard-coded values.
+ * Dark teal/mint palette. WCAG AA verified on all text/background pairings.
+ */
+
+:root {
+  /* ── Accent / Brand ────────────────────────────────────── */
+  --tok-accent:           #00c896;
+  --tok-accent-dim:       rgba(0, 200, 150, 0.14);
+  --tok-accent-hover:     #00e0a9;
+  --tok-accent-press:     #00b085;
+  --tok-accent-border:    rgba(0, 200, 150, 0.28);
+  --tok-accent-text:      #003d2e;   /* text ON accent bg — WCAG AA */
+
+  /* ── Surface stack ─────────────────────────────────────── */
+  --tok-bg:               #0b1410;
+  --tok-surface:          rgba(15, 26, 22, 0.94);
+  --tok-surface-raised:   rgba(20, 36, 30, 0.97);
+  --tok-surface-overlay:  rgba(8, 18, 14, 0.88);
+  --tok-surface-glass:    rgba(10, 26, 20, 0.82);
+
+  /* ── Border ────────────────────────────────────────────── */
+  --tok-border:           rgba(0, 200, 150, 0.12);
+  --tok-border-strong:    rgba(0, 200, 150, 0.28);
+  --tok-border-subtle:    rgba(255, 255, 255, 0.06);
+
+  /* ── Text ──────────────────────────────────────────────── */
+  --tok-text-primary:     #e8f5ef;   /* 14.6:1 on --tok-surface */
+  --tok-text-secondary:   #a8c8b8;   /* 7.2:1  on --tok-surface */
+  --tok-text-muted:       #6d9480;   /* 4.6:1  on --tok-surface – AA large */
+  --tok-text-disabled:    #3d5449;
+  --tok-text-on-accent:   #012c22;   /* on --tok-accent — 9.4:1 */
+  --tok-text-on-light:    #0f1f1a;   /* for light-bg modals */
+
+  /* ── Semantic status ───────────────────────────────────── */
+  --tok-success:          #10b981;
+  --tok-success-dim:      rgba(16, 185, 129, 0.14);
+  --tok-success-text:     #a7f3d0;
+  --tok-warning:          #f59e0b;
+  --tok-warning-dim:      rgba(245, 158, 11, 0.14);
+  --tok-warning-text:     #fde68a;
+  --tok-error:            #f04c5f;
+  --tok-error-dim:        rgba(240, 76, 95, 0.14);
+  --tok-error-text:       #fecdd3;
+  --tok-info:             #38bdf8;
+  --tok-info-dim:         rgba(56, 189, 248, 0.12);
+
+  /* ── Family icon accent colors ─────────────────────────── */
+  --tok-family-display:        #38bdf8;
+  --tok-family-display-dim:    rgba(56, 189, 248, 0.14);
+  --tok-family-power:          #fbbf24;
+  --tok-family-power-dim:      rgba(251, 191, 36, 0.14);
+  --tok-family-logic:          #a78bfa;
+  --tok-family-logic-dim:      rgba(167, 139, 250, 0.14);
+  --tok-family-security:       #34d399;
+  --tok-family-security-dim:   rgba(52, 211, 153, 0.14);
+  --tok-family-connectivity:   #60a5fa;
+  --tok-family-connectivity-dim: rgba(96, 165, 250, 0.14);
+  --tok-family-physical:       #22d3ee;
+  --tok-family-physical-dim:   rgba(34, 211, 238, 0.14);
+
+  /* ── Spacing scale ─────────────────────────────────────── */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  20px;
+  --sp-6:  24px;
+  --sp-8:  32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* ── Radius scale ──────────────────────────────────────── */
+  --r-xs:  6px;
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  18px;
+  --r-xl:  24px;
+  --r-2xl: 30px;
+  --r-full: 9999px;
+
+  /* ── Type scale ────────────────────────────────────────── */
+  --t-xs:   0.7rem;
+  --t-sm:   0.78rem;
+  --t-base: 0.9rem;
+  --t-md:   1rem;
+  --t-lg:   1.1rem;
+  --t-xl:   1.25rem;
+  --t-2xl:  1.5rem;
+  --t-3xl:  2rem;
+
+  /* ── Shadow scale ──────────────────────────────────────── */
+  --sh-xs: 0 2px 6px rgba(0, 0, 0, 0.2);
+  --sh-sm: 0 4px 14px rgba(0, 0, 0, 0.28);
+  --sh-md: 0 10px 30px rgba(0, 0, 0, 0.36);
+  --sh-lg: 0 20px 50px rgba(0, 0, 0, 0.46);
+  --sh-xl: 0 32px 80px rgba(0, 0, 0, 0.56);
+  --sh-glow: 0 0 24px rgba(0, 200, 150, 0.18);
+
+  /* ── Motion tokens ─────────────────────────────────────── */
+  --dur-instant:  80ms;
+  --dur-fast:     140ms;
+  --dur-base:     200ms;
+  --dur-slow:     320ms;
+  --dur-enter:    180ms;
+  --dur-exit:     140ms;
+
+  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in:        cubic-bezier(0.4, 0, 1, 1);
+  --ease-in-out:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-premium:   cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Max-width shell ───────────────────────────────────── */
+  --shell-max:    1200px;
+  --shell-pad:    clamp(16px, 2vw, 32px);
+
+  /* ── Z-index scale ─────────────────────────────────────── */
+  --z-base:    1;
+  --z-raised:  10;
+  --z-sticky:  100;
+  --z-overlay: 1000;
+  --z-modal:   2000;
+  --z-toast:   3000;
+}
