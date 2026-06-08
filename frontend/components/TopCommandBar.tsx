@@ -7,6 +7,7 @@ import {
   Droplets,
   LayoutGrid,
   Monitor,
+  Search,
   Settings2,
   Shield,
   ShieldCheck,
@@ -329,32 +330,46 @@ export function TopCommandBar({
 
                 {/* Step indicator */}
                 <div className="lm-family-router-steps" aria-label="Router steps">
-                  <span className="is-current" aria-current="step">1 Family</span>
-                  <span>2 Flow</span>
-                  <span>3 Guided workspace</span>
+                  <span className="lm-step is-current" aria-current="step">
+                    <span className="lm-step-num">1</span>
+                    <span className="lm-step-label">Family</span>
+                  </span>
+                  <span className="lm-step-connector" aria-hidden="true" />
+                  <span className="lm-step">
+                    <span className="lm-step-num">2</span>
+                    <span className="lm-step-label">Flow</span>
+                  </span>
+                  <span className="lm-step-connector" aria-hidden="true" />
+                  <span className="lm-step">
+                    <span className="lm-step-num">3</span>
+                    <span className="lm-step-label">Workspace</span>
+                  </span>
                 </div>
 
                 {/* Filter */}
                 <label className="lm-family-filter-label" htmlFor="family-filter">
                   Find family
                 </label>
-                <input
-                  aria-activedescendant={
-                    activeFamilyIndex >= 0 && filteredFamilies[activeFamilyIndex]
-                      ? `fmo-${filteredFamilies[activeFamilyIndex].id}`
-                      : undefined
-                  }
-                  aria-controls="family-menu-list"
-                  aria-expanded={familyMenuOpen}
-                  className="lm-family-filter-input"
-                  id="family-filter"
-                  onChange={(e) => setFamilyFilter(e.target.value)}
-                  onKeyDown={handleFilterKeyDown}
-                  placeholder="Display, power, security, SIM…"
-                  ref={familyFilterRef}
-                  role="combobox"
-                  value={familyFilter}
-                />
+                <div className="lm-family-filter-wrap">
+                  <Search size={14} aria-hidden="true" className="lm-family-filter-icon" />
+                  <input
+                    aria-activedescendant={
+                      activeFamilyIndex >= 0 && filteredFamilies[activeFamilyIndex]
+                        ? `fmo-${filteredFamilies[activeFamilyIndex].id}`
+                        : undefined
+                    }
+                    aria-controls="family-menu-list"
+                    aria-expanded={familyMenuOpen}
+                    className="lm-family-filter-input"
+                    id="family-filter"
+                    onChange={(e) => setFamilyFilter(e.target.value)}
+                    onKeyDown={handleFilterKeyDown}
+                    placeholder="Display, power, security, SIM…"
+                    ref={familyFilterRef}
+                    role="combobox"
+                    value={familyFilter}
+                  />
+                </div>
 
                 {activeFamily && (
                   <p className="lm-family-active-note">
@@ -366,6 +381,7 @@ export function TopCommandBar({
                 <div className="lm-family-menu-list" id="family-menu-list" role="listbox">
                   {filteredFamilies.length ? (
                     filteredFamilies.map((family, index) => {
+
                       const isActive      = selectedFamilyId === family.id;
                       const isHighlighted = activeFamilyIndex === index;
                       return (
@@ -378,7 +394,7 @@ export function TopCommandBar({
                           onClick={() => handleSelect(family.id)}
                           onMouseEnter={() => setActiveFamilyIndex(index)}
                           ref={(n) => { familyItemRefs.current[index] = n; }}
-                          style={{ "--item-index": index } as CSSProperties}
+                          style={{ "--item-index": index, "--fam-accent": FAMILY_ICON_MAP[family.id]?.stroke ?? "#00c896" } as CSSProperties}
                           type="button"
                         >
                           <FamilyIconChip familyId={family.id} />
@@ -405,6 +421,18 @@ export function TopCommandBar({
                       No family matches. Try power, display, security, SIM, or liquid.
                     </div>
                   )}
+                </div>
+
+                {/* Keyboard hint */}
+                <div className="lm-family-keyboard-hint" aria-hidden="true">
+                  <kbd>↑↓</kbd>
+                  <span>navigate</span>
+                  <span className="lm-hint-sep">·</span>
+                  <kbd>Enter</kbd>
+                  <span>select</span>
+                  <span className="lm-hint-sep">·</span>
+                  <kbd>Esc</kbd>
+                  <span>close</span>
                 </div>
               </div>
             )}
