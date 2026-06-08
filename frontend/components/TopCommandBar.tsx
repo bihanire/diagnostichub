@@ -329,19 +329,19 @@ export function TopCommandBar({
                 </div>
 
                 {/* Step indicator */}
-                <div className="lm-family-router-steps" aria-label="Router steps">
-                  <span className="lm-step is-current" aria-current="step">
-                    <span className="lm-step-num">1</span>
+                <div className="lm-family-router-steps" aria-label="Router steps" role="list">
+                  <span className="lm-step is-current" aria-current="step" role="listitem">
+                    <span className="lm-step-num" aria-hidden="true">1</span>
                     <span className="lm-step-label">Family</span>
                   </span>
-                  <span className="lm-step-connector" aria-hidden="true" />
-                  <span className="lm-step">
-                    <span className="lm-step-num">2</span>
+                  <span className="lm-step-sep" aria-hidden="true">›</span>
+                  <span className="lm-step" role="listitem" title="Select a family first">
+                    <span className="lm-step-num" aria-hidden="true">2</span>
                     <span className="lm-step-label">Flow</span>
                   </span>
-                  <span className="lm-step-connector" aria-hidden="true" />
-                  <span className="lm-step">
-                    <span className="lm-step-num">3</span>
+                  <span className="lm-step-sep" aria-hidden="true">›</span>
+                  <span className="lm-step" role="listitem" title="Select a flow to open workspace">
+                    <span className="lm-step-num" aria-hidden="true">3</span>
                     <span className="lm-step-label">Workspace</span>
                   </span>
                 </div>

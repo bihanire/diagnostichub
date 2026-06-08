@@ -179,67 +179,69 @@
   box-sizing: border-box;
 }
 
-/* Step indicator — numbered circles + connectors */
+/* Step indicator — compact breadcrumb */
 .lm-family-router-steps {
   display: flex !important;
   align-items: center !important;
-  gap: 0 !important;
+  gap: 6px !important;
   padding: 0 16px 14px !important;
   background: transparent !important;
   border: none !important;
+  flex-wrap: nowrap !important;
 }
 
 .lm-step {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 7px !important;
+  gap: 5px !important;
   background: none !important;
   border: none !important;
   padding: 0 !important;
   flex-shrink: 0;
+  cursor: default;
 }
 
 .lm-step-num {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 22px !important;
-  height: 22px !important;
+  width: 18px !important;
+  height: 18px !important;
   border-radius: 50% !important;
-  font-size: 0.7rem !important;
+  font-size: 0.64rem !important;
   font-weight: 800 !important;
-  background: rgba(15, 113, 104, 0.08) !important;
-  color: #6d8c85 !important;
-  border: 1.5px solid rgba(15, 113, 104, 0.16) !important;
+  background: rgba(15, 113, 104, 0.07) !important;
+  color: #8ab4ad !important;
+  border: 1.5px solid rgba(15, 113, 104, 0.14) !important;
   box-shadow: none !important;
-  transition: all 140ms ease;
   flex-shrink: 0;
 }
 
 .lm-step-label {
-  font-size: 0.74rem !important;
-  font-weight: 600 !important;
-  color: #7a9e98 !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  color: #8ab4ad !important;
   white-space: nowrap;
   background: none !important;
   border: none !important;
   box-shadow: none !important;
 }
 
-.lm-step-connector {
-  flex: 1;
-  min-width: 16px;
-  height: 1.5px;
-  background: rgba(15, 113, 104, 0.14);
-  margin: 0 6px;
-  border-radius: 2px;
+/* › separator */
+.lm-step-sep {
+  color: rgba(15, 113, 104, 0.25);
+  font-size: 0.75rem;
+  line-height: 1;
+  flex-shrink: 0;
+  user-select: none;
 }
 
+/* Active step */
 .lm-step.is-current .lm-step-num {
-  background: rgba(0, 200, 150, 0.18) !important;
+  background: rgba(0, 200, 150, 0.16) !important;
   color: #056b62 !important;
-  border-color: rgba(0, 200, 150, 0.42) !important;
-  box-shadow: 0 0 0 3.5px rgba(0, 200, 150, 0.1), 0 2px 8px rgba(0,200,150,0.14) !important;
+  border-color: rgba(0, 200, 150, 0.38) !important;
+  box-shadow: 0 0 0 3px rgba(0, 200, 150, 0.1) !important;
 }
 
 .lm-step.is-current .lm-step-label {
