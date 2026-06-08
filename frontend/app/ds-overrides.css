@@ -358,42 +358,47 @@
   line-height: 1;
 }
 
-/* ── Nav tabs — consistent on dark topbar ────────────────── */
+/* ── Nav tabs — light topbar surface ─────────────────────── */
 .lm-nav-tab {
-  color: rgba(160, 210, 190, 0.68) !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
-  transition: color 140ms ease, background 140ms ease, border-color 140ms ease !important;
+  color: #2e5f58 !important;
+  background: transparent !important;
+  border: 1px solid rgba(15, 113, 104, 0.16) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  transition: color 130ms ease, background 130ms ease, border-color 130ms ease !important;
 }
 
 .lm-nav-tab:hover {
-  color: rgba(224, 248, 238, 0.92) !important;
-  background: rgba(255, 255, 255, 0.09) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #0a3d38 !important;
+  background: rgba(0, 200, 150, 0.08) !important;
+  border-color: rgba(0, 200, 150, 0.26) !important;
 }
 
 .lm-nav-tab.active {
-  color: #00c896 !important;
-  background: rgba(0, 200, 150, 0.16) !important;
-  border-color: rgba(0, 200, 150, 0.34) !important;
-  box-shadow: 0 0 0 1px rgba(0, 200, 150, 0.1) inset !important;
+  color: #007a62 !important;
+  background: rgba(0, 200, 150, 0.13) !important;
+  border-color: rgba(0, 200, 150, 0.32) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(0, 200, 150, 0.12) !important;
 }
 
 .lm-nav-tab-ops {
-  color: #5ee8b8 !important;
+  color: #007a62 !important;
   background: rgba(0, 200, 150, 0.1) !important;
-  border-color: rgba(0, 200, 150, 0.24) !important;
+  border-color: rgba(0, 200, 150, 0.28) !important;
+  font-weight: 600 !important;
 }
 
 .lm-nav-tab-ops:hover {
   background: rgba(0, 200, 150, 0.18) !important;
-  color: #a7f3d0 !important;
+  border-color: rgba(0, 200, 150, 0.4) !important;
 }
 
 .lm-nav-tab-ops.lm-nav-tab-ops-authenticated {
-  background: rgba(0, 200, 150, 0.18) !important;
-  border-color: rgba(0, 200, 150, 0.4) !important;
-  color: #00c896 !important;
+  background: rgba(0, 200, 150, 0.2) !important;
+  border-color: rgba(0, 200, 150, 0.45) !important;
+  color: #006650 !important;
+  font-weight: 700 !important;
 }
 
 /* ── Eyebrow — teal on dark bg, deep teal on light bg ─────── */
@@ -589,8 +594,7 @@
 
 /* ── Topbar chrome refinement ────────────────────────────── */
 .lm-topbar {
-  border-bottom: 1px solid rgba(0, 200, 150, 0.08) !important;
-  box-shadow: 0 1px 0 rgba(0, 200, 150, 0.05) !important;
+  box-shadow: 0 2px 12px rgba(4, 20, 16, 0.1) !important;
 }
 
 /* ── Responsive: max-width containment ───────────────────── */
