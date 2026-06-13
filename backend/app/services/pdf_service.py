@@ -39,15 +39,16 @@ LOCK_LABELS = {
 
 def _fmt_dt(dt: datetime | None) -> str:
     if dt is None:
-        return "—"
+        return "-"
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
-    return dt.strftime("%-d %b %Y  %H:%M UTC").lstrip("0") if hasattr(dt, "strftime") else str(dt)
+    # %-d is Linux-only; use %d and strip the leading zero manually
+    return dt.strftime("%d %b %Y  %H:%M UTC").lstrip("0") if hasattr(dt, "strftime") else str(dt)
 
 
 def _bool(val: bool | None) -> str:
     if val is None:
-        return "—"
+        return "-"
     return "Yes" if val else "No"
 
 
@@ -88,7 +89,7 @@ class _JobCardPDF(FPDF):
             self.set_xy(12, self.get_y() + 4)
         else:
             self.set_xy(x - w, self.get_y() + 4)
-        self.cell(w, 4.5, value or "—", ln=last)
+        self.cell(w, 4.5, value or "-", ln=last)
         if not last:
             self.set_xy(x, self.get_y() - 4.5)
 
@@ -106,7 +107,7 @@ class _JobCardPDF(FPDF):
         self.set_text_color(*DARK)
         self.set_font("Helvetica", "B", 8)
         self.set_xy(x0, y0 + 4)
-        self.cell(w, 4.5, v1 or "—", ln=False)
+        self.cell(w, 4.5, v1 or "-", ln=False)
         self.set_xy(x0 + w, y0)
         self.set_font("Helvetica", "", 7)
         self.set_text_color(*MID)
@@ -114,7 +115,7 @@ class _JobCardPDF(FPDF):
         self.set_text_color(*DARK)
         self.set_font("Helvetica", "B", 8)
         self.set_xy(x0 + w, y0 + 4)
-        self.cell(w, 4.5, v2 or "—", ln=True)
+        self.cell(w, 4.5, v2 or "-", ln=True)
         self.ln(2)
 
     def _divider(self) -> None:
@@ -201,8 +202,8 @@ class _JobCardPDF(FPDF):
             "Phone", c.client_phone,
         )
         self._two_fields(
-            "Alternate Phone", c.client_alt_phone or "—",
-            "ID / Account Number", c.client_id_number or "—",
+            "Alternate Phone", c.client_alt_phone or "-",
+            "ID / Account Number", c.client_id_number or "-",
         )
         y = self.get_y()
 
@@ -218,7 +219,7 @@ class _JobCardPDF(FPDF):
         self.cell(0, 4, "Complaint / Reported Fault", ln=True)
         self.set_text_color(*DARK)
         self.set_font("Helvetica", "B", 8)
-        self.multi_cell(0, 4.5, c.complaint or "—")
+        self.multi_cell(0, 4.5, c.complaint or "-")
         self.ln(2)
 
         # ── Diagnostic ───────────────────────────────────────────────────────
@@ -226,8 +227,8 @@ class _JobCardPDF(FPDF):
             self._divider()
             self._section_title("Diagnostic Output")
             self._two_fields(
-                "T-Code", c.sym_code or "—",
-                "SRC Group", c.src_group or "—",
+                "T-Code", c.sym_code or "-",
+                "SRC Group", c.src_group or "-",
             )
             if c.defect_description:
                 self.set_font("Helvetica", "", 7)
@@ -245,7 +246,7 @@ class _JobCardPDF(FPDF):
             wty_label = WARRANTY_LABELS.get(c.warranty_direction, c.warranty_direction)
             self._two_fields(
                 "Decision", wty_label,
-                "Exception Code", c.wty_exception or "—",
+                "Exception Code", c.wty_exception or "-",
             )
             self._two_fields(
                 "Liquid Exposure", _bool(c.liquid_exposure),
@@ -260,11 +261,11 @@ class _JobCardPDF(FPDF):
         self._divider()
         self._section_title("Dispatch Routing")
         self._two_fields(
-            "ASC Name", c.asc_name or "—",
-            "ASC Code", c.asc_code or "—",
+            "ASC Name", c.asc_name or "-",
+            "ASC Code", c.asc_code or "-",
         )
         self._two_fields(
-            "LS Code", c.ls_code or "—",
+            "LS Code", c.ls_code or "-",
             "Status", c.status.upper(),
         )
         if c.waybill_number:
