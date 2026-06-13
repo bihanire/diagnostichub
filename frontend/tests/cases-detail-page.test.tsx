@@ -18,7 +18,7 @@ const apiMocks = vi.hoisted(() => ({
 }));
 
 const googleFormMocks = vi.hoisted(() => ({
-  buildPreFillUrl: vi.fn(() => null),
+  buildPreFillUrl: vi.fn(() => null as string | null),
 }));
 
 vi.mock("next/navigation", () => ({

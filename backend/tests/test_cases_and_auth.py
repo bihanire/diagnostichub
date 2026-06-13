@@ -25,12 +25,10 @@ from sqlalchemy.pool import StaticPool
 from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.cases import router as cases_router
-from app.core.auth_deps import get_current_user
 from app.core.config import get_settings
 from app.core.database import Base, get_db
 from app.db.seed import seed_ec_locations, seed_session
 from app.models.models import AppUser, ECLocation
-
 
 # ── Shared test state ─────────────────────────────────────────────────────────
 
