@@ -4,3 +4,6 @@ sqlalchemy==2.0.43
 psycopg[binary]>=3.2.13,<3.3
 pydantic-settings==2.10.1
 httpx==0.28.1
+PyJWT==2.10.1
+fpdf2==2.8.3
+gspread==6.1.4

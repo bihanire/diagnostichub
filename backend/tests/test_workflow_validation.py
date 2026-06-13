@@ -88,7 +88,7 @@ class WorkflowValidationStageFourTests(unittest.TestCase):
 
         self.assertEqual(report.error_count, 0)
         self.assertEqual(report.warning_count, 0)
-        self.assertEqual(report.validated_procedures, 16)
+        self.assertEqual(report.validated_procedures, 17)
 
     def test_validator_rejects_missing_final_outcome_keys(self) -> None:
         with self.SessionLocal() as db:
@@ -112,7 +112,10 @@ class WorkflowValidationStageFourTests(unittest.TestCase):
         self.assertGreaterEqual(report.error_count, 2)
         self.assertIn("Final outcome has blank required text: follow_up_message", messages)
         self.assertTrue(
-            any(message.startswith("Final outcome is missing required keys:") for message in messages)
+            any(
+                message.startswith("Final outcome is missing required keys:")
+                for message in messages
+            )
         )
 
     def test_validator_rejects_one_sided_question_branches(self) -> None:
@@ -128,7 +131,8 @@ class WorkflowValidationStageFourTests(unittest.TestCase):
             any(
                 issue.severity == "error"
                 and issue.node_id == 7001
-                and issue.message == "Question node must define both yes and no branches or a final outcome."
+                and issue.message
+                == "Question node must define both yes and no branches or a final outcome."
                 for issue in report.issues
             )
         )
@@ -147,14 +151,19 @@ class WorkflowValidationStageFourTests(unittest.TestCase):
         self.assertIn("Procedure has no final outcome nodes.", messages)
         self.assertIn("Cycle detected in decision tree.", messages)
         self.assertTrue(
-            any(message == "Reachable question cannot reach a final outcome." for message in messages)
+            any(
+                message == "Reachable question cannot reach a final outcome."
+                for message in messages
+            )
         )
 
     def test_validator_warns_when_yes_and_no_immediately_converge(self) -> None:
         with self.SessionLocal() as db:
             self._add_procedure(
                 db,
-                DecisionNode(id=7001, question="Does either answer converge?", yes_next=7002, no_next=7002),
+                DecisionNode(
+                    id=7001, question="Does either answer converge?", yes_next=7002, no_next=7002
+                ),
                 DecisionNode(id=7002, question="Outcome", final_outcome=_valid_outcome()),
             )
             report = validate_procedure_workflows(db)
@@ -164,7 +173,8 @@ class WorkflowValidationStageFourTests(unittest.TestCase):
             any(
                 issue.severity == "warning"
                 and issue.node_id == 7001
-                and issue.message == "Yes and no answers converge immediately to the same next node."
+                and issue.message
+                == "Yes and no answers converge immediately to the same next node."
                 for issue in report.issues
             )
         )

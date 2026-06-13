@@ -1,6 +1,6 @@
 param(
     [string]$DatabaseUrl = "",
-    [int]$Port = 8010
+    [int]$Port = 8000
 )
 
 $ErrorActionPreference = "Stop"

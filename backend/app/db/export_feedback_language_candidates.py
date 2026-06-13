@@ -12,7 +12,9 @@ def main() -> None:
         description="Export live branch search phrases from feedback into a CSV review pack."
     )
     parser.add_argument("--days", type=int, default=30, help="How many days of feedback to review.")
-    parser.add_argument("--limit", type=int, default=50, help="Maximum number of phrases to export.")
+    parser.add_argument(
+        "--limit", type=int, default=50, help="Maximum number of phrases to export."
+    )
     parser.add_argument("--path", required=True, help="Destination CSV path.")
     args = parser.parse_args()
 

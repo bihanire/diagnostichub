@@ -1,6 +1,6 @@
-from collections import Counter, defaultdict, deque
+from collections import Counter, deque
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from functools import lru_cache
 from threading import Lock
 from time import monotonic
@@ -17,7 +17,7 @@ from app.schemas.telemetry import (
 
 
 def _utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _percentile(values: list[float], percentile: float) -> float:
@@ -116,7 +116,9 @@ class _EndpointMetric:
             self.failure_categories[failure_category] += 1
 
     def to_payload(self) -> EndpointTelemetryPayload:
-        average_duration = self.total_duration_ms / self.total_requests if self.total_requests else 0.0
+        average_duration = (
+            self.total_duration_ms / self.total_requests if self.total_requests else 0.0
+        )
         error_total = self.client_error_count + self.server_error_count
         error_rate = error_total / self.total_requests if self.total_requests else 0.0
         return EndpointTelemetryPayload(

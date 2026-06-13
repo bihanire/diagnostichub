@@ -13,3 +13,8 @@ frontend/tsconfig.tsbuildinfo
 /venv/
 /tmp/
 artifacts/
+*.db
+HANDOFF_FOR_CLAUDE.md
+CLAUDE_BACKEND_PROCESS_BRIEF.md
+docs/stakeholder-brief.html
+docs/stakeholder-brief.pdf

@@ -35,6 +35,8 @@ def export_sample_sop_directory(path: str | Path) -> Path:
             "customer_listening",
             "customer_expectation",
             "related_actions",
+            "src_group",
+            "primary_t_code",
         ],
         _build_procedure_rows(),
         PROCEDURE_COLUMNS,
@@ -108,6 +110,8 @@ def _build_procedure_rows() -> list[dict[str, str]]:
                 "customer_listening": customer_care["listening"],
                 "customer_expectation": customer_care["expectation"],
                 "related_actions": _pipe_join(steps["related_actions"]),
+                "src_group": procedure.get("src_group") or "",
+                "primary_t_code": procedure.get("primary_t_code") or "",
             }
         )
     return rows

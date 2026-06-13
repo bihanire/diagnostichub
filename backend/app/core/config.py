@@ -27,6 +27,35 @@ class Settings(BaseSettings):
     request_correlation_enabled: bool = True
     standardize_error_responses: bool = True
 
+    # Google OAuth 2.0
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    google_redirect_uri: str = "http://localhost:8000/auth/callback"
+
+    # JWT — set JWT_SECRET to a strong random value in production
+    jwt_secret: str = "dev-jwt-secret-replace-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
+
+    # Auth cookies
+    auth_cookie_name: str = "dh_auth"
+    auth_cookie_secure: bool = False  # True in production (HTTPS)
+    auth_reg_cookie_name: str = "dh_reg"
+    auth_reg_cookie_expire_minutes: int = 30
+
+    # Frontend base URL (used for OAuth redirects)
+    frontend_url: str = "http://localhost:3000"
+
+    # Google Sheets sync (Phase 4) — leave unset to disable
+    # GOOGLE_SHEETS_CREDENTIALS_JSON: base64-encoded service account JSON key
+    google_sheets_credentials_json: str | None = None
+    google_sheets_spreadsheet_id: str | None = None
+    google_sheets_worksheet_name: str = "Cases"
+
+    # Aramex dispatch webhook (Phase 5) — leave unset to disable
+    aramex_webhook_url: str | None = None
+    aramex_webhook_secret: str | None = None
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @property

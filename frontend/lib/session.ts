@@ -41,6 +41,11 @@ export function normalizeTriageSession(value: unknown): TriageSession | null {
     dispatchGateConfirmed: Array.isArray(session.dispatchGateConfirmed)
       ? session.dispatchGateConfirmed
       : [],
+    warrantyAutoSkipped: typeof session.warrantyAutoSkipped === "boolean" ? session.warrantyAutoSkipped : undefined,
+    warrantyAnswers: Array.isArray(session.warrantyAnswers) ? session.warrantyAnswers : undefined,
+    device: isRecord(session.device) && typeof (session.device as Record<string, unknown>).id === "number"
+      ? session.device as TriageSession["device"]
+      : undefined,
     updatedAt: hasText(session.updatedAt) ? session.updatedAt : new Date().toISOString(),
   } as TriageSession;
 }

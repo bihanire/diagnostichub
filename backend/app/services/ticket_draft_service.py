@@ -4,7 +4,6 @@ from app.schemas.ticket_draft import (
     TicketDraftRequirementStatus,
 )
 
-
 WEBHOOK_REQUIREMENTS = [
     (
         "signed_delivery",
@@ -50,7 +49,9 @@ def preview_ticket_draft(payload: TicketDraftPreviewRequest) -> TicketDraftPrevi
             "summary": _build_ticket_summary(payload),
             "procedure": payload.procedure.title,
             "family": payload.family.title or payload.family.id or "Not selected",
-            "decision": payload.decisionLabel or payload.watuDecision.decisionLabel or "Not selected",
+            "decision": payload.decisionLabel
+            or payload.watuDecision.decisionLabel
+            or "Not selected",
             "warranty_direction": payload.warrantyDirection
             or payload.watuDecision.warrantyDirection
             or "Not selected",

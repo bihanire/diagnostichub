@@ -52,7 +52,8 @@ vi.mock("@/lib/api", () => ({
   getRepairFamilies: apiMocks.getRepairFamilies,
   getRepairFamilyDetail: apiMocks.getRepairFamilyDetail,
   getRepairFamilyLearningModule: apiMocks.getRepairFamilyLearningModule,
-  recordInteractionTelemetry: apiMocks.recordInteractionTelemetry
+  recordInteractionTelemetry: apiMocks.recordInteractionTelemetry,
+  getDevices: vi.fn().mockResolvedValue({ devices: [] })
 }));
 
 vi.mock("@/lib/session", () => ({

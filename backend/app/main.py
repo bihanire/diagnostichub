@@ -3,8 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes.feedback import router as feedback_router
+from app.api.routes.admin import router as admin_router
+from app.api.routes.auth import router as auth_router
+from app.api.routes.cases import router as cases_router
 from app.api.routes.families import router as families_router
+from app.api.routes.feedback import router as feedback_router
 from app.api.routes.ops import router as ops_router
 from app.api.routes.related import router as related_router
 from app.api.routes.search import router as search_router
@@ -76,7 +79,9 @@ async def lifespan(app: FastAPI):
     _log_data_integrity_report(integrity_report)
     telemetry.record_event(
         event="startup_integrity_validated",
-        status="success" if integrity_report.error_count == 0 and report.error_count == 0 else "review",
+        status="success"
+        if integrity_report.error_count == 0 and report.error_count == 0
+        else "review",
         metadata={
             "workflow_errors": report.error_count,
             "workflow_warnings": report.warning_count,
@@ -117,6 +122,9 @@ app.add_middleware(
     expose_headers=["X-Request-ID"],
 )
 
+app.include_router(admin_router)
+app.include_router(auth_router)
+app.include_router(cases_router)
 app.include_router(search_router)
 app.include_router(system_router)
 app.include_router(families_router)

@@ -6,9 +6,14 @@ from starlette.responses import PlainTextResponse
 
 from app.main import app
 
-
-JSON_CONTRACT_EXEMPTIONS: set[str] = set()
-BODY_OPTIONAL_POSTS = {"/ops/logout"}
+# Auth redirect endpoints return HTTP 302; PDF endpoint returns application/pdf — no JSON response_model.
+JSON_CONTRACT_EXEMPTIONS: set[str] = {"/auth/google", "/auth/callback", "/cases/{reference}/pdf"}
+BODY_OPTIONAL_POSTS = {
+    "/ops/logout",
+    "/auth/logout",
+    "/admin/users/{user_id}/approve",
+    "/admin/users/{user_id}/suspend",
+}
 STABLE_RESPONSE_REFS = {
     ("get", "/health"): "HealthResponse",
     ("get", "/meta"): "ApiMetaResponse",
@@ -16,6 +21,21 @@ STABLE_RESPONSE_REFS = {
     ("post", "/search"): "SearchResponse",
     ("post", "/triage/start"): "TriageStartResponse",
     ("post", "/triage/next"): "TriageNextResponse",
+    ("post", "/triage/warranty"): "WarrantyNextResponse",
+    ("post", "/triage/dispatch-route"): "DispatchRouteResponse",
+    ("get", "/triage/devices"): "DeviceListResponse",
+    ("get", "/triage/parts-prediction"): "PartsPredictionResponse",
+    ("get", "/auth/me"): "AuthStatusResponse",
+    ("post", "/auth/register"): "AuthStatusResponse",
+    ("get", "/auth/locations"): "ECLocationListResponse",
+    ("post", "/auth/logout"): "LogoutResponse",
+    ("get", "/admin/users"): "AdminUserListResponse",
+    ("post", "/admin/users/{user_id}/approve"): "AdminActionResponse",
+    ("post", "/admin/users/{user_id}/suspend"): "AdminActionResponse",
+    ("post", "/cases"): "CaseResponse",
+    ("get", "/cases"): "CaseListResponse",
+    ("get", "/cases/{reference}"): "CaseResponse",
+    ("patch", "/cases/{reference}/status"): "CaseStatusUpdateResponse",
     ("post", "/feedback"): "FeedbackCreateResponse",
     ("post", "/ops/login"): "OpsSessionResponse",
     ("post", "/ops/logout"): "OpsSessionResponse",

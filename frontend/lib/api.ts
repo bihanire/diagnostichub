@@ -1,6 +1,17 @@
 import {
+  AdminActionResponse,
+  AdminUserListResponse,
+  AppUser,
+  AuthStatusResponse,
   BranchFeedbackBreakdownResponse,
-  CasePacket,
+  CaseCreateRequest,
+  CaseListResponse,
+  CaseResponse,
+  CaseStatusUpdateResponse,
+  DeviceListResponse,
+  DispatchRouteRequest,
+  DispatchRouteResponse,
+  ECLocationListResponse,
   FeedbackCreateRequest,
   FeedbackCreateResponse,
   FeedbackLanguageCandidateResponse,
@@ -10,15 +21,18 @@ import {
   InteractionTelemetryResponse,
   OpsSessionResponse,
   OpsTelemetrySummaryResponse,
+  PartsPredictionResponse,
   ProcedureFeedbackBreakdownResponse,
+  RegisterRequest,
   RepairFamilyDetail,
   RepairFamilyLearningModule,
   RepairFamilySummary,
   RelatedResponse,
   SearchResponse,
-  TicketDraftPreviewResponse,
   TriageNextResponse,
-  TriageStartResponse
+  TriageStartResponse,
+  WarrantyNextRequest,
+  WarrantyNextResponse
 } from "@/lib/types";
 
 export type SearchOutputMode = "issue_interpretation" | "diagnostic_path" | "sop_action";
@@ -349,6 +363,35 @@ export function nextTriage(nodeId: number, answer: "yes" | "no"): Promise<Triage
   });
 }
 
+export function warrantyNext(payload: WarrantyNextRequest): Promise<WarrantyNextResponse> {
+  return apiRequest<WarrantyNextResponse>("/triage/warranty", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function dispatchRoute(payload: DispatchRouteRequest): Promise<DispatchRouteResponse> {
+  return apiRequest<DispatchRouteResponse>("/triage/dispatch-route", {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+}
+
+export function getDevices(): Promise<DeviceListResponse> {
+  return apiRequest<DeviceListResponse>("/triage/devices");
+}
+
+export function getPartsPrediction(
+  tCode: string,
+  warrantyDirection?: string | null,
+): Promise<PartsPredictionResponse> {
+  const params = new URLSearchParams({ t_code: tCode });
+  if (warrantyDirection) {
+    params.set("warranty_direction", warrantyDirection);
+  }
+  return apiRequest<PartsPredictionResponse>(`/triage/parts-prediction?${params.toString()}`);
+}
+
 export function getRelated(procedureId: number): Promise<RelatedResponse> {
   return apiRequest<RelatedResponse>(`/related/${procedureId}`);
 }
@@ -360,18 +403,10 @@ export function submitFeedback(payload: FeedbackCreateRequest): Promise<Feedback
   });
 }
 
-export function getFeedbackSummary(days: number): Promise<FeedbackSummaryResponse> {
-  return apiRequest<FeedbackSummaryResponse>(`/feedback/summary?days=${days}`);
-}
-
 export function getOpsFeedbackSummary(days: number): Promise<FeedbackSummaryResponse> {
   return apiRequest<FeedbackSummaryResponse>(`/feedback/summary?days=${days}`, {
     authenticated: true
   });
-}
-
-export function getFeedbackByProcedure(days: number): Promise<ProcedureFeedbackBreakdownResponse> {
-  return apiRequest<ProcedureFeedbackBreakdownResponse>(`/feedback/by-procedure?days=${days}`);
 }
 
 export function getOpsFeedbackByProcedure(
@@ -380,10 +415,6 @@ export function getOpsFeedbackByProcedure(
   return apiRequest<ProcedureFeedbackBreakdownResponse>(`/feedback/by-procedure?days=${days}`, {
     authenticated: true
   });
-}
-
-export function getFeedbackByBranch(days: number): Promise<BranchFeedbackBreakdownResponse> {
-  return apiRequest<BranchFeedbackBreakdownResponse>(`/feedback/by-branch?days=${days}`);
 }
 
 export function getOpsFeedbackByBranch(days: number): Promise<BranchFeedbackBreakdownResponse> {
@@ -445,14 +476,84 @@ export function getOpsTelemetrySummary(): Promise<OpsTelemetrySummaryResponse> {
   });
 }
 
-export function previewOpsTicketDraft(
-  casePacket: CasePacket
-): Promise<TicketDraftPreviewResponse> {
-  return apiRequest<TicketDraftPreviewResponse>("/ops/ticket-draft/preview", {
+// ── Auth ─────────────────────────────────────────────────────────────────────
+
+export function getAuthStatus(): Promise<AuthStatusResponse> {
+  return apiRequest<AuthStatusResponse>("/auth/me", { credentials: "include" });
+}
+
+export function getECLocations(): Promise<ECLocationListResponse> {
+  return apiRequest<ECLocationListResponse>("/auth/locations");
+}
+
+export function registerUser(payload: RegisterRequest): Promise<AuthStatusResponse> {
+  return apiRequest<AuthStatusResponse>("/auth/register", {
     method: "POST",
-    authenticated: true,
-    body: JSON.stringify(casePacket),
+    body: JSON.stringify(payload),
+    credentials: "include",
   });
+}
+
+export function logoutUser(): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>("/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export function getGoogleLoginUrl(): string {
+  return `${API_BASE_URL}/auth/google`;
+}
+
+export function listAdminUsers(): Promise<AdminUserListResponse> {
+  return apiRequest<AdminUserListResponse>("/admin/users", { credentials: "include" });
+}
+
+export function approveUser(userId: number): Promise<AdminActionResponse> {
+  return apiRequest<AdminActionResponse>(`/admin/users/${userId}/approve`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export function suspendUser(userId: number): Promise<AdminActionResponse> {
+  return apiRequest<AdminActionResponse>(`/admin/users/${userId}/suspend`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export function submitCase(payload: CaseCreateRequest): Promise<CaseResponse> {
+  return apiRequest<CaseResponse>("/cases", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+}
+
+export function listCases(): Promise<CaseListResponse> {
+  return apiRequest<CaseListResponse>("/cases", { credentials: "include" });
+}
+
+export function getCase(reference: string): Promise<CaseResponse> {
+  return apiRequest<CaseResponse>(`/cases/${encodeURIComponent(reference)}`, {
+    credentials: "include",
+  });
+}
+
+export function updateCaseStatus(
+  reference: string,
+  status: string,
+  waybill_number?: string
+): Promise<CaseStatusUpdateResponse> {
+  return apiRequest<CaseStatusUpdateResponse>(
+    `/cases/${encodeURIComponent(reference)}/status`,
+    {
+      method: "PATCH",
+      credentials: "include",
+      body: JSON.stringify({ status, waybill_number: waybill_number ?? null }),
+    }
+  );
 }
 
 export function recordInteractionTelemetry(

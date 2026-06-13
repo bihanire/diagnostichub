@@ -1,9 +1,7 @@
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import TypedDict
-from typing_extensions import NotRequired
+from typing import NotRequired, TypedDict
 
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.models import Procedure
@@ -498,7 +496,10 @@ FAMILY_DEFINITIONS: dict[str, _FamilyDefinition] = {
                     "network issue after dropping phone",
                 ],
                 "primary_procedure": "Liquid or Physical Damage",
-                "supporting_procedures": ["SIM or Network Issue", "Speaker, Microphone, or Audio Issue"],
+                "supporting_procedures": [
+                    "SIM or Network Issue",
+                    "Speaker, Microphone, or Audio Issue",
+                ],
             },
         ],
         "focus_cards": [
@@ -695,13 +696,15 @@ class _RawFamilySignalEvent:
 
 
 def _load_procedures(db: Session) -> list[Procedure]:
-    return list(db.scalars(
-        procedure_query_with(
-            include_tags=False,
-            include_decision_nodes=False,
-            include_links=False,
-        )
-    ).all())
+    return list(
+        db.scalars(
+            procedure_query_with(
+                include_tags=False,
+                include_decision_nodes=False,
+                include_links=False,
+            )
+        ).all()
+    )
 
 
 def _group_procedures_by_category(
@@ -869,9 +872,7 @@ def _build_family_signal_stream(
 
     dedup_index: dict[str, RepairFamilySignalEntry] = {}
     for event in raw_events:
-        dedupe_key = (
-            f"{event.priority}|{event.source}|{event.signature}|{event.summary.lower()}"
-        )
+        dedupe_key = f"{event.priority}|{event.source}|{event.signature}|{event.summary.lower()}"
         existing = dedup_index.get(dedupe_key)
         if existing is None:
             dedup_index[dedupe_key] = RepairFamilySignalEntry(

@@ -360,46 +360,46 @@
   line-height: 1;
 }
 
-/* ── Nav tabs — light topbar surface ─────────────────────── */
+/* ── Nav tabs — dark topbar surface ─────────────────────── */
 .lm-nav-tab {
-  color: #2e5f58 !important;
+  color: rgba(183, 222, 210, 0.82) !important;
   background: transparent !important;
-  border: 1px solid rgba(15, 113, 104, 0.16) !important;
+  border: 1px solid rgba(91, 190, 162, 0.2) !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   transition: color 130ms ease, background 130ms ease, border-color 130ms ease !important;
 }
 
 .lm-nav-tab:hover {
-  color: #0a3d38 !important;
-  background: rgba(0, 200, 150, 0.08) !important;
-  border-color: rgba(0, 200, 150, 0.26) !important;
+  color: rgba(218, 248, 236, 0.96) !important;
+  background: rgba(0, 200, 150, 0.1) !important;
+  border-color: rgba(0, 200, 150, 0.32) !important;
 }
 
 .lm-nav-tab.active {
-  color: #007a62 !important;
-  background: rgba(0, 200, 150, 0.13) !important;
-  border-color: rgba(0, 200, 150, 0.32) !important;
+  color: #7ee8c8 !important;
+  background: rgba(0, 200, 150, 0.14) !important;
+  border-color: rgba(0, 200, 150, 0.38) !important;
   font-weight: 600 !important;
-  box-shadow: 0 1px 4px rgba(0, 200, 150, 0.12) !important;
+  box-shadow: 0 1px 4px rgba(0, 200, 150, 0.16) !important;
 }
 
 .lm-nav-tab-ops {
-  color: #007a62 !important;
-  background: rgba(0, 200, 150, 0.1) !important;
-  border-color: rgba(0, 200, 150, 0.28) !important;
+  color: #7ee8c8 !important;
+  background: rgba(0, 200, 150, 0.12) !important;
+  border-color: rgba(0, 200, 150, 0.32) !important;
   font-weight: 600 !important;
 }
 
 .lm-nav-tab-ops:hover {
-  background: rgba(0, 200, 150, 0.18) !important;
-  border-color: rgba(0, 200, 150, 0.4) !important;
+  background: rgba(0, 200, 150, 0.2) !important;
+  border-color: rgba(0, 200, 150, 0.44) !important;
 }
 
 .lm-nav-tab-ops.lm-nav-tab-ops-authenticated {
   background: rgba(0, 200, 150, 0.2) !important;
   border-color: rgba(0, 200, 150, 0.45) !important;
-  color: #006650 !important;
+  color: #7ee8c8 !important;
   font-weight: 700 !important;
 }
 

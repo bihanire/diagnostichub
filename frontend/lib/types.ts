@@ -5,6 +5,8 @@ export type ProcedureSummary = {
   description: string;
   outcome?: string | null;
   warranty_status?: string | null;
+  src_group?: string | null;
+  primary_t_code?: string | null;
 };
 
 export type RepairFamilySummary = {
@@ -133,6 +135,8 @@ export type FinalOutcomePayload = {
   evidence_checklist: string[];
   customer_care: CustomerCare;
   follow_up_message: string;
+  src_group?: string | null;
+  primary_t_code?: string | null;
 };
 
 export type SearchResponse = {
@@ -216,7 +220,7 @@ export type FeedbackEntryPayload = {
   outcome_diagnosis?: string | null;
   feedback_tags: string[];
   final_decision_label?: string | null;
-  triage_trace: TriageAnswerRecord[];
+  triage_trace: Record<string, unknown>[];
   created_at: string;
 };
 
@@ -339,6 +343,64 @@ export type TriageAnswerRecord = {
   answer: "yes" | "no";
 };
 
+export type DeviceItem = {
+  id: number;
+  model_name: string;
+  samsung_code: string;
+  storage_gb?: number | null;
+  ram_gb?: number | null;
+  bom_version?: string | null;
+  auto_blocker_required: boolean;
+  display_label: string;
+};
+
+export type DeviceListResponse = {
+  devices: DeviceItem[];
+};
+
+export type PartsPredictionItem = {
+  part_name: string;
+  part_category?: string | null;
+};
+
+export type PartsPredictionResponse = {
+  t_code: string;
+  parts: PartsPredictionItem[];
+  directional_note: string;
+};
+
+export type DispatchRouteRequest = {
+  src_group: string | null;
+  primary_t_code: string | null;
+  warranty_direction: "IW" | "OW" | null;
+  warranty_needs_review: boolean;
+  procedure_id?: number | null;
+};
+
+export type DispatchRouteResponse = {
+  ls_code: string | null;
+  service_center: string | null;
+  route_note: string;
+  escalate: boolean;
+  dispatch_class: "iw_hardware" | "ow_hardware" | "customer_request" | "needs_review";
+  pre_dispatch_checklist: string[];
+};
+
+export type WarrantyNextRequest = {
+  primary_t_code: string;
+  answers: ("yes" | "no")[];
+};
+
+export type WarrantyNextResponse = {
+  status: "question" | "complete";
+  question_index: number | null;
+  question: string | null;
+  warranty_direction: "IW" | "OW" | null;
+  wty_exception: string | null;
+  needs_review: boolean;
+  auto_skipped: boolean;
+};
+
 export type TriageSession = {
   query?: string;
   learningFamilyId?: string | null;
@@ -358,6 +420,13 @@ export type TriageSession = {
   history: TriageAnswerRecord[];
   feedback?: FeedbackSnapshot | null;
   dispatchGateConfirmed?: string[];
+  warrantyComplete?: boolean;
+  warrantyAutoSkipped?: boolean;
+  warrantyDirection?: "IW" | "OW" | null;
+  warrantyException?: string | null;
+  warrantyNeedsReview?: boolean;
+  warrantyAnswers?: ("yes" | "no")[];
+  device?: DeviceItem | null;
   updatedAt: string;
 };
 
@@ -471,6 +540,151 @@ export type IpaasCandidateProfile = {
   bestFor: string;
   cautions: string[];
   sourceIds: string[];
+};
+
+// ── Auth / EC Platform ────────────────────────────────────────────────────────
+
+export type ECLocationItem = {
+  id: number;
+  name: string;
+  city: string;
+  country_code: string;
+  region?: string | null;
+};
+
+export type ECLocationListResponse = {
+  locations: ECLocationItem[];
+};
+
+export type AppUser = {
+  id: number;
+  email: string;
+  full_name: string;
+  role: "ec_agent" | "ec_manager" | "watu_ops" | "watu_admin";
+  approval_status: "pending" | "approved" | "suspended";
+  country_code?: string | null;
+  ec_location_id?: number | null;
+  ec_location?: ECLocationItem | null;
+};
+
+export type AuthStatusResponse = {
+  authenticated: boolean;
+  user?: AppUser | null;
+};
+
+export type RegisterRequest = {
+  ec_location_id: number;
+  country_code: string;
+};
+
+// ── Cases ─────────────────────────────────────────────────────────────────────
+
+export type CaseType = "repair" | "frp" | "return" | "theft";
+
+export type CaseStatus = "open" | "dispatched" | "closed" | "cancelled";
+
+export type CaseCreateRequest = {
+  case_type: CaseType;
+  client_name: string;
+  client_phone: string;
+  client_alt_phone?: string | null;
+  client_id_number?: string | null;
+  device_model: string;
+  device_imei: string;
+  complaint: string;
+  sim_tray_present?: boolean | null;
+  lock_type?: string | null;
+  client_pin?: string | null;
+  pattern_sequence?: string | null;
+  sym_code?: string | null;
+  src_group?: string | null;
+  defect_description?: string | null;
+  warranty_direction?: string | null;
+  wty_exception?: string | null;
+  liquid_exposure?: boolean | null;
+  drop_or_repair?: boolean | null;
+  sw_update?: boolean | null;
+  normal_use?: boolean | null;
+  asc_name?: string | null;
+  asc_code?: string | null;
+  ls_code?: string | null;
+};
+
+export type CaseResponse = {
+  id: number;
+  reference: string;
+  case_type: CaseType;
+  status: CaseStatus;
+  ec_location_id: number;
+  created_by_id: number;
+  client_name: string;
+  client_phone: string;
+  client_alt_phone?: string | null;
+  client_id_number?: string | null;
+  device_model: string;
+  device_imei: string;
+  complaint: string;
+  sim_tray_present?: boolean | null;
+  lock_type?: string | null;
+  client_pin?: string | null;
+  pattern_sequence?: string | null;
+  sym_code?: string | null;
+  src_group?: string | null;
+  defect_description?: string | null;
+  warranty_direction?: string | null;
+  wty_exception?: string | null;
+  liquid_exposure?: boolean | null;
+  drop_or_repair?: boolean | null;
+  sw_update?: boolean | null;
+  normal_use?: boolean | null;
+  asc_name?: string | null;
+  asc_code?: string | null;
+  ls_code?: string | null;
+  waybill_number?: string | null;
+  photo_front?: string | null;
+  photo_back?: string | null;
+  photo_client_holding?: string | null;
+  photo_pattern?: string | null;
+  created_at: string;
+  updated_at: string;
+  submitted_at?: string | null;
+};
+
+export type CaseListResponse = {
+  cases: CaseResponse[];
+  total: number;
+};
+
+export type CaseStatusUpdateResponse = {
+  message: string;
+  case: CaseResponse;
+};
+
+// ── Admin ─────────────────────────────────────────────────────────────────────
+
+export type AdminUserItem = {
+  id: number;
+  email: string;
+  full_name: string;
+  role: string;
+  approval_status: "pending" | "approved" | "suspended";
+  country_code?: string | null;
+  ec_location_id?: number | null;
+  ec_location_name?: string | null;
+  created_at: string;
+  approved_at?: string | null;
+  last_login_at?: string | null;
+};
+
+export type AdminUserListResponse = {
+  users: AdminUserItem[];
+  total: number;
+  pending_count: number;
+};
+
+export type AdminActionResponse = {
+  message: string;
+  user: AdminUserItem;
 };
 
 export type TicketDraftPreviewResponse = {

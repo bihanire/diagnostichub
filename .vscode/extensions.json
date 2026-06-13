@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.debugpy",
+    "charliermarsh.ruff",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "qwtel.sqlite-viewer",
+    "mechatroner.rainbow-csv",
+    "ms-azuretools.vscode-containers",
+    "donjayamanne.githistory"
+  ]
+}

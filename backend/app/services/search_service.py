@@ -13,8 +13,8 @@ from app.schemas.search import SearchResponse, StructuredIntent
 from app.services.procedure_service import (
     get_customer_care,
     get_related_procedures,
-    procedure_query_with,
     get_sop_layers,
+    procedure_query_with,
     to_summary,
 )
 from app.services.semantic_intelligence_service import build_semantic_insight
@@ -97,7 +97,6 @@ STOPWORDS = {
     "was",
     "with",
     "device",
-    "galaxy",
 }
 
 TERM_GROUPS = {
@@ -506,13 +505,17 @@ def score_issue_type_signals(tokens: list[str]) -> dict[str, int]:
     return scores
 
 
-def infer_issue_type(tokens: list[str], *, precomputed_scores: dict[str, int] | None = None) -> str | None:
+def infer_issue_type(
+    tokens: list[str], *, precomputed_scores: dict[str, int] | None = None
+) -> str | None:
     scores = precomputed_scores or score_issue_type_signals(tokens)
     highest_score = max(scores.values())
     if highest_score <= 0:
         return None
 
-    tied_issue_types = [issue_type for issue_type, score in scores.items() if score == highest_score]
+    tied_issue_types = [
+        issue_type for issue_type, score in scores.items() if score == highest_score
+    ]
     for issue_type in ISSUE_TYPE_PRIORITY:
         if issue_type in tied_issue_types:
             return issue_type
@@ -633,7 +636,9 @@ def score_procedure(
         else [token for token in query_tokens if token not in STOPWORDS]
     )
     effective_meaningful_token_set = (
-        meaningful_token_set if meaningful_token_set is not None else set(effective_meaningful_tokens)
+        meaningful_token_set
+        if meaningful_token_set is not None
+        else set(effective_meaningful_tokens)
     )
 
     overlap = 0.0
@@ -658,7 +663,8 @@ def score_procedure(
     tag_score = 0.0
     if index.normalized_tags:
         tag_score = max(
-            normalized_similarity(normalized_query_text, keyword) for keyword in index.normalized_tags
+            normalized_similarity(normalized_query_text, keyword)
+            for keyword in index.normalized_tags
         )
     exact_hits = (
         len(effective_meaningful_token_set.intersection(joined_tokens))
@@ -669,7 +675,9 @@ def score_procedure(
 
     inferred_issue_type = issue_type if issue_type is not None else infer_issue_type(query_tokens)
     issue_bonus = (
-        0.12 if inferred_issue_type and inferred_issue_type.lower() in procedure.category.lower() else 0.0
+        0.12
+        if inferred_issue_type and inferred_issue_type.lower() in procedure.category.lower()
+        else 0.0
     )
 
     raw_score = (
@@ -687,9 +695,17 @@ def score_procedure(
 
 def classify_confidence(best_score: float, margin: float) -> tuple[str, bool, str | None]:
     if best_score < 0.34:
-        return "low", True, "No strong match yet. Try another description or compare the closest flows carefully."
+        return (
+            "low",
+            True,
+            "No strong match yet. Try another description or compare the closest flows carefully.",
+        )
     if best_score < 0.58 or margin < 0.12:
-        return "caution", True, "This is the closest flow, but the match is still close. Confirm the symptom carefully before continuing."
+        return (
+            "caution",
+            True,
+            "This is the closest flow, but the match is still close. Confirm the symptom carefully before continuing.",
+        )
     return "strong", False, None
 
 
@@ -731,7 +747,9 @@ def _get_indexed_procedures(db: Session) -> tuple[ProcedureSearchIndex, ...]:
                 include_links=False,
             )
         ).all()
-        _search_index_cache = tuple(build_procedure_search_index(procedure) for procedure in procedures)
+        _search_index_cache = tuple(
+            build_procedure_search_index(procedure) for procedure in procedures
+        )
         _search_index_cache_expires_at = now + SEARCH_INDEX_CACHE_TTL_SECONDS
         _search_index_cache_bind_id = bind_id
         return _search_index_cache

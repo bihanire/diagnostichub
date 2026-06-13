@@ -192,7 +192,7 @@ export function TopCommandBar({
   /* scroll active item into view */
   useEffect(() => {
     if (familyMenuOpen && activeFamilyIndex >= 0) {
-      familyItemRefs.current[activeFamilyIndex]?.scrollIntoView({ block: "nearest" });
+      familyItemRefs.current[activeFamilyIndex]?.scrollIntoView?.({ block: "nearest" });
     }
   }, [activeFamilyIndex, familyMenuOpen]);
 

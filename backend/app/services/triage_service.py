@@ -1,11 +1,11 @@
 from collections import deque
 from functools import lru_cache
-
 from typing import Literal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.models import DecisionNode, Procedure
+from app.models.models import ChecklistItem, DecisionNode, Procedure
 from app.schemas.common import (
     BranchPlaybookPayload,
     DecisionNodePayload,
@@ -14,6 +14,7 @@ from app.schemas.common import (
     WarrantyAssessmentPayload,
 )
 from app.schemas.triage import TriageNextResponse, TriageStartResponse
+from app.services.device_guidance_service import apply_device_outcome
 from app.services.procedure_service import (
     get_customer_care,
     get_related_procedures,
@@ -21,7 +22,6 @@ from app.services.procedure_service import (
     procedure_query_with,
     to_summary,
 )
-from app.services.device_guidance_service import apply_device_outcome
 
 
 def load_procedure(db: Session, procedure_id: int) -> Procedure | None:
@@ -50,14 +50,18 @@ def find_root_node(procedure: Procedure) -> DecisionNode | None:
             referenced.add(node.no_next)
 
     root_candidates = [
-        node for node in procedure.decision_nodes if node.id not in referenced and node.final_outcome is None
+        node
+        for node in procedure.decision_nodes
+        if node.id not in referenced and node.final_outcome is None
     ]
     if root_candidates:
         return sorted(root_candidates, key=lambda item: item.id)[0]
     return sorted(procedure.decision_nodes, key=lambda item: item.id)[0]
 
 
-def _decision_graph_signature(procedure: Procedure) -> tuple[tuple[int, int | None, int | None, bool], ...]:
+def _decision_graph_signature(
+    procedure: Procedure,
+) -> tuple[tuple[int, int | None, int | None, bool], ...]:
     return tuple(
         sorted(
             (
@@ -78,7 +82,9 @@ def _calculate_depths_for_signature(
     if not signature:
         return tuple(), 1
 
-    node_map = {node_id: (yes_next, no_next, is_final) for node_id, yes_next, no_next, is_final in signature}
+    node_map = {
+        node_id: (yes_next, no_next, is_final) for node_id, yes_next, no_next, is_final in signature
+    }
     referenced: set[int] = set()
     for _, yes_next, no_next, _ in signature:
         if yes_next is not None:
@@ -120,7 +126,7 @@ def make_progress(procedure: Procedure, node_id: int | None) -> ProgressPayload:
     return ProgressPayload(step=depths.get(node_id, 1), total=total_steps)
 
 
-def build_outcome(procedure: Procedure, outcome_data: dict | None) -> FinalOutcomePayload:
+def build_outcome(db: Session, procedure: Procedure, outcome_data: dict | None) -> FinalOutcomePayload:
     data = outcome_data or {}
     customer_care = get_customer_care(procedure)
     diagnosis = data.get("diagnosis", procedure.outcome or "Review needed")
@@ -153,6 +159,7 @@ def build_outcome(procedure: Procedure, outcome_data: dict | None) -> FinalOutco
         recommended_action=recommended_action,
     )
     evidence_checklist = data.get("evidence_checklist") or build_evidence_checklist(
+        db,
         procedure,
         decision_type=decision_type,
     )
@@ -168,6 +175,8 @@ def build_outcome(procedure: Procedure, outcome_data: dict | None) -> FinalOutco
         evidence_checklist=evidence_checklist,
         customer_care=customer_care,
         follow_up_message=follow_up_message,
+        src_group=procedure.src_group,
+        primary_t_code=procedure.primary_t_code,
     )
     return apply_device_outcome(procedure, outcome)
 
@@ -360,16 +369,28 @@ def build_warranty_assessment(
 
     if any(marker in text for marker in out_of_warranty_markers):
         reasons = []
-        if any(marker in text for marker in ("crack", "impact", "physical damage", "bent", "burnt")):
-            reasons.append("Visible or reported external damage changes the case away from normal manufacturer cover.")
+        if any(
+            marker in text for marker in ("crack", "impact", "physical damage", "bent", "burnt")
+        ):
+            reasons.append(
+                "Visible or reported external damage changes the case away from normal manufacturer cover."
+            )
         if any(marker in text for marker in ("liquid", "water", "swollen")):
-            reasons.append("Liquid or unsafe battery conditions usually need out-of-warranty handling or inspection.")
+            reasons.append(
+                "Liquid or unsafe battery conditions usually need out-of-warranty handling or inspection."
+            )
         if any(marker in text for marker in ("password-reset", "forgotten password", "frp")):
             reasons.append("Access-recovery cases are not standard hardware warranty faults.")
-        if any(marker in text for marker in ("theft", "stolen", "replacement", "refund", "transfer")):
-            reasons.append("This path is operational rather than a standard manufacturer repair claim.")
+        if any(
+            marker in text for marker in ("theft", "stolen", "replacement", "refund", "transfer")
+        ):
+            reasons.append(
+                "This path is operational rather than a standard manufacturer repair claim."
+            )
         if not reasons:
-            reasons.append("The current diagnosis points away from a standard in-warranty repair path.")
+            reasons.append(
+                "The current diagnosis points away from a standard in-warranty repair path."
+            )
         return WarrantyAssessmentPayload(
             direction="likely_out_of_warranty",
             label="Likely out of warranty",
@@ -383,7 +404,9 @@ def build_warranty_assessment(
             "No strong external-damage signal is guiding the current repair route.",
         ]
         if decision_type in {"repair_intake", "service_centre"}:
-            reasons.append("Final confirmation still depends on repair inspection before the branch promises cover.")
+            reasons.append(
+                "Final confirmation still depends on repair inspection before the branch promises cover."
+            )
             confidence = "medium"
         else:
             confidence = "high"
@@ -398,9 +421,13 @@ def build_warranty_assessment(
         "The branch has a direction, but the final warranty position still depends on inspection or missing proof.",
     ]
     if decision_type in {"branch_resolve", "monitor_return"}:
-        reasons.append("The case should stay in branch handling until the symptom repeats more clearly.")
+        reasons.append(
+            "The case should stay in branch handling until the symptom repeats more clearly."
+        )
     else:
-        reasons.append("Do not overpromise warranty before the next team confirms the fault and physical condition.")
+        reasons.append(
+            "Do not overpromise warranty before the next team confirms the fault and physical condition."
+        )
     return WarrantyAssessmentPayload(
         direction="needs_inspection",
         label="Needs inspection",
@@ -484,9 +511,21 @@ def build_branch_playbook(
     return BranchPlaybookPayload(title=title, steps=steps)
 
 
-def build_evidence_checklist(procedure: Procedure, *, decision_type: str) -> list[str]:
+def build_evidence_checklist(db: Session, procedure: Procedure, *, decision_type: str) -> list[str]:
     if decision_type not in {"repair_intake", "service_centre"}:
         return []
+
+    db_rows = db.scalars(
+        select(ChecklistItem)
+        .where(
+            ChecklistItem.procedure_id == procedure.id,
+            ChecklistItem.checklist_phase == "evidence",
+            ChecklistItem.is_active == True,  # noqa: E712
+        )
+        .order_by(ChecklistItem.sort_order, ChecklistItem.id)
+    ).all()
+    if db_rows:
+        return [row.item_text for row in db_rows]
 
     checklist_map: dict[int, list[str]] = {
         1: [
@@ -604,13 +643,15 @@ def start_triage(db: Session, procedure_id: int) -> TriageStartResponse | None:
 
     root = find_root_node(procedure)
     progress = make_progress(procedure, root.id if root else None)
-    outcome = build_outcome(procedure, root.final_outcome) if root and root.final_outcome else None
+    outcome = build_outcome(db, procedure, root.final_outcome) if root and root.final_outcome else None
     status: Literal["question", "complete"] = "complete" if outcome else "question"
 
     return TriageStartResponse(
         status=status,
         procedure=to_summary(procedure),
-        current_node=DecisionNodePayload(id=root.id, question=root.question) if root and not outcome else None,
+        current_node=DecisionNodePayload(id=root.id, question=root.question)
+        if root and not outcome
+        else None,
         progress=progress,
         customer_care=get_customer_care(procedure),
         sop=get_sop_layers(procedure),
@@ -630,6 +671,7 @@ def next_triage_step(db: Session, node_id: int, answer: str) -> TriageNextRespon
     next_id = node.yes_next if answer == "yes" else node.no_next
     if next_id is None:
         fallback = build_outcome(
+            db,
             procedure,
             {
                 "diagnosis": "This flow is incomplete",
@@ -649,6 +691,7 @@ def next_triage_step(db: Session, node_id: int, answer: str) -> TriageNextRespon
     next_node = db.get(DecisionNode, next_id)
     if next_node is None:
         missing_node_outcome = build_outcome(
+            db,
             procedure,
             {
                 "diagnosis": "A linked step is missing",
@@ -668,7 +711,7 @@ def next_triage_step(db: Session, node_id: int, answer: str) -> TriageNextRespon
         return TriageNextResponse(
             status="complete",
             progress=make_progress(procedure, next_node.id),
-            outcome=build_outcome(procedure, next_node.final_outcome),
+            outcome=build_outcome(db, procedure, next_node.final_outcome),
             related=get_related_procedures(db, procedure.id),
             message="Final recommendation ready.",
         )

@@ -132,9 +132,7 @@ def register_error_handlers(app: FastAPI) -> None:
         return _json_error_response(status_code=exc.status_code, envelope=envelope)
 
     @app.exception_handler(HTTPException)
-    async def fastapi_http_exception_handler(
-        request: Request, exc: HTTPException
-    ) -> JSONResponse:
+    async def fastapi_http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         request_id = _request_id_from_state(request)
         code = _status_to_code(exc.status_code)
         detail = _safe_detail(exc.detail, _default_message_for_code(code))

@@ -3,7 +3,6 @@ from __future__ import annotations
 from app.models.models import Procedure
 from app.schemas.common import CustomerCare, FinalOutcomePayload, SopLayers
 
-
 PROCEDURE_GUIDANCE_OVERRIDES: dict[int, dict[str, list[str] | str]] = {
     1: {
         "expectation": "For Galaxy phones, start with an approved charger and quick device checks before courier escalation.",
@@ -149,6 +148,8 @@ def apply_device_outcome(procedure: Procedure, outcome: FinalOutcomePayload) -> 
             outcome.follow_up_message,
             "Keep the explanation simple and tied to the confirmed branch findings so the customer understands why the branch is or is not sending the phone for service.",
         ),
+        src_group=outcome.src_group,
+        primary_t_code=outcome.primary_t_code,
     )
 
 

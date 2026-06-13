@@ -15,6 +15,7 @@ import {
   ApiError,
   clearCachedRepairFamilies,
   getCachedRepairFamilies,
+  getDevices,
   getRepairFamilies,
   getRepairFamilyDetail,
   getRepairFamilyLearningModule,
@@ -37,6 +38,7 @@ import {
   persistTriageSessionWithRelatedHydration,
 } from "@/lib/triage-session";
 import {
+  DeviceItem,
   InteractionTelemetryEvent,
   ProcedureSummary,
   RepairFamilyDetail,
@@ -222,6 +224,8 @@ export default function HomePage() {
   const [reviewCandidates, setReviewCandidates] = useState<ProcedureSummary[]>([]);
   const [reviewSelectedProcedureId, setReviewSelectedProcedureId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [devices, setDevices] = useState<DeviceItem[]>([]);
+  const [selectedDevice, setSelectedDevice] = useState<DeviceItem | null>(null);
   const resultsRef = useRef<HTMLElement | null>(null);
   const familyExplorerRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLTextAreaElement>(null);
@@ -298,6 +302,10 @@ export default function HomePage() {
 
   useEffect(() => {
     setResumeSession(loadSession());
+  }, []);
+
+  useEffect(() => {
+    void getDevices().then((r) => setDevices(r.devices)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -945,7 +953,7 @@ export default function HomePage() {
       const seededRelated =
         searchResult?.best_match?.id === procedure.id ? searchResult.related : [];
 
-      const session = buildTriageSessionFromStart(response, {
+      const baseSession = buildTriageSessionFromStart(response, {
         query: searchQuery || query,
         learningContext,
         related: seededRelated,
@@ -956,6 +964,7 @@ export default function HomePage() {
           needsReview: searchResult?.needs_review ?? false,
         },
       });
+      const session = selectedDevice ? { ...baseSession, device: selectedDevice } : baseSession;
 
       persistTriageSessionWithRelatedHydration(session, {
         onSaved: (savedSession) => {
@@ -1463,6 +1472,30 @@ export default function HomePage() {
               title={uiCopy.home.hero.title}
               isGateway={isGatewayState}
             />
+
+            {devices.length > 0 ? (
+              <div className="device-selector-bar">
+                <label className="device-selector-label" htmlFor="device-select">
+                  Device model
+                </label>
+                <select
+                  className="device-selector"
+                  id="device-select"
+                  value={selectedDevice?.id.toString() ?? ""}
+                  onChange={(e) => {
+                    const found = devices.find((d) => d.id.toString() === e.target.value);
+                    setSelectedDevice(found ?? null);
+                  }}
+                >
+                  <option value="">Select device (optional)</option>
+                  {devices.map((d) => (
+                    <option key={d.id} value={d.id.toString()}>
+                      {d.display_label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
             {activeFamily ? (
               <FamilyFlowSelector

@@ -143,9 +143,7 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
         self.assertIn("failure_categories", search_endpoint)
         self.assertGreaterEqual(telemetry_payload["search"]["diagnostic_success_count"], 0)
         self.assertIn("no_match_rate", telemetry_payload["search"])
-        self.assertTrue(
-            any(slo["name"] == "search_response" for slo in telemetry_payload["slos"])
-        )
+        self.assertTrue(any(slo["name"] == "search_response" for slo in telemetry_payload["slos"]))
 
     def test_telemetry_tracks_failure_categories_and_probe_events(self) -> None:
         with TestClient(self.app) as client:
@@ -164,13 +162,17 @@ class TelemetryAndIntegrityTests(unittest.TestCase):
             telemetry_payload = telemetry_response.json()
 
         not_found_endpoint = next(
-            endpoint for endpoint in telemetry_payload["endpoints"] if endpoint["path"] == "/missing-route"
+            endpoint
+            for endpoint in telemetry_payload["endpoints"]
+            if endpoint["path"] == "/missing-route"
         )
         self.assertEqual(not_found_endpoint["failure_categories"].get("not_found"), 1)
         self.assertTrue(
             any(event["event"] == "health_probe" for event in telemetry_payload["recent_events"])
         )
-        health_slo = next(slo for slo in telemetry_payload["slos"] if slo["name"] == "health_liveness")
+        health_slo = next(
+            slo for slo in telemetry_payload["slos"] if slo["name"] == "health_liveness"
+        )
         self.assertGreaterEqual(health_slo["total_requests"], 1)
 
     def test_public_interaction_telemetry_records_events_for_ops_review(self) -> None:

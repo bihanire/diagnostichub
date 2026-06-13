@@ -124,7 +124,9 @@ def audit_import_package(package: SopImportPackage) -> tuple[list[str], list[str
         errors.extend(_extract_validation_errors(str(exc)))
 
     procedures_by_id = {procedure.id: procedure for procedure in package.procedures}
-    tags_by_procedure: dict[int, list[str]] = {procedure_id: [] for procedure_id in procedures_by_id}
+    tags_by_procedure: dict[int, list[str]] = {
+        procedure_id: [] for procedure_id in procedures_by_id
+    }
     finals_by_procedure: dict[int, list] = {procedure_id: [] for procedure_id in procedures_by_id}
     normalized_tag_index: dict[str, set[int]] = {}
     sources_by_procedure: dict[int, list] = {procedure_id: [] for procedure_id in procedures_by_id}
@@ -297,7 +299,9 @@ def _build_procedure_summaries(package: SopImportPackage) -> list[ProcedureAudit
 def _build_source_summaries(package: SopImportPackage) -> list[SourceAuditSummary]:
     today = date.today()
     summaries: list[SourceAuditSummary] = []
-    for source in sorted(package.knowledge_sources, key=lambda item: (item.procedure_id, item.topic)):
+    for source in sorted(
+        package.knowledge_sources, key=lambda item: (item.procedure_id, item.topic)
+    ):
         due_date = _parse_date(source.review_due_at)
         if due_date is None:
             status = "Invalid"

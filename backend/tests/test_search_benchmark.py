@@ -1,7 +1,7 @@
+import os
 import unittest
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-import os
 
 from app.db.search_benchmark import (
     load_search_benchmark,
@@ -9,9 +9,14 @@ from app.db.search_benchmark import (
     run_search_benchmark,
 )
 
-BENCHMARK_PATH = Path(__file__).resolve().parents[2] / "docs" / "sop-import-template" / "search-benchmark.csv"
+BENCHMARK_PATH = (
+    Path(__file__).resolve().parents[2] / "docs" / "sop-import-template" / "search-benchmark.csv"
+)
 QUALITY_BENCHMARK_PATH = (
-    Path(__file__).resolve().parents[2] / "docs" / "sop-import-template" / "search-quality-benchmark.csv"
+    Path(__file__).resolve().parents[2]
+    / "docs"
+    / "sop-import-template"
+    / "search-quality-benchmark.csv"
 )
 
 
@@ -51,5 +56,8 @@ class SearchBenchmarkTests(unittest.TestCase):
         markdown = render_markdown_report(report)
 
         self.assertIn("# Search Benchmark Report", markdown)
-        self.assertIn("| Query | Expected | Matched | Alternative | Issue Type | Confidence | Margin | Status |", markdown)
+        self.assertIn(
+            "| Query | Expected | Matched | Alternative | Issue Type | Confidence | Margin | Status |",
+            markdown,
+        )
         self.assertIn("phone not coming on but vibrates", markdown)

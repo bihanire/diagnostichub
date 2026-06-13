@@ -20,7 +20,9 @@ def search(request: SearchRequest, db: Session = Depends(get_db)) -> SearchRespo
         confidence_state=response.confidence_state,
         no_match=response.no_match,
         needs_review=response.needs_review,
-        ambiguity_risk=response.semantic_insight.ambiguity_risk if response.semantic_insight else None,
+        ambiguity_risk=response.semantic_insight.ambiguity_risk
+        if response.semantic_insight
+        else None,
     )
     telemetry.record_event(
         event="search_completed",

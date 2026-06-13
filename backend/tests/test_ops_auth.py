@@ -1,5 +1,5 @@
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -220,7 +220,9 @@ class OpsAuthRouteTests(unittest.TestCase):
         self.assertTrue(ready_preview["dry_run"])
         self.assertFalse(ready_preview["delivery_enabled"])
         self.assertEqual(ready_preview["draft_status"], "ready_for_operator_review")
-        self.assertEqual(ready_preview["ticket_fields"]["external_reference"], "diagnostichub:4:1778666400000")
+        self.assertEqual(
+            ready_preview["ticket_fields"]["external_reference"], "diagnostichub:4:1778666400000"
+        )
         self.assertIsNone(ready_preview["external_ticket_id"])
 
     def test_feedback_submission_stays_open_without_ops_login(self) -> None:
@@ -246,7 +248,9 @@ class OpsAuthRouteTests(unittest.TestCase):
         valid_token = valid_cookie_header.split(";", maxsplit=1)[0].split("=", maxsplit=1)[1]
         payload_segment, signature_segment = valid_token.split(".", maxsplit=1)
         tampered_signature = (
-            f"a{signature_segment[1:]}" if not signature_segment.startswith("a") else f"b{signature_segment[1:]}"
+            f"a{signature_segment[1:]}"
+            if not signature_segment.startswith("a")
+            else f"b{signature_segment[1:]}"
         )
         tampered_token = f"{payload_segment}.{tampered_signature}"
 
@@ -261,7 +265,7 @@ class OpsAuthRouteTests(unittest.TestCase):
     def test_expired_cookie_is_rejected(self) -> None:
         expired_token, _ = create_ops_session_token(
             self.settings,
-            issued_at=datetime.now(timezone.utc) - timedelta(hours=1),
+            issued_at=datetime.now(UTC) - timedelta(hours=1),
             ttl_seconds=1,
         )
 
@@ -269,7 +273,7 @@ class OpsAuthRouteTests(unittest.TestCase):
             read_ops_session_token(
                 expired_token,
                 settings=self.settings,
-                now=datetime.now(timezone.utc),
+                now=datetime.now(UTC),
             )
         )
 

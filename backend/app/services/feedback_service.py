@@ -1,14 +1,15 @@
+import re
 from collections import Counter
 from csv import DictWriter
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from io import StringIO
-import re
 
 from sqlalchemy import case, desc, func, select
 from sqlalchemy.orm import Session
 
 from app.models.models import FeedbackEntry, Procedure
 from app.schemas.feedback import (
+    FEEDBACK_TAG_OPTIONS,
     BranchFeedbackBreakdownItem,
     BranchFeedbackBreakdownResponse,
     FeedbackCreateRequest,
@@ -17,7 +18,6 @@ from app.schemas.feedback import (
     FeedbackLanguageCandidateItem,
     FeedbackLanguageCandidateResponse,
     FeedbackSummaryResponse,
-    FEEDBACK_TAG_OPTIONS,
     FeedbackTagBreakdownItem,
     FeedbackTagBreakdownResponse,
     ProcedureFeedbackBreakdownItem,
@@ -69,7 +69,7 @@ def create_feedback(db: Session, payload: FeedbackCreateRequest) -> FeedbackCrea
 
 
 def _cutoff_for_days(days: int) -> datetime:
-    return datetime.now(timezone.utc) - timedelta(days=days)
+    return datetime.now(UTC) - timedelta(days=days)
 
 
 def _feedback_where_clause(days: int):
@@ -88,10 +88,7 @@ def get_feedback_summary(db: Session, days: int = 30) -> FeedbackSummaryResponse
     total_submissions, helpful_count, not_helpful_count = summary_row
 
     latest_rows = db.scalars(
-        select(FeedbackEntry)
-        .where(where_clause)
-        .order_by(desc(FeedbackEntry.created_at))
-        .limit(10)
+        select(FeedbackEntry).where(where_clause).order_by(desc(FeedbackEntry.created_at)).limit(10)
     ).all()
 
     return FeedbackSummaryResponse(
@@ -130,7 +127,10 @@ def get_feedback_by_procedure(db: Session, days: int = 30) -> ProcedureFeedbackB
         .join(Procedure, Procedure.id == FeedbackEntry.procedure_id, isouter=True)
         .where(where_clause)
         .group_by(FeedbackEntry.procedure_id, Procedure.title)
-        .order_by(func.count(FeedbackEntry.id).desc(), func.coalesce(Procedure.title, "Unknown or deleted procedure"))
+        .order_by(
+            func.count(FeedbackEntry.id).desc(),
+            func.coalesce(Procedure.title, "Unknown or deleted procedure"),
+        )
     ).all()
 
     return ProcedureFeedbackBreakdownResponse(

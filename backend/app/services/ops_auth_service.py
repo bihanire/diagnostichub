@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import json
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException, Request, status
 
@@ -39,7 +39,7 @@ def create_ops_session_token(
     issued_at: datetime | None = None,
     ttl_seconds: int | None = None,
 ) -> tuple[str, datetime]:
-    now = issued_at or datetime.now(timezone.utc)
+    now = issued_at or datetime.now(UTC)
     lifetime_seconds = ttl_seconds or max(settings.ops_session_ttl_hours, 1) * 3600
     expires_at = now + timedelta(seconds=lifetime_seconds)
     payload = {
@@ -87,11 +87,11 @@ def read_ops_session_token(
         payload = json.loads(payload_bytes.decode("utf-8"))
         if payload.get("sub") != "ops":
             return None
-        expires_at = datetime.fromtimestamp(int(payload["exp"]), tz=timezone.utc)
+        expires_at = datetime.fromtimestamp(int(payload["exp"]), tz=UTC)
     except Exception:
         return None
 
-    if expires_at <= (now or datetime.now(timezone.utc)):
+    if expires_at <= (now or datetime.now(UTC)):
         return None
 
     return OpsSession(expires_at=expires_at)

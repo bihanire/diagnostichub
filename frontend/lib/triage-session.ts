@@ -99,6 +99,16 @@ export function getTriageRoute(response: TriageStartResponse): "/result" | "/tri
   return response.status === "complete" ? "/result" : "/triage";
 }
 
+// Maps the verbose decision-tree warranty direction strings from pre-Step-2
+// sessions (e.g. "likely_out_of_warranty") to the canonical IW/OW codes used
+// after Step 2. New sessions always have session.warrantyDirection set directly.
+function legacyDirectionToCode(direction: string | null): "IW" | "OW" | null {
+  if (!direction) return null;
+  if (direction.includes("in_warranty")) return "IW";
+  if (direction.includes("out_of_warranty")) return "OW";
+  return null;
+}
+
 export function buildCasePacketFromSession(session: TriageSession): CasePacket {
   const outcome = session.outcome || null;
   const updatedAtMs = Date.parse(session.updatedAt) || Date.now();
@@ -107,7 +117,10 @@ export function buildCasePacketFromSession(session: TriageSession): CasePacket {
   const dispatchGateConfirmed = session.dispatchGateConfirmed || [];
   const evidenceState = getEvidenceState({ dispatchGateConfirmed, evidenceChecklist });
   const deliveryReadiness = getDeliveryReadiness({ evidenceState, ticketReadiness });
-  const warrantyDirection = outcome?.warranty_assessment.label || outcome?.warranty_status || null;
+  const warrantyDirection: "IW" | "OW" | null =
+    session.warrantyDirection !== undefined
+      ? session.warrantyDirection
+      : legacyDirectionToCode(outcome?.warranty_assessment.direction ?? null);
 
   return {
     id: `case-${session.procedure.id}-${updatedAtMs}`,

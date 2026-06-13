@@ -160,9 +160,7 @@ def validate_data_integrity(db: Session) -> DataIntegrityReport:
                     continue
 
                 missing_keys = [
-                    key
-                    for key in _REQUIRED_OUTCOME_KEYS
-                    if key not in node.final_outcome
+                    key for key in _REQUIRED_OUTCOME_KEYS if key not in node.final_outcome
                 ]
                 if missing_keys:
                     issues.append(
@@ -171,8 +169,7 @@ def validate_data_integrity(db: Session) -> DataIntegrityReport:
                             procedure_id=procedure.id,
                             node_id=node.id,
                             message=(
-                                "final_outcome is missing keys: "
-                                + ", ".join(sorted(missing_keys))
+                                "final_outcome is missing keys: " + ", ".join(sorted(missing_keys))
                             ),
                         )
                     )

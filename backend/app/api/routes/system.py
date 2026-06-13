@@ -1,6 +1,7 @@
 import asyncio
+from collections.abc import Callable
 from time import perf_counter
-from typing import Callable, Literal
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
@@ -136,7 +137,9 @@ async def ready(request: Request, response: Response) -> ReadinessResponse:
             ),
         )
     )
-    check_results["workflow_validation"] = "ok" if workflow_validation.error_count == 0 else "failed"
+    check_results["workflow_validation"] = (
+        "ok" if workflow_validation.error_count == 0 else "failed"
+    )
     check_results["data_integrity"] = "ok" if data_integrity.error_count == 0 else "failed"
 
     failed = [name for name, result in check_results.items() if result != "ok"]

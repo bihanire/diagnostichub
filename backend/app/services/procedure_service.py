@@ -10,9 +10,7 @@ from app.services.device_guidance_service import (
 
 DEFAULT_GREETING = "Start with: 'I'll help you check this step by step.'"
 DEFAULT_LISTENING = "Let the customer finish the story before you ask the next question."
-DEFAULT_EXPECTATION = (
-    "Set expectation: 'We'll do a quick branch check first, then I'll tell you the safest next step.'"
-)
+DEFAULT_EXPECTATION = "Set expectation: 'We'll do a quick branch check first, then I'll tell you the safest next step.'"
 
 
 def procedure_query() -> Select[tuple[Procedure]]:
@@ -72,6 +70,8 @@ def get_related_procedures(db: Session, procedure_id: int) -> list[ProcedureSumm
             Procedure.description,
             Procedure.outcome,
             Procedure.warranty_status,
+            Procedure.src_group,
+            Procedure.primary_t_code,
         )
         .select_from(LinkedNode)
         .join(Procedure, Procedure.id == LinkedNode.linked_procedure_id)
@@ -87,6 +87,8 @@ def get_related_procedures(db: Session, procedure_id: int) -> list[ProcedureSumm
             description=description,
             outcome=outcome,
             warranty_status=warranty_status,
+            src_group=src_group,
+            primary_t_code=primary_t_code,
         )
         for (
             procedure_id_value,
@@ -95,5 +97,7 @@ def get_related_procedures(db: Session, procedure_id: int) -> list[ProcedureSumm
             description,
             outcome,
             warranty_status,
+            src_group,
+            primary_t_code,
         ) in rows
     ]

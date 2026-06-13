@@ -145,7 +145,5 @@ def feedback_export_csv(
     return PlainTextResponse(
         content=csv_content,
         media_type="text/csv",
-        headers={
-            "Content-Disposition": f'attachment; filename="feedback-{days}d.csv"'
-        },
+        headers={"Content-Disposition": f'attachment; filename="feedback-{days}d.csv"'},
     )

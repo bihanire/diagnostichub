@@ -1,7 +1,7 @@
 import json
 import logging
 from contextvars import ContextVar
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 request_id_context: ContextVar[str] = ContextVar("request_id", default="-")
 _RESERVED_LOG_RECORD_KEYS = set(logging.makeLogRecord({}).__dict__.keys())
@@ -18,7 +18,7 @@ class RequestContextFilter(logging.Filter):
 class JsonFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, object] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),

@@ -23,6 +23,8 @@ class ProcedureRow:
     customer_listening: str
     customer_expectation: str
     related_actions: list[str]
+    src_group: str
+    primary_t_code: str
 
 
 @dataclass(frozen=True)
@@ -97,6 +99,8 @@ PROCEDURE_COLUMNS = {
     "customer_listening",
     "customer_expectation",
     "related_actions",
+    "src_group",
+    "primary_t_code",
 }
 TAG_COLUMNS = {"procedure_id", "keyword"}
 NODE_COLUMNS = {
@@ -156,6 +160,8 @@ def _load_procedures(path: Path) -> list[ProcedureRow]:
             customer_listening=_text(row, "customer_listening"),
             customer_expectation=_text(row, "customer_expectation"),
             related_actions=_pipe_list(row.get("related_actions", "")),
+            src_group=_text(row, "src_group"),
+            primary_t_code=_text(row, "primary_t_code"),
         )
         for row in rows
     ]

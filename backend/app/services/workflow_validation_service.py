@@ -188,7 +188,9 @@ def validate_procedure_workflows(db: Session) -> WorkflowValidationReport:
                             )
                         )
 
-            if node.final_outcome is not None and (node.yes_next is not None or node.no_next is not None):
+            if node.final_outcome is not None and (
+                node.yes_next is not None or node.no_next is not None
+            ):
                 issues.append(
                     WorkflowValidationIssue(
                         procedure_id=procedure.id,

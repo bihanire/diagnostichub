@@ -70,6 +70,8 @@ def build_procedure(
     tags: list[str],
     nodes: list[dict],
     links: list[int],
+    src_group: str | None = None,
+    primary_t_code: str | None = None,
 ) -> dict:
     return {
         "id": procedure_id,
@@ -82,6 +84,8 @@ def build_procedure(
         "tags": tags,
         "nodes": nodes,
         "links": links,
+        "src_group": src_group or None,
+        "primary_t_code": primary_t_code or None,
     }
 
 
@@ -143,6 +147,8 @@ def package_to_sample_procedures(package: SopImportPackage) -> list[dict]:
                 sorted(tags_by_procedure.get(procedure.id, [])),
                 sorted(nodes_by_procedure.get(procedure.id, []), key=lambda item: item["id"]),
                 sorted(links_by_procedure.get(procedure.id, [])),
+                procedure.src_group or None,
+                procedure.primary_t_code or None,
             )
         )
 

@@ -39,6 +39,8 @@ def build_package(*, broken_next_id: int | None = None) -> SopImportPackage:
                 customer_listening="Listen for when the accessory stopped working.",
                 customer_expectation="Set expectation: 'This quick check tells us the next step.'",
                 related_actions=["Check cable", "Check charger"],
+                src_group="",
+                primary_t_code="",
             )
         ],
         tags=[TagRow(procedure_id=50, keyword="charger issue")],
@@ -124,7 +126,10 @@ class SopImportTests(unittest.TestCase):
         self.assertIsNotNone(procedure)
         assert procedure is not None
         self.assertEqual(procedure.title, "Accessory Test")
-        self.assertEqual(procedure.steps["customer_care"]["greeting"], "Start with: 'I will check the accessory first.'")
+        self.assertEqual(
+            procedure.steps["customer_care"]["greeting"],
+            "Start with: 'I will check the accessory first.'",
+        )
         self.assertEqual([tag.keyword for tag in tags], ["charger issue"])
         self.assertIsNotNone(first_node)
         assert first_node is not None
@@ -258,14 +263,14 @@ class SopImportTests(unittest.TestCase):
             tag_count = db.scalar(select(func.count(Tag.id)))
             first_node = db.get(DecisionNode, 101)
 
-        self.assertEqual(len(package.procedures), 16)
+        self.assertEqual(len(package.procedures), 17)
         self.assertGreater(len(package.tags), 100)
         self.assertGreater(len(package.decision_nodes), 50)
         self.assertIsNotNone(first_node)
         assert first_node is not None
         self.assertEqual(first_node.yes_next, 102)
         self.assertEqual(first_node.no_next, 104)
-        self.assertEqual(procedure_count, 16)
+        self.assertEqual(procedure_count, 17)
         self.assertEqual(tag_count, len(package.tags))
 
     def test_sample_procedures_are_loaded_from_the_canonical_sop_pack(self) -> None:

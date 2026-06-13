@@ -10,18 +10,18 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.db.seed import create_schema
 from app.db.sop_csv import (
-    LINK_COLUMNS,
-    KNOWLEDGE_SOURCE_COLUMNS,
-    NODE_COLUMNS,
-    PROCEDURE_COLUMNS,
-    TAG_COLUMNS,
+    KNOWLEDGE_SOURCE_COLUMNS,  # noqa: F401
+    LINK_COLUMNS,  # noqa: F401
+    NODE_COLUMNS,  # noqa: F401
+    PROCEDURE_COLUMNS,  # noqa: F401
+    TAG_COLUMNS,  # noqa: F401
     DecisionNodeRow,
     KnowledgeSourceRow,
-    LinkedProcedureRow,
-    ProcedureRow,
+    LinkedProcedureRow,  # noqa: F401
+    ProcedureRow,  # noqa: F401
     SopImportError,
     SopImportPackage,
-    TagRow,
+    TagRow,  # noqa: F401
     load_sop_directory,
 )
 from app.models.models import DecisionNode, LinkedNode, Procedure, Tag
@@ -43,7 +43,9 @@ def validate_import_package(
 
     procedure_ids = _find_duplicate_ids([row.id for row in package.procedures])
     node_ids = _find_duplicate_ids([row.id for row in package.decision_nodes])
-    tag_pairs = _find_duplicate_pairs((row.procedure_id, row.keyword.lower()) for row in package.tags)
+    tag_pairs = _find_duplicate_pairs(
+        (row.procedure_id, row.keyword.lower()) for row in package.tags
+    )
     link_pairs = _find_duplicate_pairs(
         (row.procedure_id, row.linked_procedure_id) for row in package.linked_procedures
     )
@@ -82,7 +84,9 @@ def validate_import_package(
 
     for node_row in package.decision_nodes:
         if node_row.procedure_id not in imported_procedure_ids:
-            errors.append(f"Decision node {node_row.id} references unknown procedure id: {node_row.procedure_id}")
+            errors.append(
+                f"Decision node {node_row.id} references unknown procedure id: {node_row.procedure_id}"
+            )
         _require_text(errors, node_row.question, f"Decision node {node_row.id} question")
         nodes_by_procedure.setdefault(node_row.procedure_id, set()).add(node_row.id)
 
@@ -95,7 +99,9 @@ def validate_import_package(
             ]:
                 _require_text(errors, value, f"Decision node {node_row.id} final {field_name}")
             if node_row.yes_next is not None or node_row.no_next is not None:
-                errors.append(f"Final decision node {node_row.id} should not have yes_next or no_next")
+                errors.append(
+                    f"Final decision node {node_row.id} should not have yes_next or no_next"
+                )
         elif node_row.yes_next is None and node_row.no_next is None:
             errors.append(f"Decision node {node_row.id} needs a next node or final outcome")
 
@@ -125,7 +131,9 @@ def validate_import_package(
             if next_id not in all_node_ids:
                 errors.append(f"Decision node {node_row.id} has broken {label} link: {next_id}")
             elif next_id not in procedure_node_ids:
-                errors.append(f"Decision node {node_row.id} {label} points outside its procedure: {next_id}")
+                errors.append(
+                    f"Decision node {node_row.id} {label} points outside its procedure: {next_id}"
+                )
 
     if errors:
         raise SopImportError("SOP import validation failed:\n- " + "\n- ".join(errors))
@@ -162,7 +170,9 @@ def import_sop_session(
             )
         )
         db.execute(delete(Tag).where(Tag.procedure_id.in_(imported_procedure_ids)))
-        db.execute(delete(DecisionNode).where(DecisionNode.procedure_id.in_(imported_procedure_ids)))
+        db.execute(
+            delete(DecisionNode).where(DecisionNode.procedure_id.in_(imported_procedure_ids))
+        )
         db.flush()
 
     for row in package.procedures:
@@ -187,6 +197,8 @@ def import_sop_session(
         }
         procedure.outcome = row.outcome
         procedure.warranty_status = row.warranty_status
+        procedure.src_group = row.src_group or None
+        procedure.primary_t_code = row.primary_t_code or None
     db.flush()
 
     for tag_row in package.tags:
@@ -220,7 +232,9 @@ def import_sop_session(
         )
 
 
-def import_sop_directory(path: str | Path, *, replace: bool = False, dry_run: bool = False) -> SopImportPackage:
+def import_sop_directory(
+    path: str | Path, *, replace: bool = False, dry_run: bool = False
+) -> SopImportPackage:
     package = load_sop_directory(path)
     with SessionLocal() as db:
         existing_procedure_ids = set(db.scalars(select(Procedure.id)).all())
@@ -285,7 +299,9 @@ def _validate_knowledge_sources(
         if len(row.summary) > 360:
             errors.append(f"{label} summary must stay under 360 characters")
         if _looks_like_external_doc_copy(row.summary) or _looks_like_external_doc_copy(row.scope):
-            errors.append(f"{label} must use original internal summary text, not copied external text or URLs")
+            errors.append(
+                f"{label} must use original internal summary text, not copied external text or URLs"
+            )
 
 
 def _parse_iso_date(value: str, label: str, errors: list[str]) -> date | None:
@@ -340,8 +356,12 @@ def _find_duplicate_pairs(values) -> list[tuple]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import SOP CSV knowledge into DiagnosticHub.")
     parser.add_argument("--path", required=True, help="Directory containing SOP import CSV files.")
-    parser.add_argument("--replace", action="store_true", help="Replace existing procedures with matching IDs.")
-    parser.add_argument("--dry-run", action="store_true", help="Validate without writing to the database.")
+    parser.add_argument(
+        "--replace", action="store_true", help="Replace existing procedures with matching IDs."
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate without writing to the database."
+    )
     args = parser.parse_args()
 
     create_schema()

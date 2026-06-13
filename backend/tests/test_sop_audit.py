@@ -29,6 +29,8 @@ def build_audit_package() -> SopImportPackage:
                 customer_listening="Ask what happened to the original device.",
                 customer_expectation="Set expectation: 'I'll confirm if this qualifies before I promise a replacement.'",
                 related_actions=["Check LS", "Check weekly payments"],
+                src_group="",
+                primary_t_code="",
             ),
             ProcedureRow(
                 id=2,
@@ -43,6 +45,8 @@ def build_audit_package() -> SopImportPackage:
                 customer_listening="Ask when the device was taken.",
                 customer_expectation="Set expectation: 'We'll secure the case first.'",
                 related_actions=["Block SIM", "Check abstract"],
+                src_group="",
+                primary_t_code="",
             ),
         ],
         tags=[
@@ -193,7 +197,7 @@ class SopAuditTests(unittest.TestCase):
             report = audit_sop_directory(temp_dir)
 
         self.assertEqual(report.error_count, 0)
-        self.assertEqual(report.procedure_count, 16)
+        self.assertEqual(report.procedure_count, 17)
         self.assertGreater(report.tag_count, 200)
         self.assertGreater(report.decision_node_count, 100)
 
@@ -204,7 +208,9 @@ class SopAuditTests(unittest.TestCase):
             markdown = render_markdown_report(report)
 
         self.assertIn("# SOP Quality Report", markdown)
-        self.assertIn("| ID | Title | Tags | Final Outcomes | Branch-Resolvable Outcomes |", markdown)
+        self.assertIn(
+            "| ID | Title | Tags | Final Outcomes | Branch-Resolvable Outcomes |", markdown
+        )
         self.assertIn("## Source Freshness", markdown)
         self.assertIn("| Procedure | Topic | Owner | Reviewed | Due | Type | Status |", markdown)
         self.assertIn("## Warnings", markdown)

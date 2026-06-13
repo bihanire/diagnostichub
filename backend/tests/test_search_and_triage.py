@@ -9,6 +9,11 @@ from app.db.sample_data import SAMPLE_PROCEDURES
 from app.db.seed import seed_session
 from app.models.models import DecisionNode, LinkedNode, Procedure, Tag
 from app.schemas.feedback import FeedbackCreateRequest
+from app.services.family_service import (
+    get_repair_family_detail,
+    get_repair_family_learning_module,
+    list_repair_families,
+)
 from app.services.feedback_service import (
     create_feedback,
     export_feedback_csv,
@@ -19,14 +24,10 @@ from app.services.feedback_service import (
     get_feedback_language_candidates,
     get_feedback_summary,
 )
-from app.services.family_service import (
-    get_repair_family_detail,
-    get_repair_family_learning_module,
-    list_repair_families,
-)
 from app.services.procedure_service import get_related_procedures
 from app.services.search_service import search_procedures
 from app.services.triage_service import next_triage_step, start_triage
+from app.services.warranty_service import evaluate_warranty
 from app.services.workflow_validation_service import validate_procedure_workflows
 
 
@@ -130,7 +131,9 @@ class SearchAndTriageTests(unittest.TestCase):
 
         self.assertFalse(response.no_match)
         self.assertIsNotNone(response.best_match)
-        self.assertEqual(response.best_match.title, "Repair Ticket, Dispatch, or Legal Status Handling")
+        self.assertEqual(
+            response.best_match.title, "Repair Ticket, Dispatch, or Legal Status Handling"
+        )
         self.assertEqual(response.structured_intent.issue_type, "Operations & Compliance")
 
     def test_search_matches_replacement_query(self) -> None:
@@ -286,7 +289,11 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertEqual(final_step.outcome.warranty_assessment.direction, "likely_out_of_warranty")
         self.assertGreater(len(final_step.outcome.branch_playbook.steps), 0)
         self.assertGreater(len(final_step.outcome.evidence_checklist), 0)
-        self.assertTrue(any("photos" in item.lower() for item in final_step.outcome.evidence_checklist))
+        self.assertTrue(
+            any("photos" in item.lower() for item in final_step.outcome.evidence_checklist)
+        )
+        self.assertEqual(final_step.outcome.src_group, "SRC012")
+        self.assertEqual(final_step.outcome.primary_t_code, "T12")
 
     def test_operational_outcomes_include_device_handover_guidance(self) -> None:
         with self.SessionLocal() as db:
@@ -448,7 +455,13 @@ class SearchAndTriageTests(unittest.TestCase):
                     comment="This was clear and quick to use.",
                     outcome_diagnosis="The phone is receiving power but the display path may be damaged.",
                     feedback_tags=["should_have_solved_at_branch"],
-                    triage_trace=[{"node_id": 101, "question": "Does the phone show any sign of life?", "answer": "yes"}],
+                    triage_trace=[
+                        {
+                            "node_id": 101,
+                            "question": "Does the phone show any sign of life?",
+                            "answer": "yes",
+                        }
+                    ],
                     final_decision_label="Book repair intake",
                     search_confidence=0.89,
                     search_confidence_state="strong",
@@ -461,7 +474,9 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertEqual(summary.helpful_count, before_summary.helpful_count + 1)
         self.assertEqual(summary.not_helpful_count, before_summary.not_helpful_count)
         self.assertEqual(summary.latest_submissions[0].branch_label, "Kampala Central")
-        self.assertEqual(summary.latest_submissions[0].feedback_tags, ["should_have_solved_at_branch"])
+        self.assertEqual(
+            summary.latest_submissions[0].feedback_tags, ["should_have_solved_at_branch"]
+        )
         self.assertEqual(summary.latest_submissions[0].final_decision_label, "Book repair intake")
         self.assertEqual(summary.latest_submissions[0].triage_trace[0]["node_id"], 101)
 
@@ -509,7 +524,7 @@ class SearchAndTriageTests(unittest.TestCase):
 
         self.assertEqual(report.error_count, 0)
         self.assertEqual(report.warning_count, 0)
-        self.assertEqual(report.validated_procedures, 16)
+        self.assertEqual(report.validated_procedures, 17)
 
     def test_feedback_reporting_breakdowns_and_export(self) -> None:
         with self.SessionLocal() as db:
@@ -587,3 +602,33 @@ class SearchAndTriageTests(unittest.TestCase):
         self.assertIn("content_review", language_csv)
         self.assertIn("sample_query", language_csv)
         self.assertIn("lines in screen and touch not working", language_csv)
+
+    def test_warranty_phase_integrates_with_triage_outcome(self) -> None:
+        with self.SessionLocal() as db:
+            final_step = next_triage_step(db, 110, "yes")
+
+        self.assertIsNotNone(final_step)
+        assert final_step is not None
+        self.assertEqual(final_step.status, "complete")
+
+        primary_t_code = final_step.outcome.primary_t_code
+        self.assertEqual(primary_t_code, "T12")
+
+        # T12 is a physical symptom — must go through the full question set.
+        # Dropped device (Q2=yes) → OW + VOID4 early-stop.
+        dropped_result = evaluate_warranty(primary_t_code, ["no", "yes"])
+        self.assertEqual(dropped_result["status"], "complete")
+        self.assertEqual(dropped_result["warranty_direction"], "OW")
+        self.assertEqual(dropped_result["wty_exception"], "VOID4")
+
+        # Normal everyday use confirmed (Q4=yes) → IW.
+        normal_use_result = evaluate_warranty(primary_t_code, ["no", "no", "no", "yes"])
+        self.assertEqual(normal_use_result["status"], "complete")
+        self.assertEqual(normal_use_result["warranty_direction"], "IW")
+        self.assertIsNone(normal_use_result["wty_exception"])
+
+        # First question asked when no answers given yet.
+        first_q = evaluate_warranty(primary_t_code, [])
+        self.assertEqual(first_q["status"], "question")
+        self.assertEqual(first_q["question_index"], 0)
+        self.assertFalse(first_q["auto_skipped"])

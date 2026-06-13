@@ -13,7 +13,8 @@ const navigationMocks = vi.hoisted(() => ({
 }));
 
 const apiMocks = vi.hoisted(() => ({
-  nextTriage: vi.fn()
+  nextTriage: vi.fn(),
+  warrantyNext: vi.fn()
 }));
 
 const sessionMocks = vi.hoisted(() => ({
@@ -30,7 +31,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/api", () => ({
-  nextTriage: apiMocks.nextTriage
+  nextTriage: apiMocks.nextTriage,
+  warrantyNext: apiMocks.warrantyNext
 }));
 
 vi.mock("@/lib/session", () => ({
@@ -133,6 +135,16 @@ describe("TriagePage", () => {
       message: "Final recommendation ready."
     };
     apiMocks.nextTriage.mockResolvedValue(finalResponse);
+    // Warranty phase: auto-skip to IW (simulates T01/T02/T03 or empty T-code fast path)
+    apiMocks.warrantyNext.mockResolvedValue({
+      status: "complete",
+      question_index: null,
+      question: null,
+      warranty_direction: "IW",
+      wty_exception: null,
+      needs_review: false,
+      auto_skipped: true
+    });
 
     render(<TriagePage />);
 
@@ -149,7 +161,10 @@ describe("TriagePage", () => {
         })
       );
     });
-    expect(navigationMocks.push).toHaveBeenCalledWith("/result");
+    // After warranty auto-skip, initiateWarrantyPhase calls router.push("/result")
+    await waitFor(() => {
+      expect(navigationMocks.push).toHaveBeenCalledWith("/result");
+    });
   });
 
   it("keeps Yes/No logic stable when the backend omits related procedures", async () => {
@@ -178,6 +193,16 @@ describe("TriagePage", () => {
       outcome: finalOutcome,
       message: "Final recommendation ready."
     } as unknown as TriageNextResponse);
+    // Warranty phase: return first question so this test stays focused on the saveSession assertion
+    apiMocks.warrantyNext.mockResolvedValue({
+      status: "question",
+      question_index: 0,
+      question: "Was the device exposed to liquid or moisture at any point?",
+      warranty_direction: null,
+      wty_exception: null,
+      needs_review: false,
+      auto_skipped: false
+    });
 
     render(<TriagePage />);
 

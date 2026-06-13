@@ -37,6 +37,7 @@ BENCHMARK_COLUMNS = {
     "minimum_margin",
 }
 
+
 @dataclass(frozen=True)
 class SearchBenchmarkCase:
     query: str
@@ -172,10 +173,14 @@ def render_markdown_report(report: SearchBenchmarkReport) -> str:
             else f"{result.case.expected_procedure_id} {result.case.expected_procedure_title}"
         )
         matched_title = result.matched_procedure_title or "No match"
-        matched_id = "-" if result.matched_procedure_id is None else str(result.matched_procedure_id)
+        matched_id = (
+            "-" if result.matched_procedure_id is None else str(result.matched_procedure_id)
+        )
         matched = f"{matched_id} {matched_title}".strip()
         alternative_title = result.alternative_procedure_title or "-"
-        alternative_id = "-" if result.alternative_procedure_id is None else str(result.alternative_procedure_id)
+        alternative_id = (
+            "-" if result.alternative_procedure_id is None else str(result.alternative_procedure_id)
+        )
         alternative = f"{alternative_id} {alternative_title}".strip()
         issue_type = result.matched_issue_type or "-"
         status = "Pass" if result.passed else f"Fail: {result.reason}"
@@ -209,7 +214,10 @@ def _evaluate_case(db, case: SearchBenchmarkCase) -> SearchBenchmarkResult:
                 margin=margin,
                 reason="expected no-match recovery",
             )
-        if case.expected_confidence_state and response.confidence_state != case.expected_confidence_state:
+        if (
+            case.expected_confidence_state
+            and response.confidence_state != case.expected_confidence_state
+        ):
             return SearchBenchmarkResult(
                 case=case,
                 passed=False,
@@ -319,7 +327,10 @@ def _evaluate_case(db, case: SearchBenchmarkCase) -> SearchBenchmarkResult:
             reason="match margin fell below the minimum threshold",
         )
 
-    if case.expected_confidence_state and response.confidence_state != case.expected_confidence_state:
+    if (
+        case.expected_confidence_state
+        and response.confidence_state != case.expected_confidence_state
+    ):
         return SearchBenchmarkResult(
             case=case,
             passed=False,
@@ -436,7 +447,9 @@ def _required_int(row: dict[str, str], column: str, path: Path) -> int:
     try:
         return int(value)
     except ValueError as exc:
-        raise SearchBenchmarkError(f"{path.name} has an invalid integer in {column}: {value}") from exc
+        raise SearchBenchmarkError(
+            f"{path.name} has an invalid integer in {column}: {value}"
+        ) from exc
 
 
 def _required_float(row: dict[str, str], column: str, path: Path) -> float:
@@ -444,7 +457,9 @@ def _required_float(row: dict[str, str], column: str, path: Path) -> float:
     try:
         return float(value)
     except ValueError as exc:
-        raise SearchBenchmarkError(f"{path.name} has an invalid number in {column}: {value}") from exc
+        raise SearchBenchmarkError(
+            f"{path.name} has an invalid number in {column}: {value}"
+        ) from exc
 
 
 def _optional_int(row: dict[str, str], column: str, path: Path, *, default: int) -> int:
@@ -454,7 +469,9 @@ def _optional_int(row: dict[str, str], column: str, path: Path, *, default: int)
     try:
         return int(value)
     except ValueError as exc:
-        raise SearchBenchmarkError(f"{path.name} has an invalid integer in {column}: {value}") from exc
+        raise SearchBenchmarkError(
+            f"{path.name} has an invalid integer in {column}: {value}"
+        ) from exc
 
 
 def _optional_bool(row: dict[str, str], column: str, *, default: bool) -> bool:

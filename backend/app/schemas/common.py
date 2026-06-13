@@ -10,6 +10,8 @@ class ProcedureSummary(BaseModel):
     description: str
     outcome: str | None = None
     warranty_status: str | None = None
+    src_group: str | None = None
+    primary_t_code: str | None = None
 
 
 class CustomerCare(BaseModel):
@@ -58,6 +60,8 @@ class FinalOutcomePayload(BaseModel):
     evidence_checklist: list[str] = Field(default_factory=list)
     customer_care: CustomerCare
     follow_up_message: str
+    src_group: str | None = None
+    primary_t_code: str | None = None
 
 
 class RelatedProceduresResponse(BaseModel):

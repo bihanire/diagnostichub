@@ -10,9 +10,11 @@ import { LearningQualityPanel } from "@/components/LearningQualityPanel";
 import { ProductRouteShell } from "@/components/ProductRouteShell";
 import { SuggestionList } from "@/components/SuggestionList";
 import { TeachingSourcePanel } from "@/components/TeachingSourcePanel";
-import { startTriage, submitFeedback } from "@/lib/api";
+import { dispatchRoute, getPartsPrediction, startTriage, submitFeedback } from "@/lib/api";
 import { feedbackTagOptions, getFeedbackTagLabel, uiCopy } from "@/lib/copy";
+import { buildDefectDesc } from "@/lib/defect-desc";
 import { clearSession, loadSession, saveSession } from "@/lib/session";
+import { DispatchRouteResponse, PartsPredictionResponse } from "@/lib/types";
 import {
   buildCasePacketFromSession,
   buildTriageSessionFromStart,
@@ -32,6 +34,9 @@ export default function ResultPage() {
   const [feedbackTags, setFeedbackTags] = useState<string[]>([]);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [defectDescCopied, setDefectDescCopied] = useState(false);
+  const [dispatchRouteData, setDispatchRouteData] = useState<DispatchRouteResponse | null>(null);
+  const [partsPrediction, setPartsPrediction] = useState<PartsPredictionResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,13 +49,35 @@ export default function ResultPage() {
       return;
     }
 
-    if (!saved.outcome) {
+    if (!saved.outcome || !saved.warrantyComplete) {
       router.replace("/triage");
       return;
     }
 
     setSession(saved);
     setDispatchGateConfirmed(saved.dispatchGateConfirmed || []);
+
+    void dispatchRoute({
+      src_group: saved.procedure.src_group ?? null,
+      primary_t_code: saved.procedure.primary_t_code ?? null,
+      warranty_direction: saved.warrantyDirection ?? null,
+      warranty_needs_review: saved.warrantyNeedsReview ?? false,
+      procedure_id: saved.procedure.id,
+    }).then(setDispatchRouteData).catch((routeError: unknown) => {
+      setError(
+        routeError instanceof Error
+          ? routeError.message
+          : "Dispatch routing could not be loaded. Confirm LS code with your supervisor."
+      );
+    });
+
+    if (saved.procedure.primary_t_code && saved.warrantyDirection) {
+      void getPartsPrediction(
+        saved.procedure.primary_t_code,
+        saved.warrantyDirection,
+      ).then(setPartsPrediction).catch(() => {});
+    }
+
     if (saved.feedback) {
       setHelpful(saved.feedback.helpful);
       setBranchLabel(saved.feedback.branch_label || "");
@@ -66,7 +93,8 @@ export default function ResultPage() {
 
     try {
       const response = await startTriage(procedure.id);
-      const nextSession = buildTriageSessionFromStart(response, { query: procedure.title });
+      const baseSession = buildTriageSessionFromStart(response, { query: procedure.title });
+      const nextSession = session?.device ? { ...baseSession, device: session.device } : baseSession;
 
       persistTriageSessionWithRelatedHydration(nextSession, {
         onSaved: (savedSession) => {
@@ -193,6 +221,26 @@ export default function ResultPage() {
   const gateComplete = gateTotal > 0 && dispatchGateConfirmed.length === gateTotal;
   const casePacket = buildCasePacketFromSession(session);
 
+  const warrantyVerdict = session.warrantyDirection ?? null;
+  const warrantyAutoSkipped = session.warrantyAutoSkipped ?? false;
+  const warrantyException = session.warrantyException ?? null;
+  const warrantyNeedsReview = session.warrantyNeedsReview ?? false;
+  const warrantyAnswers = session.warrantyAnswers ?? [];
+  const srcGroup = session.procedure.src_group ?? null;
+  const primaryTCode = session.procedure.primary_t_code ?? null;
+  const defectDesc = buildDefectDesc(primaryTCode, warrantyVerdict);
+  const device = session.device ?? null;
+  const showAutoBlockerWarning = device?.auto_blocker_required === true && showDispatchThreshold;
+  const preDispatchItems = dispatchRouteData?.pre_dispatch_checklist ?? [];
+  const likelyParts = partsPrediction?.parts ?? [];
+
+  function copyDefectDesc() {
+    void navigator.clipboard.writeText(defectDesc).then(() => {
+      setDefectDescCopied(true);
+      setTimeout(() => setDefectDescCopied(false), 2000);
+    });
+  }
+
   function persistSession(nextSession: TriageSession) {
     saveSession(nextSession);
     setSession(nextSession);
@@ -258,6 +306,11 @@ export default function ResultPage() {
             <div className="result-hero-footer">
               <span className="result-hero-footer-item">{uiCopy.result.hero.footerLabel}</span>
               <span className="result-hero-footer-item">{session.procedure.category}</span>
+              {device ? (
+                <span className="result-hero-footer-item result-hero-device-chip">
+                  {device.display_label}
+                </span>
+              ) : null}
               <span className="result-hero-footer-item">{uiCopy.result.summary.flowComplete}</span>
             </div>
           </div>
@@ -294,6 +347,58 @@ export default function ResultPage() {
           <span className="eyebrow">{uiCopy.result.primary.eyebrow}</span>
           <strong>{uiCopy.result.actionCard.warrantyTitle}</strong>
           <p>{outcome.warranty_status || uiCopy.result.actionCard.warrantyFallback}</p>
+        </div>
+      </section>
+
+      <section className="panel result-secondary-grid motion-stage">
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "0ms" }}>
+          <span className="eyebrow">Warranty confirmation</span>
+          <strong>
+            {warrantyAutoSkipped
+              ? "Customer Request"
+              : warrantyVerdict === "IW"
+              ? "In Warranty"
+              : warrantyVerdict === "OW"
+              ? "Out of Warranty"
+              : "Needs Supervisor Review"}
+          </strong>
+          <div className="chip-row result-chip-row">
+            <span
+              className={`status-badge ${
+                warrantyAutoSkipped
+                  ? "status-positive"
+                  : warrantyVerdict === "IW"
+                  ? "status-positive"
+                  : warrantyVerdict === "OW"
+                  ? "status-negative"
+                  : ""
+              }`}
+            >
+              {warrantyAutoSkipped ? "Auto-skipped" : (warrantyVerdict ?? "Unconfirmed")}
+            </span>
+            {warrantyException ? (
+              <span className="chip chip-muted">{warrantyException}</span>
+            ) : null}
+          </div>
+          {warrantyNeedsReview ? (
+            <p className="muted-copy" style={{ marginTop: "0.5rem" }}>
+              Warranty direction could not be automatically confirmed. Escalate to your supervisor before dispatching.
+            </p>
+          ) : null}
+        </div>
+        <div className="result-copy motion-card stagger-item" style={{ animationDelay: "56ms" }}>
+          <span className="eyebrow">Samsung taxonomy</span>
+          <strong>Symptom codes for case submission</strong>
+          <div className="chip-row result-chip-row">
+            {srcGroup ? <span className="chip">{srcGroup}</span> : null}
+            {primaryTCode ? <span className="chip chip-muted">{primaryTCode}</span> : null}
+            {!srcGroup && !primaryTCode ? (
+              <span className="chip chip-muted">Not assigned</span>
+            ) : null}
+          </div>
+          <p className="muted-copy">
+            Enter these codes in the SRC and T-code fields of the Google Form.
+          </p>
         </div>
       </section>
 
@@ -362,6 +467,66 @@ export default function ResultPage() {
                 </button>
               );
             })}
+          </div>
+        </section>
+      ) : null}
+
+      {showAutoBlockerWarning ? (
+        <section className="panel result-auto-blocker-warning" role="alert">
+          <div className="panel-header">
+            <span className="eyebrow">Action required before dispatch</span>
+            <h3>Disable Auto Blocker</h3>
+          </div>
+          <p className="body-copy">
+            This device runs One UI 6.0+ and has Auto Blocker enabled by default.
+            The service centre will return it unrepaired if Auto Blocker is still on at intake.
+          </p>
+          <ol className="ordered-list">
+            <li>Open <strong>Settings</strong> on the device.</li>
+            <li>Tap <strong>Security and privacy</strong>.</li>
+            <li>Tap <strong>Auto Blocker</strong> and toggle it <strong>OFF</strong>.</li>
+            <li>Confirm the change before packaging the device.</li>
+          </ol>
+          <div className="chip-row" style={{ marginTop: "0.75rem" }}>
+            <span className="status-badge status-negative">Auto Blocker — must disable</span>
+            <span className="chip chip-muted">{device?.display_label}</span>
+          </div>
+        </section>
+      ) : null}
+
+      {likelyParts.length > 0 ? (
+        <section className="panel panel-compact">
+          <div className="panel-header">
+            <span className="eyebrow">Parts guidance</span>
+            <h3>Likely part</h3>
+          </div>
+          <div className="chip-row">
+            {likelyParts.map((p) => (
+              <span className="chip" key={p.part_name}>{p.part_name}</span>
+            ))}
+          </div>
+          <p className="muted-copy" style={{ marginTop: "0.5rem" }}>
+            {partsPrediction?.directional_note}
+          </p>
+        </section>
+      ) : null}
+
+      {showDispatchThreshold && preDispatchItems.length > 0 ? (
+        <section className="panel">
+          <div className="panel-header">
+            <span className="eyebrow">Pre-dispatch</span>
+            <h3>Dispatch preparation checklist</h3>
+          </div>
+          <p className="body-copy panel-lead">
+            Complete every item before handing the device to the courier.
+          </p>
+          <div className="gate-checklist">
+            {preDispatchItems.map((item) => (
+              <div key={item} className="gate-check gate-check-static">
+                <span className="gate-check-mark" aria-hidden="true" />
+                <span>{item}</span>
+              </div>
+            ))}
           </div>
         </section>
       ) : null}
@@ -530,6 +695,104 @@ export default function ResultPage() {
       </ControlledDisclosure>
 
       <ControlledDisclosure
+        className="panel panel-compact"
+        eyebrow="Case submission"
+        title="Google Form pre-fill reference"
+      >
+        <p className="body-copy panel-lead">
+          Use these values when filling the Google Form. SOAS reads this form to create the Samsung case.
+        </p>
+        <div className="defect-desc-row">
+          <span className="defect-desc-label">Defect Description</span>
+          <code className="defect-desc-value">{defectDesc}</code>
+          <button
+            className="secondary-button defect-desc-copy"
+            onClick={copyDefectDesc}
+            type="button"
+          >
+            {defectDescCopied ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <div className="case-packet-grid">
+          {[
+            "Liquid or moisture exposure",
+            "Physical damage or prior repair",
+            "Software or firmware update trigger",
+            "Normal everyday use",
+          ].map((label, i) => {
+            const answered = i < warrantyAnswers.length;
+            const value = answered ? (warrantyAnswers[i] === "yes" ? "Yes" : "No") : "—";
+            return (
+              <span key={label}>
+                <strong>{label}</strong>
+                {value}
+              </span>
+            );
+          })}
+          <span>
+            <strong>Warranty direction</strong>
+            {warrantyVerdict === "IW"
+              ? "In Warranty"
+              : warrantyVerdict === "OW"
+              ? "Out of Warranty"
+              : "Needs Review"}
+          </span>
+          <span>
+            <strong>Warranty exception</strong>
+            {warrantyException ?? "None"}
+          </span>
+          {srcGroup ? (
+            <span>
+              <strong>SRC code</strong>
+              {srcGroup}
+            </span>
+          ) : null}
+          {primaryTCode ? (
+            <span>
+              <strong>T-code</strong>
+              {primaryTCode}
+            </span>
+          ) : null}
+        </div>
+      </ControlledDisclosure>
+
+      <ControlledDisclosure
+        className="panel panel-compact"
+        eyebrow="Case submission"
+        title="Dispatch routing"
+      >
+        {dispatchRouteData ? (
+          <>
+            <div className="dispatch-route-grid">
+              <div className="dispatch-route-card">
+                <span className="dispatch-route-card-label">LS code (MIFOS)</span>
+                <strong className={dispatchRouteData.ls_code ? "" : "muted-copy"}>
+                  {dispatchRouteData.ls_code ?? "Confirm with supervisor"}
+                </strong>
+              </div>
+              <div className="dispatch-route-card">
+                <span className="dispatch-route-card-label">Service centre</span>
+                <strong className={dispatchRouteData.service_center ? "" : "muted-copy"}>
+                  {dispatchRouteData.service_center ?? "TBC"}
+                </strong>
+              </div>
+              {dispatchRouteData.escalate ? (
+                <div className="dispatch-route-card dispatch-route-card-alert">
+                  <span className="dispatch-route-card-label">Action required</span>
+                  <strong>Escalate to supervisor</strong>
+                </div>
+              ) : null}
+            </div>
+            <p className="body-copy" style={{ marginTop: "10px" }}>
+              {dispatchRouteData.route_note}
+            </p>
+          </>
+        ) : (
+          <p className="muted-copy">Loading routing…</p>
+        )}
+      </ControlledDisclosure>
+
+      <ControlledDisclosure
         className="panel panel-compact handover-record-panel"
         eyebrow="Case evidence"
         title="Diagnostic record for review"
@@ -581,8 +844,11 @@ export default function ResultPage() {
         <button className="secondary-button" onClick={() => router.push("/")} type="button">
           {uiCopy.global.backToSearch}
         </button>
-        <button className="primary-button" onClick={startOver} type="button">
+        <button className="secondary-button" onClick={startOver} type="button">
           {uiCopy.global.startNewCase}
+        </button>
+        <button className="primary-button result-create-case-btn" onClick={() => router.push("/cases/new")} type="button">
+          Create job card
         </button>
       </div>
     </ProductRouteShell>
