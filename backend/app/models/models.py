@@ -242,6 +242,31 @@ class Case(Base):
     created_by: Mapped["AppUser"] = relationship("AppUser", foreign_keys=[created_by_id], lazy="selectin")
 
 
+class AllowedEmail(Base):
+    __tablename__ = "allowed_emails"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False, index=True)
+    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    added_by_id: Mapped[int | None] = mapped_column(ForeignKey("app_users.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class OTPRequest(Base):
+    __tablename__ = "otp_requests"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    email: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)  # SHA-256 hex of the 6-digit code
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
 class FeedbackEntry(Base):
     __tablename__ = "feedback_entries"
 

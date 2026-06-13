@@ -146,14 +146,16 @@ def get_ec_locations(db: Session) -> ECLocationListResponse:
 
 
 def complete_registration(
-    db: Session, google_sub: str, email: str, full_name: str, ec_location_id: int, country_code: str
+    db: Session, google_sub: str, email: str, full_name: str, ec_location_id: int, country_code: str,
+    full_name_override: str | None = None,
 ) -> AppUser:
     existing = db.scalar(select(AppUser).where(AppUser.google_sub == google_sub))
+    resolved_name = full_name_override.strip() if full_name_override and full_name_override.strip() else full_name
     if existing is None:
         existing = AppUser(
             google_sub=google_sub,
             email=email,
-            full_name=full_name,
+            full_name=resolved_name,
             role="ec_agent",
             approval_status="pending",
             ec_location_id=ec_location_id,
@@ -163,6 +165,8 @@ def complete_registration(
     else:
         existing.ec_location_id = ec_location_id
         existing.country_code = country_code
+        if resolved_name:
+            existing.full_name = resolved_name
     db.commit()
     db.refresh(existing)
     return existing

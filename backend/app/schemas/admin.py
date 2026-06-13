@@ -28,3 +28,27 @@ class AdminUserListResponse(BaseModel):
 class AdminActionResponse(BaseModel):
     message: str
     user: AdminUserItem
+
+
+class AllowedEmailItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: str
+    notes: str | None
+    created_at: datetime
+
+
+class AllowedEmailListResponse(BaseModel):
+    emails: list[AllowedEmailItem]
+    total: int
+
+
+class AllowedEmailAddRequest(BaseModel):
+    email: str
+    notes: str | None = None
+
+
+class AllowedEmailAddResponse(BaseModel):
+    message: str
+    item: AllowedEmailItem

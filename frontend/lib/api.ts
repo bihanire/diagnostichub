@@ -1,6 +1,8 @@
 import {
   AdminActionResponse,
   AdminUserListResponse,
+  AllowedEmailAddResponse,
+  AllowedEmailListResponse,
   AppUser,
   AuthStatusResponse,
   BranchFeedbackBreakdownResponse,
@@ -22,6 +24,7 @@ import {
   InteractionTelemetryResponse,
   OpsSessionResponse,
   OpsTelemetrySummaryResponse,
+  OTPVerifyResponse,
   PartsPredictionResponse,
   ProcedureFeedbackBreakdownResponse,
   RegisterRequest,
@@ -504,6 +507,40 @@ export function logoutUser(): Promise<{ message: string }> {
 
 export function getGoogleLoginUrl(): string {
   return `${API_BASE_URL}/auth/google`;
+}
+
+export function requestOtp(email: string): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>("/auth/otp/request", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyOtp(email: string, code: string): Promise<OTPVerifyResponse> {
+  return apiRequest<OTPVerifyResponse>("/auth/otp/verify", {
+    method: "POST",
+    body: JSON.stringify({ email, code }),
+    credentials: "include",
+  });
+}
+
+export function listAllowedEmails(): Promise<AllowedEmailListResponse> {
+  return apiRequest<AllowedEmailListResponse>("/admin/allowed-emails", { credentials: "include" });
+}
+
+export function addAllowedEmail(email: string, notes?: string): Promise<AllowedEmailAddResponse> {
+  return apiRequest<AllowedEmailAddResponse>("/admin/allowed-emails", {
+    method: "POST",
+    body: JSON.stringify({ email, notes: notes ?? null }),
+    credentials: "include",
+  });
+}
+
+export function removeAllowedEmail(id: number): Promise<void> {
+  return apiRequest<void>(`/admin/allowed-emails/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 }
 
 export function listAdminUsers(): Promise<AdminUserListResponse> {

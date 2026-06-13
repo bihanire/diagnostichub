@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getECLocations, registerUser } from "@/lib/api";
+import { getAuthStatus, getECLocations, registerUser } from "@/lib/api";
 import type { ECLocationItem } from "@/lib/types";
 
 const COUNTRY_OPTIONS = [
@@ -22,11 +22,21 @@ export default function RegisterPage() {
   const [locations, setLocations] = useState<ECLocationItem[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("UGA");
+  const [fullName, setFullName] = useState("");
+  const [needsName, setNeedsName] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingLocations, setLoadingLocations] = useState(true);
 
   useEffect(() => {
+    // Detect OTP user: if current user has no full_name, show the name field
+    getAuthStatus()
+      .then((s) => {
+        if (!s.authenticated || !s.user) return;
+        if (!s.user.full_name) setNeedsName(true);
+      })
+      .catch(() => null);
+
     getECLocations()
       .then((r) => setLocations(r.locations))
       .catch(() => setError("Could not load EC locations. Try refreshing the page."))
@@ -39,12 +49,17 @@ export default function RegisterPage() {
       setError("Please select your Experience Center location.");
       return;
     }
+    if (needsName && !fullName.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
       await registerUser({
         ec_location_id: parseInt(selectedLocation, 10),
         country_code: selectedCountry,
+        full_name: needsName ? fullName.trim() : undefined,
       });
       router.replace("/pending");
     } catch (err) {
@@ -68,12 +83,28 @@ export default function RegisterPage() {
 
         <h1 className="auth-title">Complete your registration</h1>
         <p className="auth-body">
-          Tell us which Experience Center you work at. Your account will be reviewed and approved by a Watu administrator before you can access the platform.
+          Tell us who you are and which Experience Center you work at. A Watu administrator will review and approve your account.
         </p>
 
         {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
         <form className="auth-form" onSubmit={handleSubmit}>
+          {needsName && (
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="full-name">Full name</label>
+              <input
+                autoFocus
+                className="auth-input"
+                id="full-name"
+                placeholder="Your full name"
+                required
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
+          )}
+
           <div className="auth-field">
             <label className="auth-label" htmlFor="country">Country</label>
             <select
@@ -121,7 +152,7 @@ export default function RegisterPage() {
 
           <button
             className="auth-submit-btn"
-            disabled={submitting || !selectedLocation}
+            disabled={submitting || !selectedLocation || (needsName && !fullName.trim())}
             type="submit"
           >
             {submitting ? "Submitting…" : "Submit registration"}

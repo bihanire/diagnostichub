@@ -31,6 +31,24 @@ class AppUserResponse(BaseModel):
 class RegisterRequest(BaseModel):
     ec_location_id: int
     country_code: str
+    full_name: str | None = None
+
+
+class OTPRequestBody(BaseModel):
+    email: str
+
+
+class OTPVerifyBody(BaseModel):
+    email: str
+    code: str
+
+
+class OTPRequestResponse(BaseModel):
+    message: str
+
+
+class OTPVerifyResponse(BaseModel):
+    action: str  # "dashboard" | "register" | "pending"
 
 
 class AuthStatusResponse(BaseModel):

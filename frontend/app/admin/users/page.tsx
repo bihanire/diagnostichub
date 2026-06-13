@@ -141,6 +141,7 @@ export default function AdminUsersPage() {
           {data && data.pending_count > 0 && (
             <span className="admin-pending-badge">{data.pending_count} pending</span>
           )}
+          <a className="admin-nav-link" href="/admin/allowed-emails">Allowed emails →</a>
         </div>
 
         {error && <p className="auth-error" role="alert">{error}</p>}

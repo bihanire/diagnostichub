@@ -575,6 +575,28 @@ export type AuthStatusResponse = {
 export type RegisterRequest = {
   ec_location_id: number;
   country_code: string;
+  full_name?: string;
+};
+
+export type OTPVerifyResponse = {
+  action: "dashboard" | "register" | "pending";
+};
+
+export type AllowedEmailItem = {
+  id: number;
+  email: string;
+  notes?: string | null;
+  created_at: string;
+};
+
+export type AllowedEmailListResponse = {
+  emails: AllowedEmailItem[];
+  total: number;
+};
+
+export type AllowedEmailAddResponse = {
+  message: string;
+  item: AllowedEmailItem;
 };
 
 // ── Cases ─────────────────────────────────────────────────────────────────────

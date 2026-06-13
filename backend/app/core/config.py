@@ -46,6 +46,15 @@ class Settings(BaseSettings):
     # Frontend base URL (used for OAuth redirects)
     frontend_url: str = "http://localhost:3000"
 
+    # Email OTP auth
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "noreply@watu.africa"
+    otp_expiry_minutes: int = 3
+    otp_dev_log: bool = True  # log OTP to console when SMTP unconfigured
+
     # Google Sheets sync (Phase 4) — leave unset to disable
     # GOOGLE_SHEETS_CREDENTIALS_JSON: base64-encoded service account JSON key
     google_sheets_credentials_json: str | None = None

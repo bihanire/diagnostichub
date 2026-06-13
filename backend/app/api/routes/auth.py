@@ -10,6 +10,10 @@ from app.schemas.auth import (
     AuthStatusResponse,
     ECLocationListResponse,
     LogoutResponse,
+    OTPRequestBody,
+    OTPRequestResponse,
+    OTPVerifyBody,
+    OTPVerifyResponse,
     RegisterRequest,
 )
 from app.services.auth_service import (
@@ -23,6 +27,13 @@ from app.services.auth_service import (
     issue_reg_token,
     to_user_response,
     upsert_user_from_google,
+)
+from app.services.otp_service import (
+    generate_and_store_otp,
+    get_or_create_otp_user,
+    is_email_allowed,
+    send_otp_email,
+    verify_otp,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -150,6 +161,7 @@ def register(
         full_name=reg_data["name"],
         ec_location_id=payload.ec_location_id,
         country_code=payload.country_code,
+        full_name_override=payload.full_name,
     )
     response.delete_cookie(key=settings.auth_reg_cookie_name, samesite="lax")
     return AuthStatusResponse(authenticated=False, user=to_user_response(user))
@@ -158,3 +170,75 @@ def register(
 @router.get("/locations", response_model=ECLocationListResponse)
 def list_locations(db: Session = Depends(get_db)) -> ECLocationListResponse:
     return get_ec_locations(db)
+
+
+@router.post("/otp/request", response_model=OTPRequestResponse)
+def otp_request(payload: OTPRequestBody, db: Session = Depends(get_db)) -> OTPRequestResponse:
+    email = payload.email.lower().strip()
+    if not email:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Email is required.")
+    if not is_email_allowed(email, db):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This email is not authorized. Contact your Watu administrator.",
+        )
+    settings = get_settings()
+    code = generate_and_store_otp(email, db)
+    try:
+        send_otp_email(email, code, settings)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Could not send email. Please try again or contact your administrator.",
+        )
+    return OTPRequestResponse(message="Code sent. Check your email.")
+
+
+@router.post("/otp/verify", response_model=OTPVerifyResponse)
+def otp_verify(
+    payload: OTPVerifyBody,
+    response: Response,
+    db: Session = Depends(get_db),
+) -> OTPVerifyResponse:
+    settings = get_settings()
+    email = payload.email.lower().strip()
+    if not verify_otp(email, payload.code.strip(), db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired code. Request a new one.",
+        )
+
+    user = get_or_create_otp_user(email, db)
+
+    if user.approval_status == "approved":
+        token = issue_jwt(user)
+        response.set_cookie(
+            key=settings.auth_cookie_name,
+            value=token,
+            max_age=settings.jwt_expire_minutes * 60,
+            httponly=True,
+            samesite="lax",
+            secure=settings.auth_cookie_secure,
+        )
+        return OTPVerifyResponse(action="dashboard")
+
+    if user.approval_status == "suspended":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account has been suspended. Contact your Watu administrator.",
+        )
+
+    # pending — needs registration if no name / location yet
+    if not user.full_name or user.ec_location_id is None:
+        reg_token = issue_reg_token(user.google_sub, user.email, user.full_name or "")
+        response.set_cookie(
+            key=settings.auth_reg_cookie_name,
+            value=reg_token,
+            max_age=settings.auth_reg_cookie_expire_minutes * 60,
+            httponly=True,
+            samesite="lax",
+            secure=settings.auth_cookie_secure,
+        )
+        return OTPVerifyResponse(action="register")
+
+    return OTPVerifyResponse(action="pending")
