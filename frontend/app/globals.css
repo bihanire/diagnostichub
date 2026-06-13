@@ -12271,6 +12271,45 @@ body {
   margin-top: 2px;
 }
 
+/* Search row */
+.cl-search-row {
+  position: relative;
+  margin-bottom: 0.75rem;
+}
+.cl-search-input {
+  width: 100%;
+  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--surface, #ffffff);
+  color: var(--text-primary, #111827);
+  box-sizing: border-box;
+}
+.cl-search-input:focus {
+  outline: 2px solid var(--accent, #2563eb);
+  outline-offset: -1px;
+}
+.cl-search-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.875rem;
+  padding: 0.25rem;
+  line-height: 1;
+}
+.cl-waybill {
+  font-size: 0.7rem;
+  color: var(--text-secondary, #6b7280);
+  font-family: monospace;
+  letter-spacing: 0.01em;
+}
+
 /* Filter row */
 .cl-filter-row {
   display: flex;

@@ -61,9 +61,28 @@ def _log_data_integrity_report(report: DataIntegrityReport) -> None:
         )
 
 
+def _check_production_security(s: type) -> None:
+    """Log loud warnings for insecure production settings."""
+    is_prod = not s.database_url.startswith("sqlite")
+    if not is_prod:
+        return
+    issues = []
+    if s.jwt_secret == "dev-jwt-secret-replace-in-production":
+        issues.append("JWT_SECRET is the default dev value — set a strong random secret")
+    if not s.auth_cookie_secure:
+        issues.append("AUTH_COOKIE_SECURE=false in production — cookies can be stolen over HTTP")
+    if not s.google_client_id or not s.google_client_secret:
+        issues.append("GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET unset — OAuth login will fail")
+    if "*" in s.cors_origins:
+        issues.append("CORS_ORIGINS contains wildcard '*' — restricts to your Vercel domain instead")
+    for msg in issues:
+        logger.warning("PRODUCTION_SECURITY_ISSUE: %s", msg, extra={"event": "security_check"})
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     telemetry = get_telemetry_collector()
+    _check_production_security(settings)
     validate_ops_auth_settings(settings)
     create_schema()
     if settings.seed_on_startup:

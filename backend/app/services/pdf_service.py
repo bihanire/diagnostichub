@@ -267,6 +267,11 @@ class _JobCardPDF(FPDF):
             "LS Code", c.ls_code or "—",
             "Status", c.status.upper(),
         )
+        if c.waybill_number:
+            self._two_fields(
+                "Aramex Waybill", c.waybill_number,
+                "Dispatched", _fmt_dt(c.updated_at),
+            )
 
         # ── Security ─────────────────────────────────────────────────────────
         self._divider()

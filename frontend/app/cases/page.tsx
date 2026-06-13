@@ -33,6 +33,7 @@ export default function CasesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<StatusFilter>("all");
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     async function init() {
@@ -57,8 +58,19 @@ export default function CasesPage() {
     void init();
   }, [router]);
 
-  const visible =
-    filter === "all" ? cases : cases.filter((c) => c.status === filter);
+  const q = query.trim().toLowerCase();
+
+  const statusFiltered = filter === "all" ? cases : cases.filter((c) => c.status === filter);
+
+  const visible = q
+    ? statusFiltered.filter(
+        (c) =>
+          c.reference.toLowerCase().includes(q) ||
+          c.client_name.toLowerCase().includes(q) ||
+          c.device_model.toLowerCase().includes(q) ||
+          c.device_imei.toLowerCase().includes(q)
+      )
+    : statusFiltered;
 
   const countFor = (s: StatusFilter) =>
     s === "all" ? cases.length : cases.filter((c) => c.status === s).length;
@@ -89,6 +101,28 @@ export default function CasesPage() {
         </div>
 
         {error && <p className="auth-error" role="alert">{error}</p>}
+
+        {/* Search */}
+        <div className="cl-search-row">
+          <input
+            className="cl-search-input"
+            type="search"
+            placeholder="Search by reference, name, model or IMEI…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search cases"
+          />
+          {query && (
+            <button
+              className="cl-search-clear"
+              onClick={() => setQuery("")}
+              type="button"
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
         {/* Filter tabs */}
         <div className="cl-filter-row">
@@ -126,6 +160,8 @@ export default function CasesPage() {
                   Start a diagnostic
                 </button>
               </>
+            ) : q ? (
+              <p>No cases match &ldquo;{query}&rdquo;.</p>
             ) : (
               <p>No {STATUS_LABELS[filter]?.toLowerCase()} cases.</p>
             )}
@@ -145,6 +181,9 @@ export default function CasesPage() {
                   <span className="cl-device">
                     {c.device_model} · {c.device_imei}
                   </span>
+                  {c.waybill_number && (
+                    <span className="cl-waybill">Waybill: {c.waybill_number}</span>
+                  )}
                 </div>
                 <div className="cl-card-right">
                   <span className={`cl-type-badge cl-type-${c.case_type}`}>
