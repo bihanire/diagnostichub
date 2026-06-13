@@ -38,7 +38,11 @@ export default function AdminUsersPage() {
     async function init() {
       try {
         const auth = await getAuthStatus();
-        if (!auth.authenticated || auth.user?.role !== "watu_admin") {
+        if (!auth.authenticated) {
+          router.replace("/login");
+          return;
+        }
+        if (auth.user?.role !== "watu_admin") {
           router.replace("/dashboard");
           return;
         }
