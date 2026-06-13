@@ -78,6 +78,14 @@ class CaseListResponse(BaseModel):
     total: int
 
 
+class CaseStatsResponse(BaseModel):
+    open: int
+    dispatched: int
+    closed: int
+    cancelled: int
+    total: int
+
+
 class CaseStatusUpdateRequest(BaseModel):
     status: str  # dispatched | closed | cancelled
     waybill_number: str | None = None

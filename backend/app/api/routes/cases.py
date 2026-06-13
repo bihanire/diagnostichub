@@ -9,12 +9,14 @@ from app.schemas.cases import (
     CaseCreateRequest,
     CaseListResponse,
     CaseResponse,
+    CaseStatsResponse,
     CaseStatusUpdateRequest,
     CaseStatusUpdateResponse,
 )
 from app.services.case_service import (
     create_case,
     get_case_by_reference,
+    get_case_stats_for_location,
     list_cases_for_location,
     to_case_response,
     update_case_status,
@@ -49,6 +51,14 @@ def list_cases(
         cases=[to_case_response(c) for c in cases],
         total=len(cases),
     )
+
+
+@router.get("/stats", response_model=CaseStatsResponse)
+def get_case_stats(
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+) -> CaseStatsResponse:
+    return get_case_stats_for_location(db, user)
 
 
 @router.get("/{reference}", response_model=CaseResponse)

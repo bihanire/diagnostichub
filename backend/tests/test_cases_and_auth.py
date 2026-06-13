@@ -398,6 +398,27 @@ class CasesRoutesTests(unittest.TestCase):
         self.assertTrue(r.content.startswith(b"%PDF-"))
         self.assertGreater(len(r.content), 1000)
 
+    def test_stats_returns_counts_by_status(self) -> None:
+        with self._auth_client() as client:
+            r0 = client.get("/cases/stats")
+            before = r0.json()
+            # Create an open case
+            client.post("/cases", json=_minimal_case_payload())
+            r1 = client.get("/cases/stats")
+        data = r1.json()
+        self.assertIn("open", data)
+        self.assertIn("dispatched", data)
+        self.assertIn("closed", data)
+        self.assertIn("cancelled", data)
+        self.assertIn("total", data)
+        self.assertEqual(data["open"], before["open"] + 1)
+        self.assertEqual(data["total"], before["total"] + 1)
+
+    def test_stats_requires_auth(self) -> None:
+        with TestClient(self.app) as client:
+            r = client.get("/cases/stats")
+        self.assertEqual(r.status_code, 401)
+
 
 # ── Admin routes ──────────────────────────────────────────────────────────────
 

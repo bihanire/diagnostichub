@@ -1,10 +1,10 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.models.models import AppUser, Case, ECLocation
-from app.schemas.cases import CaseCreateRequest, CaseResponse
+from app.schemas.cases import CaseCreateRequest, CaseResponse, CaseStatsResponse
 
 
 def _generate_reference(db: Session, ec_location_id: int, country_code: str) -> str:
@@ -71,6 +71,25 @@ def list_cases_for_location(db: Session, user: AppUser) -> list[Case]:
         .order_by(Case.created_at.desc())
     )
     return list(db.scalars(stmt).all())
+
+
+def get_case_stats_for_location(db: Session, user: AppUser) -> CaseStatsResponse:
+    rows = (
+        db.execute(
+            select(Case.status, func.count(Case.id).label("n"))
+            .where(Case.ec_location_id == user.ec_location_id)
+            .group_by(Case.status)
+        )
+        .all()
+    )
+    counts: dict[str, int] = {r.status: r.n for r in rows}
+    return CaseStatsResponse(
+        open=counts.get("open", 0),
+        dispatched=counts.get("dispatched", 0),
+        closed=counts.get("closed", 0),
+        cancelled=counts.get("cancelled", 0),
+        total=sum(counts.values()),
+    )
 
 
 def get_case_by_reference(db: Session, reference: str, user: AppUser) -> Case | None:

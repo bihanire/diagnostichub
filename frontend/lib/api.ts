@@ -7,6 +7,7 @@ import {
   CaseCreateRequest,
   CaseListResponse,
   CaseResponse,
+  CaseStatsResponse,
   CaseStatusUpdateResponse,
   DeviceListResponse,
   DispatchRouteRequest,
@@ -533,6 +534,10 @@ export function submitCase(payload: CaseCreateRequest): Promise<CaseResponse> {
 
 export function listCases(): Promise<CaseListResponse> {
   return apiRequest<CaseListResponse>("/cases", { credentials: "include" });
+}
+
+export function getCaseStats(): Promise<CaseStatsResponse> {
+  return apiRequest<CaseStatsResponse>("/cases/stats", { credentials: "include" });
 }
 
 export function getCase(reference: string): Promise<CaseResponse> {

@@ -655,6 +655,14 @@ export type CaseListResponse = {
   total: number;
 };
 
+export type CaseStatsResponse = {
+  open: number;
+  dispatched: number;
+  closed: number;
+  cancelled: number;
+  total: number;
+};
+
 export type CaseStatusUpdateResponse = {
   message: string;
   case: CaseResponse;

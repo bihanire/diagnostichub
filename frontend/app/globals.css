@@ -11171,6 +11171,42 @@ body {
   margin: 0;
 }
 
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.dashboard-stat-card {
+  background: var(--surface, #1a1f2e);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dashboard-stat-card:hover { border-color: rgba(255,255,255,0.18); }
+.dashboard-stat-count {
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.dashboard-stat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #8b90a0);
+}
+.dashboard-stat-open .dashboard-stat-count    { color: #60a5fa; }
+.dashboard-stat-dispatched .dashboard-stat-count { color: #fbbf24; }
+.dashboard-stat-closed .dashboard-stat-count  { color: #34d399; }
+.dashboard-stat-total .dashboard-stat-count   { color: var(--text, #e8eaf0); }
+
 .dashboard-actions {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -12574,6 +12610,10 @@ button, a, label, [role="button"], .case-radio-card, .case-bool-btn, .cl-card, .
 
   .dashboard-welcome-title {
     font-size: 1.2rem;
+  }
+
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .dashboard-actions {

@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { getAuthStatus, logoutUser } from "@/lib/api";
-import type { AppUser } from "@/lib/types";
+import { getCaseStats, getAuthStatus, logoutUser } from "@/lib/api";
+import type { AppUser, CaseStatsResponse } from "@/lib/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<AppUser | null>(null);
+  const [stats, setStats] = useState<CaseStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -29,6 +30,7 @@ export default function DashboardPage() {
         }
         setUser(status.user ?? null);
         setLoading(false);
+        getCaseStats().then(setStats).catch(() => null);
       })
       .catch(() => router.replace("/login"));
   }, [router]);
@@ -88,6 +90,43 @@ export default function DashboardPage() {
               : "Your Experience Center is not yet linked. Contact your Watu administrator."}
           </p>
         </section>
+
+        {stats && (
+          <div className="dashboard-stats">
+            <button
+              className="dashboard-stat-card dashboard-stat-open"
+              onClick={() => router.push("/cases?status=open")}
+              type="button"
+            >
+              <span className="dashboard-stat-count">{stats.open}</span>
+              <span className="dashboard-stat-label">Open</span>
+            </button>
+            <button
+              className="dashboard-stat-card dashboard-stat-dispatched"
+              onClick={() => router.push("/cases?status=dispatched")}
+              type="button"
+            >
+              <span className="dashboard-stat-count">{stats.dispatched}</span>
+              <span className="dashboard-stat-label">Dispatched</span>
+            </button>
+            <button
+              className="dashboard-stat-card dashboard-stat-closed"
+              onClick={() => router.push("/cases?status=closed")}
+              type="button"
+            >
+              <span className="dashboard-stat-count">{stats.closed}</span>
+              <span className="dashboard-stat-label">Closed</span>
+            </button>
+            <button
+              className="dashboard-stat-card dashboard-stat-total"
+              onClick={() => router.push("/cases")}
+              type="button"
+            >
+              <span className="dashboard-stat-count">{stats.total}</span>
+              <span className="dashboard-stat-label">Total</span>
+            </button>
+          </div>
+        )}
 
         <div className="dashboard-actions">
           <button
