@@ -64,24 +64,21 @@ def create_case(db: Session, user: AppUser, payload: CaseCreateRequest) -> Case:
     return case
 
 
+_CROSS_EC_ROLES = frozenset({"watu_ops", "watu_admin"})
+
+
 def list_cases_for_location(db: Session, user: AppUser) -> list[Case]:
-    stmt = (
-        select(Case)
-        .where(Case.ec_location_id == user.ec_location_id)
-        .order_by(Case.created_at.desc())
-    )
+    stmt = select(Case).order_by(Case.created_at.desc())
+    if user.role not in _CROSS_EC_ROLES:
+        stmt = stmt.where(Case.ec_location_id == user.ec_location_id)
     return list(db.scalars(stmt).all())
 
 
 def get_case_stats_for_location(db: Session, user: AppUser) -> CaseStatsResponse:
-    rows = (
-        db.execute(
-            select(Case.status, func.count(Case.id).label("n"))
-            .where(Case.ec_location_id == user.ec_location_id)
-            .group_by(Case.status)
-        )
-        .all()
-    )
+    stmt = select(Case.status, func.count(Case.id).label("n")).group_by(Case.status)
+    if user.role not in _CROSS_EC_ROLES:
+        stmt = stmt.where(Case.ec_location_id == user.ec_location_id)
+    rows = db.execute(stmt).all()
     counts: dict[str, int] = {r.status: r.n for r in rows}
     return CaseStatsResponse(
         open=counts.get("open", 0),

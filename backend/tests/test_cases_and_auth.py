@@ -197,6 +197,18 @@ class CasesRoutesTests(unittest.TestCase):
             assert loc is not None
             cls.ec_location_id = loc.id
 
+            # Second EC location (for cross-EC visibility tests)
+            cls.loc2 = ECLocation(
+                name="Remote EC",
+                city="Kampala",
+                country_code="UGA",
+                is_active=True,
+                sort_order=99,
+                job_card_sequence=500,  # avoids reference collision with loc1
+            )
+            db.add(cls.loc2)
+            db.flush()
+
             cls.agent = AppUser(
                 google_sub="cases-agent-sub",
                 email="cases-agent@test.local",
@@ -215,11 +227,33 @@ class CasesRoutesTests(unittest.TestCase):
                 ec_location_id=loc.id,
                 country_code="UGA",
             )
-            db.add_all([cls.agent, cls.other])
+            cls.remote_agent = AppUser(
+                google_sub="remote-agent-sub",
+                email="remote-agent@test.local",
+                full_name="Remote Agent",
+                role="ec_agent",
+                approval_status="approved",
+                ec_location_id=cls.loc2.id,
+                country_code="UGA",
+            )
+            cls.watu_admin = AppUser(
+                google_sub="watu-admin-sub",
+                email="watu-admin@test.local",
+                full_name="Watu Admin",
+                role="watu_admin",
+                approval_status="approved",
+                ec_location_id=None,
+                country_code="UGA",
+            )
+            db.add_all([cls.agent, cls.other, cls.remote_agent, cls.watu_admin])
             db.commit()
             db.refresh(cls.agent)
             db.refresh(cls.other)
+            db.refresh(cls.remote_agent)
+            db.refresh(cls.watu_admin)
             cls.agent_id = cls.agent.id
+            cls.remote_agent_id = cls.remote_agent.id
+            cls.watu_admin_id = cls.watu_admin.id
 
         cls.jwt_token = _make_jwt(cls.agent_id)
 
@@ -418,6 +452,51 @@ class CasesRoutesTests(unittest.TestCase):
         with TestClient(self.app) as client:
             r = client.get("/cases/stats")
         self.assertEqual(r.status_code, 401)
+
+    # Cross-EC visibility
+
+    def _remote_client(self) -> TestClient:
+        token = _make_jwt(self.remote_agent_id)
+        client = TestClient(self.app, raise_server_exceptions=True)
+        client.cookies.set("dh_auth", token)
+        return client
+
+    def _admin_client(self) -> TestClient:
+        token = _make_jwt(self.watu_admin_id)
+        client = TestClient(self.app, raise_server_exceptions=True)
+        client.cookies.set("dh_auth", token)
+        return client
+
+    def test_ec_agent_cannot_list_other_ec_cases(self) -> None:
+        with self._auth_client() as ec1, self._remote_client() as ec2:
+            ref = ec1.post("/cases", json=_minimal_case_payload()).json()["reference"]
+            cases_ec2 = ec2.get("/cases").json()["cases"]
+        refs_ec2 = [c["reference"] for c in cases_ec2]
+        self.assertNotIn(ref, refs_ec2)
+
+    def test_watu_admin_can_list_all_ec_cases(self) -> None:
+        with self._auth_client() as ec1, self._remote_client() as ec2, self._admin_client() as admin:
+            ref1 = ec1.post("/cases", json=_minimal_case_payload()).json()["reference"]
+            ref2 = ec2.post("/cases", json=_minimal_case_payload()).json()["reference"]
+            all_cases = admin.get("/cases").json()["cases"]
+        refs = [c["reference"] for c in all_cases]
+        self.assertIn(ref1, refs)
+        self.assertIn(ref2, refs)
+
+    def test_watu_admin_stats_include_all_ec_cases(self) -> None:
+        with self._auth_client() as ec1, self._remote_client() as ec2, self._admin_client() as admin:
+            before = admin.get("/cases/stats").json()["total"]
+            ec1.post("/cases", json=_minimal_case_payload())
+            ec2.post("/cases", json=_minimal_case_payload())
+            after = admin.get("/cases/stats").json()["total"]
+        self.assertEqual(after, before + 2)
+
+    def test_ec_agent_stats_exclude_other_ec_cases(self) -> None:
+        with self._auth_client() as ec1, self._remote_client() as ec2:
+            before = ec1.get("/cases/stats").json()["total"]
+            ec2.post("/cases", json=_minimal_case_payload())
+            after = ec1.get("/cases/stats").json()["total"]
+        self.assertEqual(after, before)
 
 
 # ── Admin routes ──────────────────────────────────────────────────────────────
