@@ -88,14 +88,21 @@ export default function AllowedEmailsPage() {
 
   return (
     <div className="admin-page">
-      <div className="admin-header">
-        <div>
-          <h1 className="admin-title">Allowed Emails</h1>
-          <p className="admin-subtitle">
-            Only emails on this list can request a login code. Add emails before users try to sign in.
-          </p>
+      <div className="admin-subnav">
+        <a href="/dashboard" className="admin-subnav-back">← Dashboard</a>
+        <div className="admin-subnav-links">
+          <a href="/admin/users" className="admin-subnav-link">Users</a>
+          <a href="/admin/invites" className="admin-subnav-link">Invites</a>
+          <a href="/admin/allowed-emails" className="admin-subnav-link admin-subnav-active">Allowlist</a>
+          <a href="/admin/activity" className="admin-subnav-link">Activity</a>
         </div>
-        <a className="admin-nav-link" href="/admin/users">← User accounts</a>
+      </div>
+
+      <div className="admin-page-header">
+        <h1 className="admin-title">Allowed Emails</h1>
+        <p className="admin-subtitle">
+          Direct email allowlist for login. For team onboarding, use <a className="auth-link" href="/admin/invites">Invite Links</a> instead.
+        </p>
       </div>
 
       {toast ? <p className="admin-toast" role="status">{toast}</p> : null}

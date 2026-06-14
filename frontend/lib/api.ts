@@ -1,4 +1,5 @@
 import {
+  ActivityResponse,
   AdminActionResponse,
   AdminUserListResponse,
   AllowedEmailAddResponse,
@@ -22,6 +23,11 @@ import {
   FeedbackTagBreakdownResponse,
   InteractionTelemetryPayload,
   InteractionTelemetryResponse,
+  InviteCreateRequest,
+  InviteCreateResponse,
+  InviteInfoResponse,
+  InviteListResponse,
+  InviteOTPVerifyResponse,
   OpsSessionResponse,
   OpsTelemetrySummaryResponse,
   OTPVerifyResponse,
@@ -541,6 +547,53 @@ export function removeAllowedEmail(id: number): Promise<{ message: string }> {
     method: "DELETE",
     credentials: "include",
   });
+}
+
+export function listInvites(): Promise<InviteListResponse> {
+  return apiRequest<InviteListResponse>("/admin/invites", { credentials: "include" });
+}
+
+export function createInvite(payload: InviteCreateRequest): Promise<InviteCreateResponse> {
+  return apiRequest<InviteCreateResponse>("/admin/invites", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+}
+
+export function revokeInvite(id: number): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`/admin/invites/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+}
+
+export function getInviteInfo(token: string): Promise<InviteInfoResponse> {
+  return apiRequest<InviteInfoResponse>(`/auth/invite/${token}`);
+}
+
+export function requestInviteOtp(token: string, email: string): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`/auth/invite/${token}/request`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function verifyInviteOtp(
+  token: string,
+  email: string,
+  code: string,
+  full_name: string,
+): Promise<InviteOTPVerifyResponse> {
+  return apiRequest<InviteOTPVerifyResponse>(`/auth/invite/${token}/verify`, {
+    method: "POST",
+    body: JSON.stringify({ email, code, full_name }),
+    credentials: "include",
+  });
+}
+
+export function getActivity(): Promise<ActivityResponse> {
+  return apiRequest<ActivityResponse>("/admin/activity", { credentials: "include" });
 }
 
 export function listAdminUsers(): Promise<AdminUserListResponse> {

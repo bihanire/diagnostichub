@@ -122,15 +122,21 @@ export default function AdminUsersPage() {
 
   return (
     <div className="admin-page">
-      <div className="admin-shell">
+      <div className="admin-subnav">
+        <a href="/dashboard" className="admin-subnav-back">← Dashboard</a>
+        <div className="admin-subnav-links">
+          <a href="/admin/users" className="admin-subnav-link admin-subnav-active">Users</a>
+          <a href="/admin/invites" className="admin-subnav-link">Invites</a>
+          <a href="/admin/allowed-emails" className="admin-subnav-link">Allowlist</a>
+          <a href="/admin/activity" className="admin-subnav-link">Activity</a>
+        </div>
+        {data && data.pending_count > 0 && (
+          <span className="admin-pending-badge">{data.pending_count} pending</span>
+        )}
+      </div>
 
-        {/* Header */}
+      <div className="admin-shell">
         <div className="admin-header">
-          <div>
-            <button className="case-back-btn" onClick={() => router.push("/dashboard")} type="button">
-              ← Dashboard
-            </button>
-          </div>
           <div className="admin-header-title">
             <span className="admin-brand-mark" aria-hidden="true" />
             <div>
@@ -138,10 +144,6 @@ export default function AdminUsersPage() {
               <p className="admin-subtitle">Approve or suspend EC agent registrations</p>
             </div>
           </div>
-          {data && data.pending_count > 0 && (
-            <span className="admin-pending-badge">{data.pending_count} pending</span>
-          )}
-          <a className="admin-nav-link" href="/admin/allowed-emails">Allowed emails →</a>
         </div>
 
         {error && <p className="auth-error" role="alert">{error}</p>}

@@ -254,6 +254,28 @@ class AllowedEmail(Base):
     )
 
 
+class InviteToken(Base):
+    __tablename__ = "invite_tokens"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    token: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    label: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    ec_location_id: Mapped[int] = mapped_column(ForeignKey("ec_locations.id"), nullable=False)
+    country_code: Mapped[str] = mapped_column(String(3), nullable=False)
+    role: Mapped[str] = mapped_column(String(30), default="ec_agent", nullable=False)
+    created_by_id: Mapped[int] = mapped_column(ForeignKey("app_users.id"), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    max_uses: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    use_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    auto_approve: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    ec_location: Mapped["ECLocation"] = relationship("ECLocation", foreign_keys=[ec_location_id], lazy="selectin")
+
+
 class OTPRequest(Base):
     __tablename__ = "otp_requests"
 

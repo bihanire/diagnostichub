@@ -600,6 +600,94 @@ export type AllowedEmailAddResponse = {
   item: AllowedEmailItem;
 };
 
+// ── Invites ───────────────────────────────────────────────────────────────────
+
+export type InviteItem = {
+  id: number;
+  token: string;
+  label?: string | null;
+  ec_location_id: number;
+  country_code: string;
+  role: string;
+  expires_at: string;
+  max_uses?: number | null;
+  use_count: number;
+  auto_approve: boolean;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type InviteListResponse = {
+  invites: InviteItem[];
+};
+
+export type InviteCreateRequest = {
+  ec_location_id: number;
+  country_code: string;
+  role?: string;
+  label?: string;
+  expires_in_days?: number;
+  max_uses?: number;
+  auto_approve?: boolean;
+};
+
+export type InviteCreateResponse = {
+  message: string;
+  invite: InviteItem;
+};
+
+export type InviteInfoResponse = {
+  ec_name: string;
+  ec_id: number;
+  country_code: string;
+  role: string;
+  label?: string | null;
+  expires_at: string;
+  auto_approve: boolean;
+  valid: boolean;
+};
+
+export type InviteOTPVerifyResponse = {
+  action: "dashboard" | "pending";
+  auto_approved: boolean;
+};
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+
+export type ECActivityItem = {
+  ec_id: number;
+  ec_name: string;
+  country_code: string;
+  agent_count: number;
+  cases_30d: number;
+  last_case_at?: string | null;
+};
+
+export type AgentActivityItem = {
+  user_id: number;
+  full_name: string;
+  email: string;
+  ec_name?: string | null;
+  role: string;
+  cases_30d: number;
+  last_login_at?: string | null;
+  last_case_at?: string | null;
+};
+
+export type ActivitySummary = {
+  total_active_agents: number;
+  total_cases_30d: number;
+  active_ecs: number;
+  pending_approvals: number;
+};
+
+export type ActivityResponse = {
+  generated_at: string;
+  summary: ActivitySummary;
+  by_ec: ECActivityItem[];
+  top_agents: AgentActivityItem[];
+};
+
 // ── Cases ─────────────────────────────────────────────────────────────────────
 
 export type CaseType = "repair" | "frp" | "return" | "theft";
