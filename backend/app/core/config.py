@@ -58,6 +58,11 @@ class Settings(BaseSettings):
     # Job card notifications — comma-separated recipient emails; leave empty to disable
     notify_new_case_emails: str = ""
 
+    # First-run admin bootstrap — set this to your email on first deploy.
+    # On startup, if no watu_admin exists yet, this email is created/promoted automatically.
+    # Remove after first login.
+    bootstrap_admin_email: str = ""
+
     # Google Sheets sync (Phase 4) — leave unset to disable
     # GOOGLE_SHEETS_CREDENTIALS_JSON: base64-encoded service account JSON key
     google_sheets_credentials_json: str | None = None

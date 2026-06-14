@@ -1,11 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { approveUser, getAuthStatus, listAdminUsers, suspendUser } from "@/lib/api";
-import { AdminUserItem, AdminUserListResponse } from "@/lib/types";
+import { approveUser, createAdminUser, getAuthStatus, getECLocations, listAdminUsers, suspendUser } from "@/lib/api";
+import { AdminUserItem, AdminUserListResponse, ECLocationItem } from "@/lib/types";
 
 type StatusFilter = "all" | "pending" | "approved" | "suspended";
+
+const ROLES = [
+  { value: "ec_agent", label: "EC Agent" },
+  { value: "ec_manager", label: "EC Manager" },
+  { value: "watu_ops", label: "Watu Ops" },
+  { value: "watu_admin", label: "Watu Admin" },
+];
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Pending",
@@ -28,11 +35,21 @@ function formatDate(iso: string | null | undefined): string {
 export default function AdminUsersPage() {
   const router = useRouter();
   const [data, setData] = useState<AdminUserListResponse | null>(null);
+  const [locations, setLocations] = useState<ECLocationItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<StatusFilter>("pending");
+  const [filter, setFilter] = useState<StatusFilter>("approved");
   const [actioning, setActioning] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Create user form state
+  const [showCreate, setShowCreate] = useState(false);
+  const [createEmail, setCreateEmail] = useState("");
+  const [createName, setCreateName] = useState("");
+  const [createRole, setCreateRole] = useState("ec_agent");
+  const [createLocationId, setCreateLocationId] = useState("");
+  const [createCountry, setCreateCountry] = useState("");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     async function init() {
@@ -50,7 +67,8 @@ export default function AdminUsersPage() {
         router.replace("/login");
         return;
       }
-      await reload();
+      const [, locs] = await Promise.all([reload(), getECLocations()]);
+      setLocations(locs.locations);
     }
     void init();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,6 +89,40 @@ export default function AdminUsersPage() {
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
+  }
+
+  async function handleCreate(e: FormEvent) {
+    e.preventDefault();
+    const locId = parseInt(createLocationId, 10);
+    if (!createEmail || !createName || !createCountry || !locId) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const res = await createAdminUser({
+        email: createEmail.trim(),
+        full_name: createName.trim(),
+        role: createRole,
+        ec_location_id: locId,
+        country_code: createCountry,
+      });
+      showToast(res.message);
+      setData((prev) =>
+        prev
+          ? { ...prev, users: [res.user, ...prev.users], total: prev.total + 1 }
+          : prev
+      );
+      setCreateEmail("");
+      setCreateName("");
+      setCreateRole("ec_agent");
+      setCreateLocationId("");
+      setCreateCountry("");
+      setShowCreate(false);
+      setFilter("approved");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not create user.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function handleApprove(user: AdminUserItem) {
@@ -141,10 +193,82 @@ export default function AdminUsersPage() {
             <span className="admin-brand-mark" aria-hidden="true" />
             <div>
               <h1 className="admin-title">User Management</h1>
-              <p className="admin-subtitle">Approve or suspend EC agent registrations</p>
+              <p className="admin-subtitle">Create and manage EC agent accounts</p>
             </div>
           </div>
+          <button
+            className="admin-action-btn admin-action-approve"
+            type="button"
+            onClick={() => setShowCreate((v) => !v)}
+          >
+            {showCreate ? "Cancel" : "+ Add user"}
+          </button>
         </div>
+
+        {showCreate && (
+          <div className="admin-card">
+            <h2 className="admin-section-title">Create user</h2>
+            <form className="invite-form" onSubmit={handleCreate}>
+              <div className="invite-form-row">
+                <input
+                  className="admin-input"
+                  inputMode="email"
+                  placeholder="Email address"
+                  required
+                  type="email"
+                  value={createEmail}
+                  onChange={(e) => setCreateEmail(e.target.value)}
+                />
+                <input
+                  className="admin-input"
+                  placeholder="Full name"
+                  required
+                  type="text"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                />
+              </div>
+              <div className="invite-form-row">
+                <select
+                  className="admin-input"
+                  required
+                  value={createRole}
+                  onChange={(e) => setCreateRole(e.target.value)}
+                >
+                  {ROLES.map((r) => (
+                    <option key={r.value} value={r.value}>{r.label}</option>
+                  ))}
+                </select>
+                <select
+                  className="admin-input"
+                  required
+                  value={createLocationId}
+                  onChange={(e) => {
+                    setCreateLocationId(e.target.value);
+                    const loc = locations.find((l) => l.id === parseInt(e.target.value, 10));
+                    if (loc) setCreateCountry(loc.country_code);
+                  }}
+                >
+                  <option value="">Select EC location…</option>
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name} ({loc.country_code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="invite-form-footer">
+                <button
+                  className="admin-action-btn admin-action-approve"
+                  disabled={creating}
+                  type="submit"
+                >
+                  {creating ? "Creating…" : "Create user"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {error && <p className="auth-error" role="alert">{error}</p>}
         {toast && <p className="admin-toast" role="status">{toast}</p>}

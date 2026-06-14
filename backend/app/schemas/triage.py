@@ -53,6 +53,7 @@ class WarrantyNextResponse(BaseModel):
     wty_exception: str | None = None
     needs_review: bool = False
     auto_skipped: bool = False
+    total_questions: int = 0
 
 
 class DispatchRouteRequest(BaseModel):

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.models import AppUser
-from app.schemas.admin import AdminUserItem, AdminUserListResponse
+from app.schemas.admin import AdminCreateUserRequest, AdminUserItem, AdminUserListResponse
 
 
 def _to_item(user: AppUser) -> AdminUserItem:
@@ -63,6 +63,29 @@ def suspend_user(db: Session, user_id: int, admin: AppUser) -> AppUser:
     if user.id == admin.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot change your own status.")
     user.approval_status = "suspended"
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def create_user_direct(db: Session, payload: AdminCreateUserRequest, admin: AppUser) -> AppUser:
+    email = payload.email.lower().strip()
+    existing = db.scalar(select(AppUser).where(AppUser.email == email))
+    if existing is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"{email} is already registered.")
+    now = datetime.now(UTC)
+    user = AppUser(
+        google_sub=f"otp:{email}",
+        email=email,
+        full_name=payload.full_name.strip(),
+        role=payload.role,
+        country_code=payload.country_code.upper().strip(),
+        ec_location_id=payload.ec_location_id,
+        approval_status="approved",
+        approved_by_id=admin.id,
+        approved_at=now,
+    )
+    db.add(user)
     db.commit()
     db.refresh(user)
     return user

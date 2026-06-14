@@ -67,6 +67,7 @@ def evaluate_warranty(
         "wty_exception": None,
         "needs_review": False,
         "auto_skipped": False,
+        "total_questions": len(WARRANTY_QUESTIONS),
     }
 
 
@@ -79,6 +80,7 @@ def _complete(direction: WarrantyDirection, exception: str | None) -> dict:
         "wty_exception": exception,
         "needs_review": False,
         "auto_skipped": False,
+        "total_questions": len(WARRANTY_QUESTIONS),
     }
 
 
@@ -91,6 +93,7 @@ def _auto_iw() -> dict:
         "wty_exception": None,
         "needs_review": False,
         "auto_skipped": True,
+        "total_questions": len(WARRANTY_QUESTIONS),
     }
 
 
@@ -103,4 +106,5 @@ def _needs_review() -> dict:
         "wty_exception": None,
         "needs_review": True,
         "auto_skipped": False,
+        "total_questions": len(WARRANTY_QUESTIONS),
     }

@@ -3,6 +3,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from datetime import UTC, datetime
+
+from sqlalchemy import select
+
 from app.api.routes.admin import router as admin_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.cases import router as cases_router
@@ -71,8 +75,8 @@ def _check_production_security(s: type) -> None:
         issues.append("JWT_SECRET is the default dev value — set a strong random secret")
     if not s.auth_cookie_secure:
         issues.append("AUTH_COOKIE_SECURE=false in production — cookies can be stolen over HTTP")
-    if not s.google_client_id or not s.google_client_secret:
-        issues.append("GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET unset — OAuth login will fail")
+    if not s.smtp_user or not s.smtp_password:
+        issues.append("SMTP_USER / SMTP_PASSWORD unset — OTP emails will not be delivered")
     if "*" in s.cors_origins:
         issues.append("CORS_ORIGINS contains wildcard '*' — restricts to your Vercel domain instead")
     for msg in issues:
@@ -123,7 +127,44 @@ async def lifespan(app: FastAPI):
         raise RuntimeError("Workflow validation failed during startup.")
     if settings.strict_data_integrity_validation and integrity_report.error_count > 0:
         raise RuntimeError("Data integrity validation failed during startup.")
+
+    _bootstrap_admin(settings)
     yield
+
+
+def _bootstrap_admin(s: type) -> None:
+    """Create or promote the first watu_admin if BOOTSTRAP_ADMIN_EMAIL is set."""
+    from app.models.models import AppUser
+
+    email = (s.bootstrap_admin_email or "").lower().strip()
+    if not email:
+        return
+    with SessionLocal() as db:
+        existing_admin = db.scalar(
+            select(AppUser).where(AppUser.role == "watu_admin").where(AppUser.approval_status == "approved")
+        )
+        if existing_admin and existing_admin.email != email:
+            logger.info("bootstrap_admin: admin already exists (%s), skipping", existing_admin.email)
+            return
+        user = db.scalar(select(AppUser).where(AppUser.email == email))
+        if user is None:
+            user = AppUser(
+                google_sub=f"otp:{email}",
+                email=email,
+                full_name="Admin",
+                role="watu_admin",
+                approval_status="approved",
+                approved_at=datetime.now(UTC),
+            )
+            db.add(user)
+            db.commit()
+            logger.info("bootstrap_admin: created watu_admin account for %s", email)
+        elif user.role != "watu_admin" or user.approval_status != "approved":
+            user.role = "watu_admin"
+            user.approval_status = "approved"
+            user.approved_at = datetime.now(UTC)
+            db.commit()
+            logger.info("bootstrap_admin: promoted %s to watu_admin", email)
 
 
 app = FastAPI(title=settings.app_name, version=settings.api_version, lifespan=lifespan)

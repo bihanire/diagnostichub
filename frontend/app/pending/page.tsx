@@ -71,7 +71,7 @@ export default function PendingPage() {
 
         <p className="auth-body" style={{ marginTop: "1rem" }}>
           Once approved you will be able to sign in and access the full platform.
-          You do not need to re-register — just come back and sign in with the same Google account.
+          You do not need to re-register — just come back and sign in with your work email address.
         </p>
 
         <button
