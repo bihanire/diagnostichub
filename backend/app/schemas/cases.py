@@ -71,6 +71,7 @@ class CaseResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     submitted_at: datetime | None
+    ec_location_name: str | None = None
     notes: list["CaseNoteItem"] = []
 
 
@@ -92,6 +93,9 @@ class CaseNoteCreate(BaseModel):
 class CaseListResponse(BaseModel):
     cases: list[CaseResponse]
     total: int
+    page: int = 1
+    per_page: int = 20
+    total_pages: int = 1
 
 
 class CaseStatsResponse(BaseModel):

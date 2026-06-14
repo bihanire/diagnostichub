@@ -70,11 +70,51 @@ def create_case(db: Session, user: AppUser, payload: CaseCreateRequest) -> Case:
 _CROSS_EC_ROLES = frozenset({"watu_ops", "watu_admin"})
 
 
-def list_cases_for_location(db: Session, user: AppUser) -> list[Case]:
-    stmt = select(Case).order_by(Case.created_at.desc())
+def list_cases(
+    db: Session,
+    user: AppUser,
+    *,
+    status: str | None = None,
+    q: str | None = None,
+    ec_location_id: int | None = None,
+    page: int = 1,
+    per_page: int = 20,
+) -> tuple[list[Case], int]:
+    from sqlalchemy import or_
+
+    page = max(1, page)
+    per_page = min(max(1, per_page), 100)
+
+    base = select(Case)
     if user.role not in _CROSS_EC_ROLES:
-        stmt = stmt.where(Case.ec_location_id == user.ec_location_id)
-    return list(db.scalars(stmt).all())
+        base = base.where(Case.ec_location_id == user.ec_location_id)
+    elif ec_location_id is not None:
+        base = base.where(Case.ec_location_id == ec_location_id)
+
+    if status:
+        base = base.where(Case.status == status)
+
+    if q:
+        term = f"%{q.strip()}%"
+        base = base.where(
+            or_(
+                Case.reference.ilike(term),
+                Case.client_name.ilike(term),
+                Case.device_imei.ilike(term),
+                Case.device_model.ilike(term),
+            )
+        )
+
+    count_stmt = base.with_only_columns(func.count(Case.id)).order_by(None)
+    total = db.scalar(count_stmt) or 0
+    cases = list(
+        db.scalars(
+            base.order_by(Case.created_at.desc())
+                .offset((page - 1) * per_page)
+                .limit(per_page)
+        ).all()
+    )
+    return cases, total
 
 
 def get_case_stats_for_location(db: Session, user: AppUser) -> CaseStatsResponse:
@@ -141,19 +181,21 @@ def update_case_status(
     return case
 
 
-def to_case_response(case: Case) -> CaseResponse:
+def to_case_response(case: Case, include_notes: bool = True) -> CaseResponse:
     data = CaseResponse.model_validate(case)
-    data.notes = [
-        CaseNoteItem(
-            id=n.id,
-            case_id=n.case_id,
-            user_id=n.user_id,
-            author_name=n.user.full_name if n.user else "Unknown",
-            note=n.note,
-            created_at=n.created_at,
-        )
-        for n in (case.case_notes or [])
-    ]
+    data.ec_location_name = case.ec_location.name if case.ec_location else None
+    if include_notes:
+        data.notes = [
+            CaseNoteItem(
+                id=n.id,
+                case_id=n.case_id,
+                user_id=n.user_id,
+                author_name=n.user.full_name if n.user else "Unknown",
+                note=n.note,
+                created_at=n.created_at,
+            )
+            for n in (case.case_notes or [])
+        ]
     return data
 
 

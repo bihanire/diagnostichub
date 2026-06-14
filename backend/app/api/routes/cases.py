@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import math
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -20,7 +22,7 @@ from app.services.case_service import (
     create_case,
     get_case_by_reference,
     get_case_stats_for_location,
-    list_cases_for_location,
+    list_cases,
     to_case_response,
     update_case_status,
 )
@@ -45,14 +47,28 @@ def submit_case(
 
 
 @router.get("", response_model=CaseListResponse)
-def list_cases(
+def get_cases(
     db: Session = Depends(get_db),
     user: AppUser = Depends(get_current_user),
+    status: str | None = Query(default=None),
+    q: str | None = Query(default=None),
+    ec_location_id: int | None = Query(default=None),
+    page: int = Query(default=1, ge=1),
+    per_page: int = Query(default=20, ge=1, le=100),
 ) -> CaseListResponse:
-    cases = list_cases_for_location(db, user)
+    if ec_location_id is not None and user.role not in ("watu_ops", "watu_admin"):
+        ec_location_id = None  # non-admin cannot filter by EC
+    cases, total = list_cases(
+        db, user, status=status, q=q, ec_location_id=ec_location_id,
+        page=page, per_page=per_page,
+    )
+    total_pages = max(1, math.ceil(total / per_page))
     return CaseListResponse(
-        cases=[to_case_response(c) for c in cases],
-        total=len(cases),
+        cases=[to_case_response(c, include_notes=False) for c in cases],
+        total=total,
+        page=page,
+        per_page=per_page,
+        total_pages=total_pages,
     )
 
 

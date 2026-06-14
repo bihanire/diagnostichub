@@ -26,6 +26,7 @@ from app.services.invite_service import (
     is_invite_valid,
     register_via_invite,
 )
+from app.services.email_service import send_account_ready_email
 from app.services.otp_service import (
     generate_and_store_otp,
     get_registered_user,
@@ -198,6 +199,7 @@ def invite_otp_verify(
             samesite="lax",
             secure=settings.auth_cookie_secure,
         )
+        send_account_ready_email(user, settings)
         return InviteOTPVerifyResponse(action="dashboard", auto_approved=True)
 
     return InviteOTPVerifyResponse(action="pending")

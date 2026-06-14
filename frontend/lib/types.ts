@@ -736,6 +736,7 @@ export type CaseResponse = {
   created_at: string;
   updated_at: string;
   submitted_at?: string | null;
+  ec_location_name?: string | null;
   notes?: CaseNote[];
 };
 
@@ -751,6 +752,9 @@ export type CaseNote = {
 export type CaseListResponse = {
   cases: CaseResponse[];
   total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
 };
 
 export type CaseStatsResponse = {

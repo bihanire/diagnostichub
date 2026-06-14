@@ -600,8 +600,23 @@ export function submitCase(payload: CaseCreateRequest): Promise<CaseResponse> {
   });
 }
 
-export function listCases(): Promise<CaseListResponse> {
-  return apiRequest<CaseListResponse>("/cases", { credentials: "include" });
+export type CaseListParams = {
+  status?: string;
+  q?: string;
+  ec_location_id?: number;
+  page?: number;
+  per_page?: number;
+};
+
+export function listCases(params: CaseListParams = {}): Promise<CaseListResponse> {
+  const qs = new URLSearchParams();
+  if (params.status) qs.set("status", params.status);
+  if (params.q) qs.set("q", params.q);
+  if (params.ec_location_id != null) qs.set("ec_location_id", String(params.ec_location_id));
+  if (params.page != null) qs.set("page", String(params.page));
+  if (params.per_page != null) qs.set("per_page", String(params.per_page));
+  const suffix = qs.size > 0 ? `?${qs.toString()}` : "";
+  return apiRequest<CaseListResponse>(`/cases${suffix}`, { credentials: "include" });
 }
 
 export function getCaseStats(): Promise<CaseStatsResponse> {
