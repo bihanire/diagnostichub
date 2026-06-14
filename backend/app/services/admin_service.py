@@ -4,8 +4,10 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.models import AppUser
 from app.schemas.admin import AdminCreateUserRequest, AdminUserItem, AdminUserListResponse
+from app.services.email_service import send_account_ready_email
 
 
 def _to_item(user: AppUser) -> AdminUserItem:
@@ -53,6 +55,7 @@ def approve_user(db: Session, user_id: int, admin: AppUser) -> AppUser:
     user.approved_at = datetime.now(UTC)
     db.commit()
     db.refresh(user)
+    send_account_ready_email(user, get_settings())
     return user
 
 
@@ -88,4 +91,5 @@ def create_user_direct(db: Session, payload: AdminCreateUserRequest, admin: AppU
     db.add(user)
     db.commit()
     db.refresh(user)
+    send_account_ready_email(user, get_settings())
     return user

@@ -132,6 +132,12 @@ def update_case_status(
         from app.services.aramex_service import fire_dispatch_webhook
         fire_dispatch_webhook(case)
 
+    agent = case.created_by
+    if agent and agent.email:
+        from app.core.config import get_settings
+        from app.services.email_service import send_case_status_email
+        send_case_status_email(case, new_status, agent.email, agent.full_name, get_settings())
+
     return case
 
 

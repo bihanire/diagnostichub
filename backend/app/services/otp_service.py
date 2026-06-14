@@ -1,16 +1,14 @@
 import hashlib
 import logging
 import random
-import smtplib
 from datetime import UTC, datetime, timedelta
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import Settings, get_settings
 from app.models.models import AppUser, OTPRequest
+from app.services.email_service import smtp_send
 
 logger = logging.getLogger(__name__)
 
@@ -100,34 +98,24 @@ def send_otp_email(
     settings: Settings,
     full_name: str | None = None,
 ) -> None:
-    subject = "Verification Code for Support Portal"
-    plain = (
-        f"Your one-time login code is: {code}\n\n"
-        f"It expires in {settings.otp_expiry_minutes} minutes. "
-        f"Do not share this code with anyone."
-    )
-    html = _otp_html(full_name, code, settings.otp_expiry_minutes)
-
     if not settings.smtp_user or not settings.smtp_password:
         if settings.otp_dev_log:
             logger.info("OTP for %s: %s", email, code)
         return
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = settings.smtp_from
-    msg["To"] = email
-    msg.attach(MIMEText(plain, "plain"))
-    msg.attach(MIMEText(html, "html"))
-
-    try:
-        with smtplib.SMTP(settings.smtp_host, settings.smtp_port) as smtp:
-            smtp.starttls()
-            smtp.login(settings.smtp_user, settings.smtp_password)
-            smtp.send_message(msg)
-    except Exception:
-        logger.exception("Failed to send OTP email to %s", email)
-        raise
+    plain = (
+        f"Your one-time login code is: {code}\n\n"
+        f"It expires in {settings.otp_expiry_minutes} minutes. "
+        f"Do not share this code with anyone."
+    )
+    smtp_send(
+        recipients=[email],
+        subject="Verification Code for Support Portal",
+        html=_otp_html(full_name, code, settings.otp_expiry_minutes),
+        plain=plain,
+        settings=settings,
+        raise_on_failure=True,
+    )
 
 
 def verify_otp(email: str, code: str, db: Session) -> bool:
