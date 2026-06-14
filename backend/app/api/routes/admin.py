@@ -33,6 +33,7 @@ from app.services.invite_service import (
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 _admin_only = require_role("watu_admin")
+_ops_or_admin = require_role("watu_admin", "watu_ops")
 
 
 # ── Users ─────────────────────────────────────────────────────────────────────
@@ -131,6 +132,6 @@ def revoke_invite_link(
 @router.get("/activity", response_model=ActivityResponse)
 def get_activity_dashboard(
     db: Session = Depends(get_db),
-    _admin: AppUser = Depends(_admin_only),
+    _user: AppUser = Depends(_ops_or_admin),
 ) -> ActivityResponse:
     return get_activity(db)

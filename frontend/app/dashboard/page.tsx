@@ -87,6 +87,8 @@ export default function DashboardPage() {
           <p className="dashboard-welcome-body">
             {user?.ec_location
               ? `You are registered at ${user.ec_location.name}, ${user.ec_location.city}.`
+              : user?.role === "watu_ops" || user?.role === "watu_admin"
+              ? "You have access to all Experience Centers."
               : "Your Experience Center is not yet linked. Contact your Watu administrator."}
           </p>
         </section>
@@ -145,8 +147,8 @@ export default function DashboardPage() {
             type="button"
           >
             <span className="dashboard-action-icon" aria-hidden="true">&#9776;</span>
-            <strong>My cases</strong>
-            <span>View and manage job cards from your EC</span>
+            <strong>{user?.role === "watu_ops" || user?.role === "watu_admin" ? "All cases" : "My cases"}</strong>
+            <span>{user?.role === "watu_ops" || user?.role === "watu_admin" ? "View and search job cards across all ECs" : "View and manage job cards from your EC"}</span>
           </button>
 
           <button
@@ -179,6 +181,18 @@ export default function DashboardPage() {
             <span>Your role, EC location, and sign out</span>
           </button>
 
+          {(user?.role === "watu_admin" || user?.role === "watu_ops") && (
+            <button
+              className="dashboard-action-card dashboard-action-admin"
+              onClick={() => router.push("/admin/activity")}
+              type="button"
+            >
+              <span className="dashboard-action-icon" aria-hidden="true">&#9641;</span>
+              <strong>Activity dashboard</strong>
+              <span>EC volumes, agent activity, and case trends (last 30d)</span>
+            </button>
+          )}
+
           {user?.role === "watu_admin" && (
             <button
               className="dashboard-action-card dashboard-action-admin"
@@ -186,7 +200,7 @@ export default function DashboardPage() {
               type="button"
             >
               <span className="dashboard-action-icon" aria-hidden="true">&#9646;&#9646;</span>
-              <strong>User approvals</strong>
+              <strong>User management</strong>
               <span>Create, approve, and manage EC agent accounts</span>
             </button>
           )}

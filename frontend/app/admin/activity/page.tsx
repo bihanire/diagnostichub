@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { getActivity, getAuthStatus } from "@/lib/api";
-import type { ActivityResponse } from "@/lib/types";
+import type { ActivityResponse, AppUser } from "@/lib/types";
 
 const ROLE_LABELS: Record<string, string> = {
   ec_agent: "Agent",
@@ -32,8 +32,11 @@ function formatDate(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString("en-UG", { dateStyle: "medium" });
 }
 
+const OPS_ROLES = new Set(["watu_admin", "watu_ops"]);
+
 export default function ActivityPage() {
   const router = useRouter();
+  const [user, setUser] = useState<AppUser | null>(null);
   const [data, setData] = useState<ActivityResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,8 @@ export default function ActivityPage() {
       try {
         const auth = await getAuthStatus();
         if (!auth.authenticated) { router.replace("/login"); return; }
-        if (auth.user?.role !== "watu_admin") { router.replace("/dashboard"); return; }
+        if (!auth.user || !OPS_ROLES.has(auth.user.role)) { router.replace("/dashboard"); return; }
+        setUser(auth.user);
       } catch { router.replace("/login"); return; }
 
       try {
@@ -62,9 +66,12 @@ export default function ActivityPage() {
       <div className="admin-subnav">
         <a href="/dashboard" className="admin-subnav-back">← Dashboard</a>
         <div className="admin-subnav-links">
-          <a href="/admin/users" className="admin-subnav-link">Users</a>
-          <a href="/admin/invites" className="admin-subnav-link">Invites</a>
-          <a href="/admin/allowed-emails" className="admin-subnav-link">Allowlist</a>
+          {user?.role === "watu_admin" && (
+            <>
+              <a href="/admin/users" className="admin-subnav-link">Users</a>
+              <a href="/admin/invites" className="admin-subnav-link">Invites</a>
+            </>
+          )}
           <a href="/admin/activity" className="admin-subnav-link admin-subnav-active">Activity</a>
         </div>
       </div>

@@ -179,7 +179,6 @@ export default function AdminUsersPage() {
         <div className="admin-subnav-links">
           <a href="/admin/users" className="admin-subnav-link admin-subnav-active">Users</a>
           <a href="/admin/invites" className="admin-subnav-link">Invites</a>
-          <a href="/admin/allowed-emails" className="admin-subnav-link">Allowlist</a>
           <a href="/admin/activity" className="admin-subnav-link">Activity</a>
         </div>
         {data && data.pending_count > 0 && (
