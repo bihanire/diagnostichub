@@ -536,8 +536,8 @@ export function addAllowedEmail(email: string, notes?: string): Promise<AllowedE
   });
 }
 
-export function removeAllowedEmail(id: number): Promise<void> {
-  return apiRequest<void>(`/admin/allowed-emails/${id}`, {
+export function removeAllowedEmail(id: number): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>(`/admin/allowed-emails/${id}`, {
     method: "DELETE",
     credentials: "include",
   });

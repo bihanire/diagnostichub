@@ -84,14 +84,16 @@ def add_allowed_email(
     return AllowedEmailAddResponse(message=f"{email} added to allowlist.", item=AllowedEmailItem.model_validate(entry))
 
 
-@router.delete("/allowed-emails/{entry_id}", status_code=204)
+@router.delete("/allowed-emails/{entry_id}")
 def remove_allowed_email(
     entry_id: int,
     db: Session = Depends(get_db),
     _admin: AppUser = Depends(_admin_only),
-) -> None:
+) -> dict[str, str]:
     entry = db.get(AllowedEmail, entry_id)
     if entry is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found.")
+    email = entry.email
     db.delete(entry)
     db.commit()
+    return {"message": f"{email} removed from allowlist."}

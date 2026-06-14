@@ -49,6 +49,7 @@ class OTPRequestResponse(BaseModel):
 
 class OTPVerifyResponse(BaseModel):
     action: str  # "dashboard" | "register" | "pending"
+    needs_name: bool = False
 
 
 class AuthStatusResponse(BaseModel):

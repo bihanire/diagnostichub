@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     otp_expiry_minutes: int = 3
     otp_dev_log: bool = True  # log OTP to console when SMTP unconfigured
 
+    # Job card notifications — comma-separated recipient emails; leave empty to disable
+    notify_new_case_emails: str = ""
+
     # Google Sheets sync (Phase 4) — leave unset to disable
     # GOOGLE_SHEETS_CREDENTIALS_JSON: base64-encoded service account JSON key
     google_sheets_credentials_json: str | None = None

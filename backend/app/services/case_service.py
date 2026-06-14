@@ -61,6 +61,9 @@ def create_case(db: Session, user: AppUser, payload: CaseCreateRequest) -> Case:
     from app.services.sheets_service import append_case_row
     append_case_row(case)
 
+    from app.services.notification_service import send_new_case_notification
+    send_new_case_notification(case)
+
     return case
 
 

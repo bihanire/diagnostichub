@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-import { getAuthStatus, getECLocations, registerUser } from "@/lib/api";
+import { getECLocations, registerUser } from "@/lib/api";
 import type { ECLocationItem } from "@/lib/types";
 
 const COUNTRY_OPTIONS = [
@@ -19,24 +19,17 @@ const COUNTRY_OPTIONS = [
 
 export default function RegisterPage() {
   const router = useRouter();
+  const params = useSearchParams();
+  const needsName = params?.get("needs_name") === "1";
   const [locations, setLocations] = useState<ECLocationItem[]>([]);
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("UGA");
   const [fullName, setFullName] = useState("");
-  const [needsName, setNeedsName] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingLocations, setLoadingLocations] = useState(true);
 
   useEffect(() => {
-    // Detect OTP user: if current user has no full_name, show the name field
-    getAuthStatus()
-      .then((s) => {
-        if (!s.authenticated || !s.user) return;
-        if (!s.user.full_name) setNeedsName(true);
-      })
-      .catch(() => null);
-
     getECLocations()
       .then((r) => setLocations(r.locations))
       .catch(() => setError("Could not load EC locations. Try refreshing the page."))

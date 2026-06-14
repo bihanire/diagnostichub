@@ -68,7 +68,7 @@ export default function LoginPage() {
       if (result.action === "dashboard") {
         router.replace("/dashboard");
       } else if (result.action === "register") {
-        router.replace("/register");
+        router.replace(result.needs_name ? "/register?needs_name=1" : "/register");
       } else {
         router.replace("/pending");
       }

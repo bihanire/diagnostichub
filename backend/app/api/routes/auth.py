@@ -230,6 +230,7 @@ def otp_verify(
 
     # pending — needs registration if no name / location yet
     if not user.full_name or user.ec_location_id is None:
+        needs_name = not bool(user.full_name)
         reg_token = issue_reg_token(user.google_sub, user.email, user.full_name or "")
         response.set_cookie(
             key=settings.auth_reg_cookie_name,
@@ -239,6 +240,6 @@ def otp_verify(
             samesite="lax",
             secure=settings.auth_cookie_secure,
         )
-        return OTPVerifyResponse(action="register")
+        return OTPVerifyResponse(action="register", needs_name=needs_name)
 
     return OTPVerifyResponse(action="pending")

@@ -580,6 +580,7 @@ export type RegisterRequest = {
 
 export type OTPVerifyResponse = {
   action: "dashboard" | "register" | "pending";
+  needs_name?: boolean;
 };
 
 export type AllowedEmailItem = {
