@@ -64,14 +64,8 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const result = await verifyOtp(email.trim(), code.trim());
-      if (result.action === "dashboard") {
-        router.replace("/dashboard");
-      } else if (result.action === "register") {
-        router.replace(result.needs_name ? "/register?needs_name=1" : "/register");
-      } else {
-        router.replace("/pending");
-      }
+      await verifyOtp(email.trim(), code.trim());
+      router.replace("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Verification failed. Try again.");
       setSubmitting(false);

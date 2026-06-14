@@ -404,8 +404,8 @@ export default function PlaybookPage() {
     <div className="pb-page">
       <div className="pb-shell">
         <div className="pb-header">
-          <button className="case-back-btn" onClick={() => router.push("/dashboard")} type="button">
-            ← Dashboard
+          <button className="case-back-btn" onClick={() => router.back()} type="button">
+            ← Back
           </button>
           <div>
             <h1 className="pb-title">EC Playbook</h1>

@@ -399,6 +399,7 @@ export type WarrantyNextResponse = {
   wty_exception: string | null;
   needs_review: boolean;
   auto_skipped: boolean;
+  total_questions: number;
 };
 
 export type TriageSession = {
@@ -572,32 +573,8 @@ export type AuthStatusResponse = {
   user?: AppUser | null;
 };
 
-export type RegisterRequest = {
-  ec_location_id: number;
-  country_code: string;
-  full_name?: string;
-};
-
 export type OTPVerifyResponse = {
-  action: "dashboard" | "register" | "pending";
-  needs_name?: boolean;
-};
-
-export type AllowedEmailItem = {
-  id: number;
-  email: string;
-  notes?: string | null;
-  created_at: string;
-};
-
-export type AllowedEmailListResponse = {
-  emails: AllowedEmailItem[];
-  total: number;
-};
-
-export type AllowedEmailAddResponse = {
-  message: string;
-  item: AllowedEmailItem;
+  action: "dashboard";
 };
 
 // ── Invites ───────────────────────────────────────────────────────────────────
@@ -759,6 +736,16 @@ export type CaseResponse = {
   created_at: string;
   updated_at: string;
   submitted_at?: string | null;
+  notes?: CaseNote[];
+};
+
+export type CaseNote = {
+  id: number;
+  case_id: number;
+  user_id: number;
+  author_name: string;
+  note: string;
+  created_at: string;
 };
 
 export type CaseListResponse = {
@@ -802,6 +789,19 @@ export type AdminUserListResponse = {
 };
 
 export type AdminActionResponse = {
+  message: string;
+  user: AdminUserItem;
+};
+
+export type AdminCreateUserRequest = {
+  email: string;
+  full_name: string;
+  role: string;
+  ec_location_id: number;
+  country_code: string;
+};
+
+export type AdminCreateUserResponse = {
   message: string;
   user: AdminUserItem;
 };

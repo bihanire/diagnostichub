@@ -385,6 +385,12 @@ export default function ResultPage() {
               Warranty direction could not be automatically confirmed. Escalate to your supervisor before dispatching.
             </p>
           ) : null}
+          <div className="triage-resource-bar">
+            <span>Procedure guide:</span>
+            <button className="sop-inline-link" onClick={() => router.push(warrantyVerdict === "IW" ? "/sop#iw-repair" : "/sop#oow-repair")} type="button">
+              {warrantyVerdict === "OW" ? "OOW Repair in SOP →" : "IW Repair in SOP →"}
+            </button>
+          </div>
         </div>
         <div className="result-copy motion-card stagger-item" style={{ animationDelay: "56ms" }}>
           <span className="eyebrow">Samsung taxonomy</span>
@@ -786,6 +792,12 @@ export default function ResultPage() {
             <p className="body-copy" style={{ marginTop: "10px" }}>
               {dispatchRouteData.route_note}
             </p>
+            <div className="triage-resource-bar">
+              <span>Packaging &amp; handover steps:</span>
+              <button className="sop-inline-link" onClick={() => router.push("/sop#dispatch")} type="button">
+                Aramex Dispatch guide →
+              </button>
+            </div>
           </>
         ) : (
           <p className="muted-copy">Loading routing…</p>

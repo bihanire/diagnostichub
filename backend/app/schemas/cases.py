@@ -71,6 +71,22 @@ class CaseResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     submitted_at: datetime | None
+    notes: list["CaseNoteItem"] = []
+
+
+class CaseNoteItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    case_id: int
+    user_id: int
+    author_name: str
+    note: str
+    created_at: datetime
+
+
+class CaseNoteCreate(BaseModel):
+    note: str
 
 
 class CaseListResponse(BaseModel):

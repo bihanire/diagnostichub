@@ -3,8 +3,8 @@ from datetime import UTC, datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.models.models import AppUser, Case, ECLocation
-from app.schemas.cases import CaseCreateRequest, CaseResponse, CaseStatsResponse
+from app.models.models import AppUser, Case, CaseNote, ECLocation
+from app.schemas.cases import CaseCreateRequest, CaseNoteCreate, CaseNoteItem, CaseResponse, CaseStatsResponse
 
 
 def _generate_reference(db: Session, ec_location_id: int, country_code: str) -> str:
@@ -136,4 +136,27 @@ def update_case_status(
 
 
 def to_case_response(case: Case) -> CaseResponse:
-    return CaseResponse.model_validate(case)
+    data = CaseResponse.model_validate(case)
+    data.notes = [
+        CaseNoteItem(
+            id=n.id,
+            case_id=n.case_id,
+            user_id=n.user_id,
+            author_name=n.user.full_name if n.user else "Unknown",
+            note=n.note,
+            created_at=n.created_at,
+        )
+        for n in (case.case_notes or [])
+    ]
+    return data
+
+
+def add_case_note(db: Session, case: Case, user: AppUser, payload: CaseNoteCreate) -> CaseNote:
+    note_text = payload.note.strip()
+    if not note_text:
+        raise ValueError("Note cannot be empty.")
+    note = CaseNote(case_id=case.id, user_id=user.id, note=note_text)
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    return note

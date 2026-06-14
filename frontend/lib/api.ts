@@ -1,14 +1,15 @@
 import {
   ActivityResponse,
   AdminActionResponse,
+  AdminCreateUserRequest,
+  AdminCreateUserResponse,
   AdminUserListResponse,
-  AllowedEmailAddResponse,
-  AllowedEmailListResponse,
   AppUser,
   AuthStatusResponse,
   BranchFeedbackBreakdownResponse,
   CaseCreateRequest,
   CaseListResponse,
+  CaseNote,
   CaseResponse,
   CaseStatsResponse,
   CaseStatusUpdateResponse,
@@ -33,7 +34,6 @@ import {
   OTPVerifyResponse,
   PartsPredictionResponse,
   ProcedureFeedbackBreakdownResponse,
-  RegisterRequest,
   RepairFamilyDetail,
   RepairFamilyLearningModule,
   RepairFamilySummary,
@@ -496,23 +496,12 @@ export function getECLocations(): Promise<ECLocationListResponse> {
   return apiRequest<ECLocationListResponse>("/auth/locations");
 }
 
-export function registerUser(payload: RegisterRequest): Promise<AuthStatusResponse> {
-  return apiRequest<AuthStatusResponse>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-    credentials: "include",
-  });
-}
 
 export function logoutUser(): Promise<{ message: string }> {
   return apiRequest<{ message: string }>("/auth/logout", {
     method: "POST",
     credentials: "include",
   });
-}
-
-export function getGoogleLoginUrl(): string {
-  return `${API_BASE_URL}/auth/google`;
 }
 
 export function requestOtp(email: string): Promise<{ message: string }> {
@@ -526,25 +515,6 @@ export function verifyOtp(email: string, code: string): Promise<OTPVerifyRespons
   return apiRequest<OTPVerifyResponse>("/auth/otp/verify", {
     method: "POST",
     body: JSON.stringify({ email, code }),
-    credentials: "include",
-  });
-}
-
-export function listAllowedEmails(): Promise<AllowedEmailListResponse> {
-  return apiRequest<AllowedEmailListResponse>("/admin/allowed-emails", { credentials: "include" });
-}
-
-export function addAllowedEmail(email: string, notes?: string): Promise<AllowedEmailAddResponse> {
-  return apiRequest<AllowedEmailAddResponse>("/admin/allowed-emails", {
-    method: "POST",
-    body: JSON.stringify({ email, notes: notes ?? null }),
-    credentials: "include",
-  });
-}
-
-export function removeAllowedEmail(id: number): Promise<{ message: string }> {
-  return apiRequest<{ message: string }>(`/admin/allowed-emails/${id}`, {
-    method: "DELETE",
     credentials: "include",
   });
 }
@@ -600,6 +570,14 @@ export function listAdminUsers(): Promise<AdminUserListResponse> {
   return apiRequest<AdminUserListResponse>("/admin/users", { credentials: "include" });
 }
 
+export function createAdminUser(payload: AdminCreateUserRequest): Promise<AdminCreateUserResponse> {
+  return apiRequest<AdminCreateUserResponse>("/admin/users", {
+    method: "POST",
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+}
+
 export function approveUser(userId: number): Promise<AdminActionResponse> {
   return apiRequest<AdminActionResponse>(`/admin/users/${userId}/approve`, {
     method: "POST",
@@ -647,6 +625,17 @@ export function updateCaseStatus(
       method: "PATCH",
       credentials: "include",
       body: JSON.stringify({ status, waybill_number: waybill_number ?? null }),
+    }
+  );
+}
+
+export function addCaseNote(reference: string, note: string): Promise<CaseNote> {
+  return apiRequest<CaseNote>(
+    `/cases/${encodeURIComponent(reference)}/notes`,
+    {
+      method: "POST",
+      credentials: "include",
+      body: JSON.stringify({ note }),
     }
   );
 }

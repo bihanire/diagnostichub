@@ -159,6 +159,26 @@ export default function DashboardPage() {
             <span>Warranty, FRP, returns, theft, PAYG unlocking</span>
           </button>
 
+          <button
+            className="dashboard-action-card dashboard-action-secondary"
+            onClick={() => router.push("/sop")}
+            type="button"
+          >
+            <span className="dashboard-action-icon" aria-hidden="true">&#9776;</span>
+            <strong>SOP</strong>
+            <span>Repairs, returns, theft, recovery, dispatch — step by step</span>
+          </button>
+
+          <button
+            className="dashboard-action-card dashboard-action-secondary"
+            onClick={() => router.push("/profile")}
+            type="button"
+          >
+            <span className="dashboard-action-icon" aria-hidden="true">&#9673;</span>
+            <strong>My account</strong>
+            <span>Your role, EC location, and sign out</span>
+          </button>
+
           {user?.role === "watu_admin" && (
             <button
               className="dashboard-action-card dashboard-action-admin"
@@ -167,7 +187,7 @@ export default function DashboardPage() {
             >
               <span className="dashboard-action-icon" aria-hidden="true">&#9646;&#9646;</span>
               <strong>User approvals</strong>
-              <span>Review and approve EC agent registrations</span>
+              <span>Create, approve, and manage EC agent accounts</span>
             </button>
           )}
         </div>

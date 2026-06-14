@@ -240,18 +240,25 @@ class Case(Base):
 
     ec_location: Mapped["ECLocation"] = relationship("ECLocation", foreign_keys=[ec_location_id], lazy="selectin")
     created_by: Mapped["AppUser"] = relationship("AppUser", foreign_keys=[created_by_id], lazy="selectin")
+    case_notes: Mapped[list["CaseNote"]] = relationship(
+        "CaseNote", back_populates="case", cascade="all, delete-orphan", lazy="selectin",
+        order_by="CaseNote.created_at.asc()",
+    )
 
 
-class AllowedEmail(Base):
-    __tablename__ = "allowed_emails"
+class CaseNote(Base):
+    __tablename__ = "case_notes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    email: Mapped[str] = mapped_column(String(200), unique=True, nullable=False, index=True)
-    notes: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    added_by_id: Mapped[int | None] = mapped_column(ForeignKey("app_users.id"), nullable=True)
+    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("app_users.id"), nullable=False)
+    note: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+    case: Mapped["Case"] = relationship("Case", back_populates="case_notes")
+    user: Mapped["AppUser"] = relationship("AppUser", foreign_keys=[user_id], lazy="selectin")
 
 
 class InviteToken(Base):

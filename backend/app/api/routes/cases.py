@@ -8,12 +8,15 @@ from app.models.models import AppUser
 from app.schemas.cases import (
     CaseCreateRequest,
     CaseListResponse,
+    CaseNoteCreate,
+    CaseNoteItem,
     CaseResponse,
     CaseStatsResponse,
     CaseStatusUpdateRequest,
     CaseStatusUpdateResponse,
 )
 from app.services.case_service import (
+    add_case_note,
     create_case,
     get_case_by_reference,
     get_case_stats_for_location,
@@ -90,6 +93,30 @@ def patch_case_status(
     return CaseStatusUpdateResponse(
         message=f"Case {reference} status updated to '{payload.status}'.",
         case=to_case_response(case),
+    )
+
+
+@router.post("/{reference}/notes", response_model=CaseNoteItem, status_code=201)
+def add_note(
+    reference: str,
+    payload: CaseNoteCreate,
+    db: Session = Depends(get_db),
+    user: AppUser = Depends(get_current_user),
+) -> CaseNoteItem:
+    case = get_case_by_reference(db, reference, user)
+    if case is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Case not found.")
+    try:
+        note = add_case_note(db, case, user, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return CaseNoteItem(
+        id=note.id,
+        case_id=note.case_id,
+        user_id=note.user_id,
+        author_name=note.user.full_name if note.user else user.full_name,
+        note=note.note,
+        created_at=note.created_at,
     )
 
 

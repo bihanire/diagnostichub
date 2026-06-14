@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getAuthStatus, getCase, updateCaseStatus } from "@/lib/api";
+import { addCaseNote, getApiBaseUrl, getAuthStatus, getCase, updateCaseStatus } from "@/lib/api";
 import { buildPreFillUrl } from "@/lib/googleForm";
 import { clearSession } from "@/lib/session";
-import { AppUser, CaseResponse } from "@/lib/types";
+import { AppUser, CaseNote, CaseResponse } from "@/lib/types";
 
 const CASE_TYPE_LABELS: Record<string, string> = {
   repair: "Repair",
@@ -35,6 +35,10 @@ export default function CaseDetailPage() {
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notes, setNotes] = useState<CaseNote[]>([]);
+  const [noteText, setNoteText] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
+  const [noteError, setNoteError] = useState<string | null>(null);
 
   // Status panel state
   const [statusAction, setStatusAction] = useState<"dispatch" | "cancel" | "close" | null>(null);
@@ -59,6 +63,7 @@ export default function CaseDetailPage() {
       try {
         const data = await getCase(reference);
         setCaseData(data);
+        setNotes(data.notes ?? []);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Case not found.");
       } finally {
@@ -103,6 +108,23 @@ export default function CaseDetailPage() {
     router.push("/dashboard");
   }
 
+  async function handleAddNote(e: FormEvent) {
+    e.preventDefault();
+    const text = noteText.trim();
+    if (!text) return;
+    setAddingNote(true);
+    setNoteError(null);
+    try {
+      const note = await addCaseNote(reference, text);
+      setNotes((prev) => [...prev, note]);
+      setNoteText("");
+    } catch (err) {
+      setNoteError(err instanceof Error ? err.message : "Failed to add note.");
+    } finally {
+      setAddingNote(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="case-page">
@@ -144,6 +166,12 @@ export default function CaseDetailPage() {
       {statusToast && <div className="cs-toast">{statusToast}</div>}
 
       <div className="case-card case-card-wide">
+
+        <div className="case-header">
+          <button className="case-back-btn" onClick={() => router.back()} type="button">
+            ← Back
+          </button>
+        </div>
 
         {/* Job card reference — the hero */}
         <div className="case-ref-hero">
@@ -329,13 +357,50 @@ export default function CaseDetailPage() {
           )}
         </div>
 
+        {/* Case notes */}
+        <div className="case-notes-section">
+          <h3 className="case-section-title">Notes</h3>
+          {notes.length === 0 ? (
+            <p className="case-notes-empty">No notes yet. Use notes to log follow-ups, courier updates, or anything relevant to this case.</p>
+          ) : (
+            <ul className="case-notes-list">
+              {notes.map((n) => (
+                <li key={n.id} className="case-note-item">
+                  <div className="case-note-meta">
+                    <span className="case-note-author">{n.author_name}</span>
+                    <span className="case-note-time">
+                      {new Date(n.created_at).toLocaleString("en-UG", { dateStyle: "medium", timeStyle: "short" })}
+                    </span>
+                  </div>
+                  <p className="case-note-body">{n.note}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form className="case-note-form" onSubmit={handleAddNote}>
+            <textarea
+              className="case-input case-textarea case-note-input"
+              placeholder="Add a note — courier reference, follow-up, customer update…"
+              rows={2}
+              maxLength={1000}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              disabled={addingNote}
+            />
+            {noteError && <p className="auth-error" role="alert">{noteError}</p>}
+            <button className="secondary-button" type="submit" disabled={addingNote || !noteText.trim()}>
+              {addingNote ? "Adding…" : "Add note"}
+            </button>
+          </form>
+        </div>
+
         <div className="case-action-row">
           <button className="secondary-button" onClick={() => router.push("/dashboard")} type="button">
             Back to dashboard
           </button>
           <a
             className="primary-button case-pdf-btn"
-            href={`${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000"}/cases/${reference}/pdf`}
+            href={`${getApiBaseUrl()}/cases/${reference}/pdf`}
             download={`${reference}.pdf`}
             target="_blank"
             rel="noreferrer"

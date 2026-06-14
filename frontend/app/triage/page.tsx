@@ -24,11 +24,12 @@ import {
 const INCOMPLETE_TRIAGE_RESPONSE =
   "The next diagnosis step came back incomplete. Please retry this answer or restart the flow.";
 
-// Must match the length of WARRANTY_QUESTIONS in backend/app/services/warranty_service.py
-const TOTAL_WARRANTY_QUESTIONS = 4;
+const INCOMPLETE_WARRANTY_RESPONSE =
+  "The warranty check returned an incomplete response. Please retry.";
 
 type ActiveWarrantyQuestion = {
   index: number;
+  total: number;
   question: string;
   answers: ("yes" | "no")[];
 };
@@ -167,6 +168,21 @@ function getValidatedTriageResponse(response: unknown): TriageNextResponse {
   };
 }
 
+function getValidatedWarrantyResponse(response: unknown): WarrantyNextResponse {
+  if (!isRecord(response) || (response.status !== "question" && response.status !== "complete")) {
+    throw new Error(INCOMPLETE_WARRANTY_RESPONSE);
+  }
+  if (typeof response.total_questions !== "number" || response.total_questions <= 0) {
+    throw new Error(INCOMPLETE_WARRANTY_RESPONSE);
+  }
+  if (response.status === "question") {
+    if (typeof response.question_index !== "number" || typeof response.question !== "string" || !response.question) {
+      throw new Error(INCOMPLETE_WARRANTY_RESPONSE);
+    }
+  }
+  return response as WarrantyNextResponse;
+}
+
 export default function TriagePage() {
   const router = useRouter();
   const [session, setSession] = useState<TriageSession | null>(null);
@@ -182,7 +198,9 @@ export default function TriagePage() {
     // Resume from saved answers if the session was partially answered before a refresh.
     const savedAnswers = activeSession.warrantyAnswers ?? [];
     try {
-      const response = await warrantyNext({ primary_t_code: tCode, answers: savedAnswers });
+      const response = getValidatedWarrantyResponse(
+        await warrantyNext({ primary_t_code: tCode, answers: savedAnswers })
+      );
       if (response.status === "complete") {
         const updatedSession = applyWarrantyResult(activeSession, response, savedAnswers);
         saveSession(updatedSession);
@@ -190,15 +208,13 @@ export default function TriagePage() {
         startTransition(() => {
           router.push("/result");
         });
-      } else if (response.question_index !== null && response.question) {
+      } else {
         setWarrantyQuestion({
-          index: response.question_index,
-          question: response.question,
+          index: response.question_index!,
+          total: response.total_questions,
+          question: response.question!,
           answers: savedAnswers
         });
-      } else {
-        // Malformed response: status=question but missing question_index or question text.
-        setError("Warranty check returned an incomplete response. Please retry.");
       }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Warranty check could not be started. Please retry.");
@@ -303,7 +319,9 @@ export default function TriagePage() {
     const tCode = session.procedure.primary_t_code || "";
 
     try {
-      const response = await warrantyNext({ primary_t_code: tCode, answers: newAnswers });
+      const response = getValidatedWarrantyResponse(
+        await warrantyNext({ primary_t_code: tCode, answers: newAnswers })
+      );
       if (response.status === "complete") {
         const updatedSession = applyWarrantyResult(session, response, newAnswers);
         saveSession(updatedSession);
@@ -312,10 +330,8 @@ export default function TriagePage() {
         startTransition(() => {
           router.push("/result");
         });
-      } else if (response.question_index !== null && response.question) {
-        setWarrantyQuestion({ index: response.question_index, question: response.question, answers: newAnswers });
       } else {
-        setError("Warranty check returned an incomplete response. Please retry.");
+        setWarrantyQuestion({ index: response.question_index!, total: response.total_questions, question: response.question!, answers: newAnswers });
       }
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Warranty check failed. Please retry.");
@@ -349,7 +365,7 @@ export default function TriagePage() {
   }
 
   if (warrantyQuestion !== null) {
-    const totalWarrantyQuestions = TOTAL_WARRANTY_QUESTIONS;
+    const totalWarrantyQuestions = warrantyQuestion.total;
     return (
       <ProductRouteShell
         className="triage-route"
@@ -434,6 +450,21 @@ export default function TriagePage() {
         <div className="action-grid">
           <button className="secondary-button" onClick={() => router.push("/")} type="button">
             {uiCopy.triage.pauseLabel}
+          </button>
+        </div>
+
+        <div className="triage-resource-bar">
+          <span>Need help?</span>
+          <button className="sop-inline-link" onClick={() => router.push("/sop#iw-repair")} type="button">
+            IW Repair guide
+          </button>
+          <span className="triage-resource-sep" aria-hidden="true">·</span>
+          <button className="sop-inline-link" onClick={() => router.push("/sop#oow-repair")} type="button">
+            OOW Repair guide
+          </button>
+          <span className="triage-resource-sep" aria-hidden="true">·</span>
+          <button className="sop-inline-link" onClick={() => router.push("/sop")} type="button">
+            Full SOP
           </button>
         </div>
       </ProductRouteShell>
@@ -589,6 +620,17 @@ export default function TriagePage() {
       <div className="action-grid">
         <button className="secondary-button" onClick={() => router.push("/")} type="button">
           {uiCopy.triage.pauseLabel}
+        </button>
+      </div>
+
+      <div className="triage-resource-bar">
+        <span>Need help?</span>
+        <button className="sop-inline-link" onClick={() => router.push("/sop")} type="button">
+          SOP guide
+        </button>
+        <span className="triage-resource-sep" aria-hidden="true">·</span>
+        <button className="sop-inline-link" onClick={() => router.push("/playbook")} type="button">
+          Playbook
         </button>
       </div>
     </ProductRouteShell>

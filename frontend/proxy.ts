@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PROTECTED_PATHS = ["/dashboard", "/admin", "/cases", "/triage", "/result", "/playbook", "/"];
-const AUTH_PATHS = ["/login", "/register", "/pending"];
+const PROTECTED_PATHS = ["/dashboard", "/admin", "/cases", "/triage", "/result", "/playbook", "/sop", "/profile", "/"];
+const AUTH_PATHS = ["/login", "/register"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -20,7 +20,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (isAuthPage && authCookie && !pathname.startsWith("/pending")) {
+  if (isAuthPage && authCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -36,7 +36,12 @@ export const config = {
     "/triage/:path*",
     "/result/:path*",
     "/playbook/:path*",
+    "/sop/:path*",
+    "/sop",
+    "/profile/:path*",
+    "/profile",
     "/login",
     "/register",
+    "/pending",
   ],
 };

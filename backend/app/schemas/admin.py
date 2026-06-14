@@ -3,6 +3,14 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 
+class AdminCreateUserRequest(BaseModel):
+    email: str
+    full_name: str
+    role: str = "ec_agent"
+    ec_location_id: int
+    country_code: str
+
+
 class AdminUserItem(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,28 +38,9 @@ class AdminActionResponse(BaseModel):
     user: AdminUserItem
 
 
-class AllowedEmailItem(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    email: str
-    notes: str | None
-    created_at: datetime
-
-
-class AllowedEmailListResponse(BaseModel):
-    emails: list[AllowedEmailItem]
-    total: int
-
-
-class AllowedEmailAddRequest(BaseModel):
-    email: str
-    notes: str | None = None
-
-
-class AllowedEmailAddResponse(BaseModel):
+class AdminCreateUserResponse(BaseModel):
     message: str
-    item: AllowedEmailItem
+    user: AdminUserItem
 
 
 # ── Invites ───────────────────────────────────────────────────────────────────

@@ -28,11 +28,6 @@ class AppUserResponse(BaseModel):
     ec_location: ECLocationItem | None = None
 
 
-class RegisterRequest(BaseModel):
-    ec_location_id: int
-    country_code: str
-    full_name: str | None = None
-
 
 class OTPRequestBody(BaseModel):
     email: str
@@ -48,8 +43,7 @@ class OTPRequestResponse(BaseModel):
 
 
 class OTPVerifyResponse(BaseModel):
-    action: str  # "dashboard" | "register" | "pending"
-    needs_name: bool = False
+    action: str  # always "dashboard"
 
 
 class AuthStatusResponse(BaseModel):
