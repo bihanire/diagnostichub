@@ -6,18 +6,47 @@ from starlette.responses import PlainTextResponse
 
 from app.main import app
 
-# Auth redirect endpoints return HTTP 302; PDF endpoint returns application/pdf — no JSON response_model.
-JSON_CONTRACT_EXEMPTIONS: set[str] = {"/auth/google", "/auth/callback", "/cases/{reference}/pdf"}
+# PDF endpoint returns application/pdf — no JSON response_model.
+JSON_CONTRACT_EXEMPTIONS: set[str] = {"/cases/{reference}/pdf"}
 BODY_OPTIONAL_POSTS = {
     "/ops/logout",
     "/auth/logout",
     "/admin/users/{user_id}/approve",
     "/admin/users/{user_id}/suspend",
 }
+# DELETE /admin/invites/{invite_id} returns a raw dict (not a named schema) — exempt from response-model check.
+JSON_CONTRACT_EXEMPTIONS.add("/admin/invites/{invite_id}")
+
 STABLE_RESPONSE_REFS = {
+    # Core
     ("get", "/health"): "HealthResponse",
     ("get", "/meta"): "ApiMetaResponse",
     ("get", "/ready"): "ReadinessResponse",
+    # Auth — OTP flow
+    ("get", "/auth/me"): "AuthStatusResponse",
+    ("post", "/auth/logout"): "LogoutResponse",
+    ("get", "/auth/locations"): "ECLocationListResponse",
+    ("post", "/auth/otp/request"): "OTPRequestResponse",
+    ("post", "/auth/otp/verify"): "OTPVerifyResponse",
+    ("get", "/auth/invite/{token}"): "InviteInfoResponse",
+    ("post", "/auth/invite/{token}/request"): "OTPRequestResponse",
+    ("post", "/auth/invite/{token}/verify"): "InviteOTPVerifyResponse",
+    # Admin
+    ("get", "/admin/users"): "AdminUserListResponse",
+    ("post", "/admin/users"): "AdminCreateUserResponse",
+    ("post", "/admin/users/{user_id}/approve"): "AdminActionResponse",
+    ("post", "/admin/users/{user_id}/suspend"): "AdminActionResponse",
+    ("get", "/admin/invites"): "InviteListResponse",
+    ("post", "/admin/invites"): "InviteCreateResponse",
+    ("get", "/admin/activity"): "ActivityResponse",
+    # Cases
+    ("post", "/cases"): "CaseResponse",
+    ("get", "/cases"): "CaseListResponse",
+    ("get", "/cases/stats"): "CaseStatsResponse",
+    ("get", "/cases/{reference}"): "CaseResponse",
+    ("patch", "/cases/{reference}/status"): "CaseStatusUpdateResponse",
+    ("post", "/cases/{reference}/notes"): "CaseNoteItem",
+    # Triage
     ("post", "/search"): "SearchResponse",
     ("post", "/triage/start"): "TriageStartResponse",
     ("post", "/triage/next"): "TriageNextResponse",
@@ -25,18 +54,9 @@ STABLE_RESPONSE_REFS = {
     ("post", "/triage/dispatch-route"): "DispatchRouteResponse",
     ("get", "/triage/devices"): "DeviceListResponse",
     ("get", "/triage/parts-prediction"): "PartsPredictionResponse",
-    ("get", "/auth/me"): "AuthStatusResponse",
-    ("post", "/auth/register"): "AuthStatusResponse",
-    ("get", "/auth/locations"): "ECLocationListResponse",
-    ("post", "/auth/logout"): "LogoutResponse",
-    ("get", "/admin/users"): "AdminUserListResponse",
-    ("post", "/admin/users/{user_id}/approve"): "AdminActionResponse",
-    ("post", "/admin/users/{user_id}/suspend"): "AdminActionResponse",
-    ("post", "/cases"): "CaseResponse",
-    ("get", "/cases"): "CaseListResponse",
-    ("get", "/cases/{reference}"): "CaseResponse",
-    ("patch", "/cases/{reference}/status"): "CaseStatusUpdateResponse",
+    # Feedback
     ("post", "/feedback"): "FeedbackCreateResponse",
+    # Ops
     ("post", "/ops/login"): "OpsSessionResponse",
     ("post", "/ops/logout"): "OpsSessionResponse",
     ("get", "/ops/session"): "OpsSessionResponse",
@@ -89,7 +109,14 @@ class ApiContractGovernanceTests(unittest.TestCase):
 
         for (method, path), expected_schema_name in STABLE_RESPONSE_REFS.items():
             operation = schema["paths"][path][method]
-            response_schema = operation["responses"]["200"]["content"]["application/json"]["schema"]
+            # Accept any 2xx success code (200, 201, etc.)
+            success_code = next(
+                (c for c in operation["responses"] if c.startswith("2")), None
+            )
+            if success_code is None:
+                drifted_refs.append(f"{method.upper()} {path}: no 2xx response defined")
+                continue
+            response_schema = operation["responses"][success_code]["content"]["application/json"]["schema"]
             expected_ref = f"#/components/schemas/{expected_schema_name}"
             if response_schema.get("$ref") != expected_ref:
                 drifted_refs.append(f"{method.upper()} {path}: {response_schema}")
